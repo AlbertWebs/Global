@@ -11,22 +11,40 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $superAdminRole = Role::where('slug', 'super-admin')->first();
+        // Create roles if they don't exist
+        $superAdminRole = Role::firstOrCreate(
+            ['slug' => 'super-admin'],
+            [
+                'name' => 'Super Admin',
+                'description' => 'Full system access with all permissions',
+            ]
+        );
 
-        User::create([
-            'name' => 'Super Admin',
-            'email' => 'admin@globalcollege.edu',
-            'password' => Hash::make('password'),
-            'role_id' => $superAdminRole->id,
-        ]);
+        $cashierRole = Role::firstOrCreate(
+            ['slug' => 'cashier'],
+            [
+                'name' => 'Cashier',
+                'description' => 'Can process payments and generate receipts',
+            ]
+        );
 
-        $cashierRole = Role::where('slug', 'cashier')->first();
+        // Create users if they don't exist
+        User::firstOrCreate(
+            ['email' => 'admin@globalcollege.edu'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('password'),
+                'role_id' => $superAdminRole->id,
+            ]
+        );
 
-        User::create([
-            'name' => 'Cashier',
-            'email' => 'cashier@globalcollege.edu',
-            'password' => Hash::make('password'),
-            'role_id' => $cashierRole->id,
-        ]);
+        User::firstOrCreate(
+            ['email' => 'cashier@globalcollege.edu'],
+            [
+                'name' => 'Cashier',
+                'password' => Hash::make('password'),
+                'role_id' => $cashierRole->id,
+            ]
+        );
     }
 }
