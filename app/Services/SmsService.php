@@ -54,10 +54,13 @@ class SmsService
             // Format phone number to international format
             $phoneNumber = PhoneNumberFormatter::format($student->phone);
             
+            // Remove plus sign before sending (some providers don't accept it)
+            $phoneNumberForSending = ltrim($phoneNumber, '+');
+            
             // Replace placeholders in message
             $formattedMessage = $this->replacePlaceholders($message, $student);
 
-            // Check rate limiting
+            // Check rate limiting (use original format for cache key)
             if ($this->isRateLimited($phoneNumber)) {
                 Log::warning("SMS rate limited", [
                     'student_id' => $student->id,
@@ -66,8 +69,8 @@ class SmsService
                 return false;
             }
 
-            // Send SMS via provider
-            $result = $this->provider->send($phoneNumber, $formattedMessage);
+            // Send SMS via provider (without plus sign)
+            $result = $this->provider->send($phoneNumberForSending, $formattedMessage);
 
             // Record rate limit
             $this->recordRateLimit($phoneNumber);
@@ -180,6 +183,9 @@ class SmsService
 
             // Format phone number to international format
             $phoneNumber = PhoneNumberFormatter::format($teacher->phone);
+            
+            // Remove plus sign before sending (some providers don't accept it)
+            $phoneNumberForSending = ltrim($phoneNumber, '+');
 
             // Get message template
             $message = config('sms.templates.teacher_enrollment', 
@@ -199,7 +205,7 @@ class SmsService
             $message = str_replace('{username}', $username, $message);
             $message = str_replace('{password}', $password, $message);
 
-            // Check rate limiting
+            // Check rate limiting (use original format for cache key)
             if ($this->isRateLimited($phoneNumber)) {
                 Log::warning("SMS rate limited", [
                     'teacher_id' => $teacher->id,
@@ -208,8 +214,8 @@ class SmsService
                 return false;
             }
 
-            // Send SMS via provider
-            $result = $this->provider->send($phoneNumber, $message);
+            // Send SMS via provider (without plus sign)
+            $result = $this->provider->send($phoneNumberForSending, $message);
 
             // Record rate limit
             $this->recordRateLimit($phoneNumber);

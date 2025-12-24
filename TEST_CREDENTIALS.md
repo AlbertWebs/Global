@@ -22,7 +22,7 @@
 
 ## 👨‍🎓 Student Account
 
-**Login URL:** `http://localhost:8000/student/login`
+**Login URL:** `http://localhost:8000/updte`
 
 - **Student Number:** `STU-TEST001`
 - **Password:** `STU-TEST001`
