@@ -172,16 +172,18 @@ class StudentController extends Controller
         $driver = \DB::getDriverName();
         if ($driver === 'sqlite') {
             $dateFormat = "strftime('%Y-%m', created_at)";
+            $groupBy = "strftime('%Y-%m', created_at)";
         } else {
-            // MySQL/MariaDB
+            // MySQL/MariaDB - use the expression directly in GROUP BY to satisfy ONLY_FULL_GROUP_BY
             $dateFormat = "DATE_FORMAT(created_at, '%Y-%m')";
+            $groupBy = "DATE_FORMAT(created_at, '%Y-%m')";
         }
         
         $monthlyTrend = $student->payments()
             ->selectRaw("{$dateFormat} as month, SUM(amount_paid) as total")
             ->where('created_at', '>=', now()->subMonths(6))
-            ->groupBy('month')
-            ->orderBy('month')
+            ->groupByRaw($groupBy)
+            ->orderByRaw($groupBy)
             ->get();
         
         return view('students.show', compact(
