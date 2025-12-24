@@ -17,6 +17,7 @@ return new class extends Migration
             
             // Create new unique constraint that includes month and year
             // This allows the same course to be registered in different months
+            // Note: Using limited string lengths to avoid MySQL key length issues
             $table->unique(['student_id', 'course_id', 'academic_year', 'month', 'year'], 'unique_student_course_month_registration');
         });
     }

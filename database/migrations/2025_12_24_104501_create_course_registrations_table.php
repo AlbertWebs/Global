@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id')->constrained()->onDelete('cascade');
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
-            $table->string('academic_year');
-            $table->string('term');
+            $table->string('academic_year', 50); // Limit length for composite index compatibility
+            $table->string('term', 50); // Limit length for composite index compatibility
             $table->date('registration_date')->default(now());
             $table->enum('status', ['registered', 'completed', 'dropped'])->default('registered');
             $table->text('notes')->nullable();
