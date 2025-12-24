@@ -315,11 +315,24 @@ class SmsService
      */
     protected function recordRateLimit(string $phoneNumber): void
     {
-        $key = "sms_rate_limit:{$phoneNumber}";
-        $ttl = now()->addHour(); // Rate limit window: 1 hour
-        
-        $count = Cache::get($key, 0);
-        Cache::put($key, $count + 1, $ttl);
+        try {
+            $key = "sms_rate_limit:{$phoneNumber}";
+            $ttl = 3600; // Rate limit window: 1 hour in seconds
+            
+            // Use increment if key exists, otherwise set it
+            if (Cache::has($key)) {
+                Cache::increment($key);
+            } else {
+                Cache::put($key, 1, $ttl);
+            }
+        } catch (\Exception $e) {
+            // If cache fails (e.g., SQLite compatibility issues), log and continue
+            // Rate limiting is not critical enough to fail SMS sending
+            Log::warning("Failed to record SMS rate limit", [
+                'phone' => $phoneNumber,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**
