@@ -84,6 +84,23 @@ class BillingController extends Controller
         // Create ledger entry for money trace
         LedgerEntry::createFromPayment($payment);
 
+        // Send payment confirmation SMS (queued for async processing)
+        try {
+            $smsService = app(\App\Services\SmsService::class);
+            $smsService->sendPaymentSMS(
+                $payment->student,
+                $payment->amount_paid,
+                $payment->course->name,
+                $receipt->receipt_number
+            );
+        } catch (\Exception $e) {
+            // Log error but don't fail the payment
+            \Log::error("Failed to send payment SMS", [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
         // Log the activity
         ActivityLog::log(
             'payment.created',

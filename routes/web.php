@@ -17,6 +17,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentPortalController;
+use App\Http\Controllers\TeacherPortalController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +33,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Students
+    Route::post('/students/{student}/send-welcome-sms', [StudentController::class, 'sendWelcomeSMS'])->name('students.send-welcome-sms');
     Route::resource('students', StudentController::class);
 
     // Courses
@@ -96,4 +99,27 @@ Route::middleware('auth')->group(function () {
     // Data Purge (Super Admin only - checked in controller)
     Route::get('/data-purge', [DataPurgeController::class, 'index'])->name('data-purge.index');
     Route::post('/data-purge', [DataPurgeController::class, 'purge'])->name('data-purge.purge');
+
+    // Student Portal
+    Route::prefix('student-portal')->name('student-portal.')->group(function () {
+        Route::get('/', [StudentPortalController::class, 'index'])->name('index');
+        Route::get('/financial-info', [StudentPortalController::class, 'financialInfo'])->name('financial-info');
+        Route::get('/courses', [StudentPortalController::class, 'courses'])->name('courses');
+        Route::get('/results', [StudentPortalController::class, 'results'])->name('results');
+        Route::get('/settings', [StudentPortalController::class, 'settings'])->name('settings');
+    });
+
+    // Teacher Portal
+    Route::prefix('teacher-portal')->name('teacher-portal.')->group(function () {
+        Route::get('/', [TeacherPortalController::class, 'index'])->name('index');
+        Route::get('/personal-info', [TeacherPortalController::class, 'personalInfo'])->name('personal-info');
+        Route::get('/courses', [TeacherPortalController::class, 'courses'])->name('courses');
+        Route::get('/student-progress', [TeacherPortalController::class, 'studentProgress'])->name('student-progress');
+        Route::get('/post-results', [TeacherPortalController::class, 'postResults'])->name('post-results');
+        Route::post('/post-results', [TeacherPortalController::class, 'storeResult'])->name('store-result');
+        Route::get('/communicate', [TeacherPortalController::class, 'communicate'])->name('communicate');
+        Route::post('/communicate', [TeacherPortalController::class, 'storeAnnouncement'])->name('store-announcement');
+        Route::get('/attendance', [TeacherPortalController::class, 'attendance'])->name('attendance');
+        Route::get('/settings', [TeacherPortalController::class, 'settings'])->name('settings');
+    });
 });

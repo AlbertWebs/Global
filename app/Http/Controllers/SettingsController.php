@@ -12,7 +12,9 @@ class SettingsController extends Controller
     {
         // Only Super Admin can access settings
         if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can access settings');
+            return view('errors.unauthorized', [
+                'message' => 'Only Super Administrators can access system settings. Please contact your administrator if you need access to this page.'
+            ]);
         }
 
         $settings = Setting::orderBy('group')->orderBy('key')->get()->groupBy('group');
@@ -24,7 +26,9 @@ class SettingsController extends Controller
     {
         // Only Super Admin can update settings
         if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can update settings');
+            return view('errors.unauthorized', [
+                'message' => 'Only Super Administrators can update system settings. Please contact your administrator if you need access to this feature.'
+            ]);
         }
 
         $validated = $request->validate([

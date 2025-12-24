@@ -1,0 +1,242 @@
+<?php
+
+namespace App\Services;
+
+use App\Contracts\SmsProviderInterface;
+use App\Models\Student;
+use App\Services\SmsProviders\AfricasTalkingProvider;
+use App\Services\SmsProviders\LogProvider;
+use App\Services\SmsProviders\TwilioProvider;
+use App\Services\SmsProviders\ZettatelProvider;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
+
+class SmsService
+{
+    protected SmsProviderInterface $provider;
+    protected PhoneNumberFormatter $formatter;
+
+    public function __construct(?SmsProviderInterface $provider = null)
+    {
+        $this->formatter = new PhoneNumberFormatter();
+        $this->provider = $provider ?? $this->resolveProvider();
+    }
+
+    /**
+     * Send SMS to a student
+     * 
+     * @param string $message The message to send
+     * @param Student $student The student to send the message to
+     * @return bool
+     */
+    public function sendSMSs($message, $student): bool
+    {
+        try {
+            // Validate student has phone number
+            if (!$student->phone) {
+                Log::warning("SMS not sent: Student {$student->id} has no phone number", [
+                    'student_id' => $student->id,
+                    'student_name' => $student->full_name,
+                ]);
+                return false;
+            }
+
+            // Validate phone number format
+            if (!PhoneNumberFormatter::isValid($student->phone)) {
+                Log::warning("SMS not sent: Invalid phone number format", [
+                    'student_id' => $student->id,
+                    'phone' => $student->phone,
+                ]);
+                return false;
+            }
+
+            // Format phone number to international format
+            $phoneNumber = PhoneNumberFormatter::format($student->phone);
+            
+            // Replace placeholders in message
+            $formattedMessage = $this->replacePlaceholders($message, $student);
+
+            // Check rate limiting
+            if ($this->isRateLimited($phoneNumber)) {
+                Log::warning("SMS rate limited", [
+                    'student_id' => $student->id,
+                    'phone' => $phoneNumber,
+                ]);
+                return false;
+            }
+
+            // Send SMS via provider
+            $result = $this->provider->send($phoneNumber, $formattedMessage);
+
+            // Record rate limit
+            $this->recordRateLimit($phoneNumber);
+
+            if ($result['success']) {
+                // Log successful SMS
+                Log::info("SMS sent successfully", [
+                    'student_id' => $student->id,
+                    'student_name' => $student->full_name,
+                    'phone' => $phoneNumber,
+                    'message_id' => $result['message_id'] ?? null,
+                    'provider' => config('sms.provider', 'log'),
+                ]);
+
+                return true;
+            } else {
+                Log::error("SMS send failed", [
+                    'student_id' => $student->id,
+                    'phone' => $phoneNumber,
+                    'error' => $result['error'] ?? 'Unknown error',
+                    'provider_response' => $result['provider_response'] ?? null,
+                ]);
+
+                return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Exception while sending SMS", [
+                'student_id' => $student->id ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Send enrollment confirmation SMS
+     * 
+     * @param Student $student
+     * @return bool
+     */
+    public function sendEnrollmentSMS(Student $student): bool
+    {
+        $message = config('sms.templates.enrollment', 
+            "Welcome {student_name}! You have been successfully enrolled at {school_name}. Your student number is {student_number}. We look forward to your success!"
+        );
+
+        // Replace school name placeholder
+        $schoolName = \App\Models\Setting::get('school_name', 'Global College');
+        $message = str_replace('{school_name}', $schoolName, $message);
+
+        return $this->sendSMSs($message, $student);
+    }
+
+    /**
+     * Send payment confirmation SMS
+     * 
+     * @param Student $student
+     * @param float $amount
+     * @param string $courseName
+     * @param string $receiptNumber
+     * @return bool
+     */
+    public function sendPaymentSMS(Student $student, float $amount, string $courseName, string $receiptNumber): bool
+    {
+        $message = config('sms.templates.payment',
+            "Dear {student_name}, payment of KES {amount} for {course_name} has been received. Receipt Number: {receipt_number}. Thank you for your payment!"
+        );
+
+        // Replace payment-specific placeholders
+        $message = str_replace('{amount}', number_format($amount, 2), $message);
+        $message = str_replace('{course_name}', $courseName, $message);
+        $message = str_replace('{receipt_number}', $receiptNumber, $message);
+
+        return $this->sendSMSs($message, $student);
+    }
+
+    /**
+     * Replace placeholders in message with student data
+     * 
+     * @param string $message
+     * @param Student $student
+     * @return string
+     */
+    protected function replacePlaceholders(string $message, Student $student): string
+    {
+        $schoolName = \App\Models\Setting::get('school_name', 'Global College');
+        $schoolPhone = \App\Models\Setting::get('school_phone', '');
+
+        $placeholders = [
+            '{student_name}' => $student->full_name,
+            '{first_name}' => $student->first_name,
+            '{last_name}' => $student->last_name,
+            '{student_number}' => $student->student_number,
+            '{admission_number}' => $student->admission_number ?? '',
+            '{phone}' => $student->phone ?? '',
+            '{school_name}' => $schoolName,
+            '{school_phone}' => $schoolPhone,
+        ];
+
+        return str_replace(array_keys($placeholders), array_values($placeholders), $message);
+    }
+
+    /**
+     * Resolve SMS provider based on configuration
+     * 
+     * @return SmsProviderInterface
+     */
+    protected function resolveProvider(): SmsProviderInterface
+    {
+        $provider = config('sms.provider', 'log');
+
+        return match ($provider) {
+            'africastalking' => new AfricasTalkingProvider(),
+            'twilio' => new TwilioProvider(),
+            'zettatel' => new ZettatelProvider(),
+            default => new LogProvider(),
+        };
+    }
+
+    /**
+     * Check if phone number is rate limited
+     * 
+     * @param string $phoneNumber
+     * @return bool
+     */
+    protected function isRateLimited(string $phoneNumber): bool
+    {
+        $rateLimit = config('sms.rate_limit', 5); // Max 5 SMS per hour per number
+        $key = "sms_rate_limit:{$phoneNumber}";
+        
+        $count = Cache::get($key, 0);
+        
+        return $count >= $rateLimit;
+    }
+
+    /**
+     * Record SMS send for rate limiting
+     * 
+     * @param string $phoneNumber
+     * @return void
+     */
+    protected function recordRateLimit(string $phoneNumber): void
+    {
+        $key = "sms_rate_limit:{$phoneNumber}";
+        $ttl = now()->addHour(); // Rate limit window: 1 hour
+        
+        $count = Cache::get($key, 0);
+        Cache::put($key, $count + 1, $ttl);
+    }
+
+    /**
+     * Send SMS to multiple students (batch)
+     * 
+     * @param string $message
+     * @param array $students Array of Student models
+     * @return array Results with success/failure for each student
+     */
+    public function sendBatchSMSs(string $message, array $students): array
+    {
+        $results = [];
+
+        foreach ($students as $student) {
+            $results[$student->id] = [
+                'student' => $student->full_name,
+                'phone' => $student->phone,
+                'success' => $this->sendSMSs($message, $student),
+            ];
+        }
+
+        return $results;
+    }
+}

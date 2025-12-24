@@ -11,8 +11,8 @@
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 <div class="flex items-center gap-6">
                     <!-- Avatar -->
-                    <div class="w-24 h-24 bg-white bg-opacity-20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-xl border-4 border-white border-opacity-30">
-                        <span class="text-4xl font-bold text-white">
+                    <div class="w-24 h-24 bg-white bg-opacity-30 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl border-4 border-white border-opacity-50">
+                        <span class="text-4xl font-bold text-white drop-shadow-lg">
                             {{ strtoupper(substr($student->first_name, 0, 1) . substr($student->last_name, 0, 1)) }}
                         </span>
                     </div>
@@ -20,20 +20,20 @@
                     <!-- Student Info -->
                     <div>
                         <h1 class="text-3xl font-bold text-white mb-2">{{ $student->full_name }}</h1>
-                        <div class="flex flex-wrap items-center gap-4 text-white text-opacity-90">
+                        <div class="flex flex-wrap items-center gap-4 text-white">
                             <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
                                 </svg>
                                 <span class="font-medium">{{ $student->admission_number }}</span>
                             </div>
                             <div class="flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
                                 </svg>
                                 <span>{{ $student->student_number }}</span>
                             </div>
-                            <span class="px-3 py-1 bg-white bg-opacity-20 backdrop-blur-sm rounded-full text-sm font-semibold border border-white border-opacity-30">
+                            <span class="px-3 py-1 bg-white bg-opacity-30 backdrop-blur-md rounded-full text-sm font-semibold text-white border-2 border-white border-opacity-50 shadow-md">
                                 {{ ucfirst($student->status) }}
                             </span>
                         </div>
@@ -42,8 +42,8 @@
                 
                 <!-- Quick Actions -->
                 <div class="flex flex-wrap gap-3">
-                    <a href="{{ route('course-registrations.create') }}?student_id={{ $student->id }}" class="px-5 py-2.5 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-xl hover:bg-opacity-30 transition-all shadow-lg hover:shadow-xl border border-white border-opacity-30 font-semibold flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('course-registrations.create') }}?student_id={{ $student->id }}" class="px-5 py-2.5 bg-white bg-opacity-30 backdrop-blur-md text-white rounded-xl hover:bg-opacity-40 transition-all shadow-lg hover:shadow-xl border-2 border-white border-opacity-50 font-semibold flex items-center gap-2">
+                        <svg class="w-5 h-5 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                         </svg>
                         Register Course
@@ -54,12 +54,22 @@
                         </svg>
                         Process Payment
                     </a>
-                    <a href="{{ route('students.edit', $student->id) }}" class="px-5 py-2.5 bg-white bg-opacity-20 backdrop-blur-sm text-white rounded-xl hover:bg-opacity-30 transition-all shadow-lg hover:shadow-xl border border-white border-opacity-30 font-semibold flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('students.edit', $student->id) }}" class="px-5 py-2.5 bg-white bg-opacity-30 backdrop-blur-md text-white rounded-xl hover:bg-opacity-40 transition-all shadow-lg hover:shadow-xl border-2 border-white border-opacity-50 font-semibold flex items-center gap-2">
+                        <svg class="w-5 h-5 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                         Edit
                     </a>
+                    <button 
+                        onclick="sendWelcomeMessage({{ $student->id }})"
+                        class="px-5 py-2.5 bg-green-500 bg-opacity-90 backdrop-blur-md text-white rounded-xl hover:bg-opacity-100 transition-all shadow-lg hover:shadow-xl border-2 border-green-300 border-opacity-50 font-semibold flex items-center gap-2"
+                        id="welcome-btn-{{ $student->id }}"
+                    >
+                        <svg class="w-5 h-5 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                        </svg>
+                        <span id="welcome-text-{{ $student->id }}">Send Welcome SMS</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -69,8 +79,8 @@
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 bg-white bg-opacity-30 rounded-xl flex items-center justify-center shadow-md">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                 </div>
@@ -81,8 +91,8 @@
 
         <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 bg-white bg-opacity-30 rounded-xl flex items-center justify-center shadow-md">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </div>
@@ -93,8 +103,8 @@
 
         <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 bg-white bg-opacity-30 rounded-xl flex items-center justify-center shadow-md">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                     </svg>
                 </div>
@@ -105,8 +115,8 @@
 
         <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="w-12 h-12 bg-white bg-opacity-30 rounded-xl flex items-center justify-center shadow-md">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                     </svg>
                 </div>
@@ -199,7 +209,7 @@
                         <div class="space-y-4">
                             @if($student->email)
                             <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
                                 </svg>
                                 <a href="mailto:{{ $student->email }}" class="text-blue-600 hover:underline font-medium">{{ $student->email }}</a>
@@ -207,7 +217,7 @@
                             @endif
                             @if($student->phone)
                             <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                                 </svg>
                                 <a href="tel:{{ $student->phone }}" class="text-blue-600 hover:underline font-medium">{{ $student->phone }}</a>
@@ -215,7 +225,7 @@
                             @endif
                             @if($student->address)
                             <div class="flex items-start gap-3">
-                                <svg class="w-5 h-5 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-5 h-5 text-gray-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 </svg>
@@ -596,6 +606,110 @@ function quickPaymentForm() {
             const paid = parseFloat(this.amountPaid) || 0;
             this.balance = Math.max(0, agreed - paid);
         }
+    }
+}
+
+async function sendWelcomeMessage(studentId) {
+    const btn = document.getElementById(`welcome-btn-${studentId}`);
+    const text = document.getElementById(`welcome-text-${studentId}`);
+    
+    if (!btn || !text) return;
+    
+    // Disable button and show loading state
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+    text.textContent = 'Sending...';
+    
+    try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        
+        if (!csrfToken) {
+            throw new Error('CSRF token not found. Please refresh the page.');
+        }
+        
+        // Create a form and submit it via fetch
+        const formData = new FormData();
+        formData.append('_token', csrfToken);
+        
+        const url = `{{ url('/students') }}/${studentId}/send-welcome-sms`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData,
+            credentials: 'same-origin'
+        });
+        
+        // Check if response is ok
+        if (!response.ok) {
+            // Try to get error message from response
+            let errorMessage = 'Failed to send SMS';
+            const contentType = response.headers.get('content-type');
+            
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorMessage;
+                } catch (e) {
+                    errorMessage = 'Server returned an error. Status: ' + response.status;
+                }
+            } else {
+                const text = await response.text();
+                if (text.includes('<!DOCTYPE')) {
+                    errorMessage = 'Server returned an error page (Status: ' + response.status + '). Please check the console.';
+                    console.error('HTML Error Response:', text.substring(0, 500));
+                } else {
+                    errorMessage = text || errorMessage;
+                }
+            }
+            throw new Error(errorMessage);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            text.textContent = 'Sent! ✓';
+            btn.classList.remove('bg-green-500', 'bg-opacity-90');
+            btn.classList.add('bg-green-600');
+            
+            // Show success message
+            alert('Welcome SMS sent successfully!');
+            
+            // Reset after 3 seconds
+            setTimeout(() => {
+                text.textContent = 'Send Welcome SMS';
+                btn.classList.remove('bg-green-600', 'opacity-50', 'cursor-not-allowed');
+                btn.classList.add('bg-green-500', 'bg-opacity-90');
+                btn.disabled = false;
+            }, 3000);
+        } else {
+            throw new Error(data.message || 'Failed to send SMS');
+        }
+    } catch (error) {
+        console.error('Error sending welcome SMS:', error);
+        console.error('Error details:', {
+            name: error.name,
+            message: error.message
+        });
+        
+        text.textContent = 'Failed';
+        btn.classList.remove('bg-green-500', 'bg-opacity-90');
+        btn.classList.add('bg-red-500', 'bg-opacity-90');
+        
+        const errorMsg = error.message || 'Network error. Please check your connection and try again.';
+        alert('Failed to send welcome SMS: ' + errorMsg);
+        
+        // Reset after 3 seconds
+        setTimeout(() => {
+            text.textContent = 'Send Welcome SMS';
+            btn.classList.remove('bg-red-500', 'bg-opacity-90', 'opacity-50', 'cursor-not-allowed');
+            btn.classList.add('bg-green-500', 'bg-opacity-90');
+            btn.disabled = false;
+        }, 3000);
     }
 }
 </script>

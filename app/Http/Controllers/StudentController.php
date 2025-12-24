@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\Student;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -69,6 +70,18 @@ class StudentController extends Controller
             $validated['student_number'] = 'STU-' . strtoupper(Str::random(8));
 
             $student = Student::create($validated);
+
+            // Send enrollment SMS
+            try {
+                $smsService = app(\App\Services\SmsService::class);
+                $smsService->sendEnrollmentSMS($student);
+            } catch (\Exception $e) {
+                // Log error but don't fail the enrollment
+                \Log::error("Failed to send enrollment SMS", [
+                    'student_id' => $student->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
 
             // Log the activity
             ActivityLog::log(
@@ -153,9 +166,9 @@ class StudentController extends Controller
         // Recent payments (last 5)
         $recentPayments = $student->payments()->with('course', 'receipt', 'cashier')->latest()->take(5)->get();
         
-        // Monthly payment trend (last 6 months)
+        // Monthly payment trend (last 6 months) - SQLite compatible
         $monthlyTrend = $student->payments()
-            ->selectRaw('DATE_FORMAT(created_at, "%Y-%m") as month, SUM(amount_paid) as total')
+            ->selectRaw("strftime('%Y-%m', created_at) as month, SUM(amount_paid) as total")
             ->where('created_at', '>=', now()->subMonths(6))
             ->groupBy('month')
             ->orderBy('month')
@@ -277,5 +290,51 @@ class StudentController extends Controller
         $student->delete();
         return redirect()->route('students.index')
             ->with('success', 'Student deleted successfully!');
+    }
+
+    /**
+     * Send welcome SMS to a student
+     */
+    public function sendWelcomeSMS(Request $request, Student $student)
+    {
+        try {
+            // Ensure we return JSON even if there's an error
+            if (!$request->wantsJson() && !$request->ajax()) {
+                $request->headers->set('Accept', 'application/json');
+            }
+
+            $smsService = app(SmsService::class);
+            $success = $smsService->sendEnrollmentSMS($student);
+
+            if ($success) {
+                // Log the activity
+                ActivityLog::log(
+                    'student.welcome_sms_sent',
+                    "Welcome SMS sent to {$student->full_name} (Admission #: {$student->admission_number})",
+                    $student
+                );
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Welcome SMS sent successfully!'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to send welcome SMS. Please check the student\'s phone number and SMS configuration.'
+                ], 400);
+            }
+        } catch (\Exception $e) {
+            \Log::error("Failed to send welcome SMS", [
+                'student_id' => $student->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while sending the welcome SMS: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

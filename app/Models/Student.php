@@ -43,6 +43,11 @@ class Student extends Model
         return $this->hasMany(CourseRegistration::class);
     }
 
+    public function results(): HasMany
+    {
+        return $this->hasMany(StudentResult::class);
+    }
+
     public function registeredCourses()
     {
         return $this->belongsToMany(Course::class, 'course_registrations')
