@@ -168,9 +168,17 @@ class StudentController extends Controller
         // Recent payments (last 5)
         $recentPayments = $student->payments()->with('course', 'receipt', 'cashier')->latest()->take(5)->get();
         
-        // Monthly payment trend (last 6 months) - SQLite compatible
+        // Monthly payment trend (last 6 months) - Database agnostic
+        $driver = \DB::getDriverName();
+        if ($driver === 'sqlite') {
+            $dateFormat = "strftime('%Y-%m', created_at)";
+        } else {
+            // MySQL/MariaDB
+            $dateFormat = "DATE_FORMAT(created_at, '%Y-%m')";
+        }
+        
         $monthlyTrend = $student->payments()
-            ->selectRaw("strftime('%Y-%m', created_at) as month, SUM(amount_paid) as total")
+            ->selectRaw("{$dateFormat} as month, SUM(amount_paid) as total")
             ->where('created_at', '>=', now()->subMonths(6))
             ->groupBy('month')
             ->orderBy('month')
