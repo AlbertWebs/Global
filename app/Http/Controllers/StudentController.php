@@ -68,6 +68,8 @@ class StudentController extends Controller
             // Auto-generate admission number
             $validated['admission_number'] = $this->generateAdmissionNumber();
             $validated['student_number'] = 'STU-' . strtoupper(Str::random(8));
+            // Set default password as student_number (will be hashed automatically by model cast)
+            $validated['password'] = $validated['student_number'];
 
             $student = Student::create($validated);
 

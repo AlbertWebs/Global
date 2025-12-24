@@ -84,16 +84,23 @@ return [
     | - {amount}: Payment amount (for payment SMS)
     | - {course_name}: Course name (for payment SMS)
     | - {receipt_number}: Receipt number (for payment SMS)
+    | - {login_url}: Student portal login URL
+    | - {username}: Student portal username (student number)
+    | - {password}: Student portal password (student number)
     |
     */
 
     'templates' => [
         'enrollment' => env('SMS_TEMPLATE_ENROLLMENT', 
-            "Welcome {student_name}! You have been successfully enrolled at {school_name}. Your student number is {student_number}. We look forward to your success!"
+            "Welcome {student_name}! You have been enrolled at {school_name}. Student No: {student_number}. Access your portal: {login_url} Login: {username} Password: {password}"
         ),
         
         'payment' => env('SMS_TEMPLATE_PAYMENT',
             "Dear {student_name}, payment of KES {amount} for {course_name} has been received. Receipt Number: {receipt_number}. Thank you for your payment!"
+        ),
+        
+        'teacher_enrollment' => env('SMS_TEMPLATE_TEACHER_ENROLLMENT',
+            "Welcome {teacher_name}! You have been onboarded at {school_name}. Employee No: {employee_number}. Access your portal: {login_url} Username: {username} Password: {password}"
         ),
     ],
 ];

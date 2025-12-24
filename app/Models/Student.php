@@ -15,6 +15,8 @@ class Student extends Model
         'last_name',
         'email',
         'phone',
+        'photo',
+        'password',
         'date_of_birth',
         'gender',
         'level_of_education',
@@ -26,10 +28,15 @@ class Student extends Model
         'status',
     ];
 
+    protected $hidden = [
+        'password',
+    ];
+
     protected function casts(): array
     {
         return [
             'date_of_birth' => 'date',
+            'password' => 'hashed',
         ];
     }
 

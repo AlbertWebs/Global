@@ -14,9 +14,16 @@
             <div class="flex justify-between items-center h-16">
                 <!-- Logo and Brand -->
                 <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <h1 class="text-2xl font-bold text-blue-600">GC Portal</h1>
-                    </div>
+                    <a href="{{ route('teacher-portal.index') }}" class="flex items-center space-x-3 flex-shrink-0">
+                        @if(\App\Models\Setting::get('school_logo'))
+                            <img src="{{ asset('storage/' . \App\Models\Setting::get('school_logo')) }}" alt="School Logo" class="h-10 w-auto object-contain">
+                        @else
+                            <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                                <span class="text-white font-bold text-lg">{{ strtoupper(substr(\App\Models\Setting::get('school_name', 'GC'), 0, 2)) }}</span>
+                            </div>
+                        @endif
+                        <h1 class="text-xl font-bold text-blue-600 hidden sm:block">Teacher Portal</h1>
+                    </a>
                 </div>
 
                 <!-- Right Side: Profile Photo and Settings -->
@@ -34,7 +41,7 @@
                         <button @click="open = !open" class="flex items-center space-x-3 focus:outline-none">
                             <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg">
                                 @if($teacher->photo)
-                                    <img src="{{ $teacher->photo }}" alt="{{ $teacher->name }}" class="w-full h-full rounded-full object-cover">
+                                    <img src="{{ asset('storage/' . $teacher->photo) }}" alt="{{ $teacher->name }}" class="w-full h-full rounded-full object-cover">
                                 @else
                                     {{ strtoupper(substr($teacher->name, 0, 1)) }}
                                 @endif
@@ -90,26 +97,26 @@
 
                 <!-- Navigation Menu -->
                 <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-                    <a href="{{ route('teacher-portal.index') }}" class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all {{ request()->routeIs('teacher-portal.index') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('teacher-portal.index') }}" class="flex items-center px-4 py-3 rounded-lg transition-all group {{ request()->routeIs('teacher-portal.index') ? 'bg-white bg-opacity-20 shadow-lg text-gray-900 font-semibold' : 'text-white hover:bg-white hover:bg-opacity-20 hover:text-gray-900' }}">
+                        <svg class="w-5 h-5 mr-3 {{ request()->routeIs('teacher-portal.index') ? 'text-gray-900' : 'text-white group-hover:text-gray-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                         </svg>
                         Dashboard
                     </a>
-                    <a href="{{ route('teacher-portal.personal-info') }}" class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all {{ request()->routeIs('teacher-portal.personal-info') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('teacher-portal.personal-info') }}" class="flex items-center px-4 py-3 rounded-lg transition-all group {{ request()->routeIs('teacher-portal.personal-info') ? 'bg-white bg-opacity-20 shadow-lg text-gray-900 font-semibold' : 'text-white hover:bg-white hover:bg-opacity-20 hover:text-gray-900' }}">
+                        <svg class="w-5 h-5 mr-3 {{ request()->routeIs('teacher-portal.personal-info') ? 'text-gray-900' : 'text-white group-hover:text-gray-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
                         Personal Info
                     </a>
-                    <a href="{{ route('teacher-portal.courses') }}" class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all {{ request()->routeIs('teacher-portal.courses') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('teacher-portal.courses') }}" class="flex items-center px-4 py-3 rounded-lg transition-all group {{ request()->routeIs('teacher-portal.courses') ? 'bg-white bg-opacity-20 shadow-lg text-gray-900 font-semibold' : 'text-white hover:bg-white hover:bg-opacity-20 hover:text-gray-900' }}">
+                        <svg class="w-5 h-5 mr-3 {{ request()->routeIs('teacher-portal.courses') ? 'text-gray-900' : 'text-white group-hover:text-gray-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                         </svg>
                         My Courses
                     </a>
-                    <a href="{{ route('teacher-portal.post-results') }}" class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all {{ request()->routeIs('teacher-portal.post-results') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('teacher-portal.post-results') }}" class="flex items-center px-4 py-3 rounded-lg transition-all group {{ request()->routeIs('teacher-portal.post-results') ? 'bg-white bg-opacity-20 shadow-lg text-gray-900 font-semibold' : 'text-white hover:bg-white hover:bg-opacity-20 hover:text-gray-900' }}">
+                        <svg class="w-5 h-5 mr-3 {{ request()->routeIs('teacher-portal.post-results') ? 'text-gray-900' : 'text-white group-hover:text-gray-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                         </svg>
                         Post Results
@@ -117,26 +124,26 @@
                         <span class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">{{ $pendingResults }}</span>
                         @endif
                     </a>
-                    <a href="{{ route('teacher-portal.communicate') }}" class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all {{ request()->routeIs('teacher-portal.communicate') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('teacher-portal.communicate') }}" class="flex items-center px-4 py-3 rounded-lg transition-all group {{ request()->routeIs('teacher-portal.communicate') ? 'bg-white bg-opacity-20 shadow-lg text-gray-900 font-semibold' : 'text-white hover:bg-white hover:bg-opacity-20 hover:text-gray-900' }}">
+                        <svg class="w-5 h-5 mr-3 {{ request()->routeIs('teacher-portal.communicate') ? 'text-gray-900' : 'text-white group-hover:text-gray-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                         </svg>
                         Communicate
                     </a>
-                    <a href="{{ route('teacher-portal.student-progress') }}" class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all {{ request()->routeIs('teacher-portal.student-progress') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('teacher-portal.student-progress') }}" class="flex items-center px-4 py-3 rounded-lg transition-all group {{ request()->routeIs('teacher-portal.student-progress') ? 'bg-white bg-opacity-20 shadow-lg text-gray-900 font-semibold' : 'text-white hover:bg-white hover:bg-opacity-20 hover:text-gray-900' }}">
+                        <svg class="w-5 h-5 mr-3 {{ request()->routeIs('teacher-portal.student-progress') ? 'text-gray-900' : 'text-white group-hover:text-gray-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                         </svg>
                         Student Progress
                     </a>
-                    <a href="{{ route('teacher-portal.attendance') }}" class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all {{ request()->routeIs('teacher-portal.attendance') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('teacher-portal.attendance') }}" class="flex items-center px-4 py-3 rounded-lg transition-all group {{ request()->routeIs('teacher-portal.attendance') ? 'bg-white bg-opacity-20 shadow-lg text-gray-900 font-semibold' : 'text-white hover:bg-white hover:bg-opacity-20 hover:text-gray-900' }}">
+                        <svg class="w-5 h-5 mr-3 {{ request()->routeIs('teacher-portal.attendance') ? 'text-gray-900' : 'text-white group-hover:text-gray-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                         </svg>
                         Attendance
                     </a>
-                    <a href="{{ route('teacher-portal.settings') }}" class="flex items-center px-4 py-3 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-all {{ request()->routeIs('teacher-portal.settings') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('teacher-portal.settings') }}" class="flex items-center px-4 py-3 rounded-lg transition-all group {{ request()->routeIs('teacher-portal.settings') ? 'bg-white bg-opacity-20 shadow-lg text-gray-900 font-semibold' : 'text-white hover:bg-white hover:bg-opacity-20 hover:text-gray-900' }}">
+                        <svg class="w-5 h-5 mr-3 {{ request()->routeIs('teacher-portal.settings') ? 'text-gray-900' : 'text-white group-hover:text-gray-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         </svg>
@@ -159,9 +166,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
                         <div class="flex items-center justify-between mb-4">
-                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                            <div class="w-12 h-12 bg-blue-800 bg-opacity-50 rounded-xl flex items-center justify-center shadow-md">
+                                <svg class="w-6 h-6 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                                 </svg>
                             </div>
                             <span class="text-2xl font-bold">{{ $courses->count() }}</span>
@@ -171,9 +178,9 @@
 
                     <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
                         <div class="flex items-center justify-between mb-4">
-                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            <div class="w-12 h-12 bg-green-800 bg-opacity-50 rounded-xl flex items-center justify-center shadow-md">
+                                <svg class="w-6 h-6 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                                 </svg>
                             </div>
                             <span class="text-2xl font-bold">{{ $totalStudents }}</span>
@@ -183,9 +190,9 @@
 
                     <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
                         <div class="flex items-center justify-between mb-4">
-                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            <div class="w-12 h-12 bg-purple-800 bg-opacity-50 rounded-xl flex items-center justify-center shadow-md">
+                                <svg class="w-6 h-6 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
                             </div>
                             <span class="text-2xl font-bold">{{ $pendingResults }}</span>
@@ -195,9 +202,9 @@
 
                     <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
                         <div class="flex items-center justify-between mb-4">
-                            <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            <div class="w-12 h-12 bg-orange-800 bg-opacity-50 rounded-xl flex items-center justify-center shadow-md">
+                                <svg class="w-6 h-6 text-orange-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                                 </svg>
                             </div>
                             <span class="text-2xl font-bold">{{ $recentAnnouncements->count() }}</span>

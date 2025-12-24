@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\StudentLoginController;
+use App\Http\Controllers\Auth\TeacherLoginController;
 use App\Http\Controllers\BankDepositController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CourseController;
@@ -17,15 +19,27 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\Admin\TeacherController;
 use App\Http\Controllers\StudentPortalController;
 use App\Http\Controllers\TeacherPortalController;
 use App\Http\Controllers\UserController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Authentication Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+// Student Login Routes (Public)
+Route::get('/student/login', [StudentLoginController::class, 'showLoginForm'])->name('student.login');
+Route::post('/student/login', [StudentLoginController::class, 'login']);
+Route::post('/student/logout', [StudentLoginController::class, 'logout'])->name('student.logout');
+
+// Teacher Login Routes (Public)
+Route::get('/teacher/login', [TeacherLoginController::class, 'showLoginForm'])->name('teacher.login');
+Route::post('/teacher/login', [TeacherLoginController::class, 'login']);
+Route::post('/teacher/logout', [TeacherLoginController::class, 'logout'])->name('teacher.logout');
 
 // Protected Routes
 Route::middleware('auth')->group(function () {
@@ -62,6 +76,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('expenses', ExpenseController::class);
 
     // Bank Deposits (Cashier and Super Admin)
+    Route::get('/bank-deposits/get-balance', [BankDepositController::class, 'getBalance'])->name('bank-deposits.get-balance');
     Route::resource('bank-deposits', BankDepositController::class);
 
     // Mobile Dashboard (Super Admin only)
@@ -70,6 +85,7 @@ Route::middleware('auth')->group(function () {
     // Reports (Super Admin only - checked in controller)
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
+    Route::get('/reports/export-payments', [ReportController::class, 'exportPayments'])->name('reports.export-payments');
     Route::get('/reports/export-expenses', [ReportController::class, 'exportExpenses'])->name('reports.export-expenses');
 
     // Fee Balances (Super Admin only - checked in controller)
@@ -81,6 +97,11 @@ Route::middleware('auth')->group(function () {
 
     // Users & Roles (Super Admin only - checked in controller)
     Route::resource('users', UserController::class);
+
+    // Teachers Management (Super Admin only - checked in controller)
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::resource('teachers', TeacherController::class);
+    });
 
     // Role Permissions (Super Admin only - checked in controller)
     Route::get('/role-permissions', [RolePermissionController::class, 'index'])->name('role-permissions.index');
@@ -100,17 +121,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/data-purge', [DataPurgeController::class, 'index'])->name('data-purge.index');
     Route::post('/data-purge', [DataPurgeController::class, 'purge'])->name('data-purge.purge');
 
-    // Student Portal
-    Route::prefix('student-portal')->name('student-portal.')->group(function () {
+    // Student Portal (requires student authentication)
+    Route::prefix('student-portal')->name('student-portal.')->middleware('student.auth')->group(function () {
         Route::get('/', [StudentPortalController::class, 'index'])->name('index');
         Route::get('/financial-info', [StudentPortalController::class, 'financialInfo'])->name('financial-info');
         Route::get('/courses', [StudentPortalController::class, 'courses'])->name('courses');
-        Route::get('/results', [StudentPortalController::class, 'results'])->name('results');
+        Route::get('/announcements', [StudentPortalController::class, 'announcements'])->name('announcements');
         Route::get('/settings', [StudentPortalController::class, 'settings'])->name('settings');
+        Route::post('/change-password', [StudentPortalController::class, 'changePassword'])->name('change-password');
+        Route::post('/upload-photo', [StudentPortalController::class, 'uploadPhoto'])->name('upload-photo');
+        Route::post('/logout', [StudentLoginController::class, 'logout'])->name('logout');
+        
+        // Student-accessible receipt routes
+        Route::get('/receipts/{id}', [ReceiptController::class, 'studentShow'])->name('receipts.show');
+        Route::get('/receipts/{id}/print', [ReceiptController::class, 'studentPrint'])->name('receipts.print');
+        Route::get('/receipts/{id}/print-bw', [ReceiptController::class, 'studentPrintBw'])->name('receipts.print-bw');
+        Route::get('/receipts/{id}/thermal', [ReceiptController::class, 'studentThermal'])->name('receipts.thermal');
     });
 
-    // Teacher Portal
-    Route::prefix('teacher-portal')->name('teacher-portal.')->group(function () {
+    // Teacher Portal (requires teacher authentication)
+    Route::prefix('teacher-portal')->name('teacher-portal.')->middleware('teacher.auth')->group(function () {
         Route::get('/', [TeacherPortalController::class, 'index'])->name('index');
         Route::get('/personal-info', [TeacherPortalController::class, 'personalInfo'])->name('personal-info');
         Route::get('/courses', [TeacherPortalController::class, 'courses'])->name('courses');
@@ -121,5 +151,9 @@ Route::middleware('auth')->group(function () {
         Route::post('/communicate', [TeacherPortalController::class, 'storeAnnouncement'])->name('store-announcement');
         Route::get('/attendance', [TeacherPortalController::class, 'attendance'])->name('attendance');
         Route::get('/settings', [TeacherPortalController::class, 'settings'])->name('settings');
+        Route::post('/change-password', [TeacherPortalController::class, 'changePassword'])->name('change-password');
+        Route::post('/upload-photo', [TeacherPortalController::class, 'uploadPhoto'])->name('upload-photo');
+        Route::put('/personal-info', [TeacherPortalController::class, 'updatePersonalInfo'])->name('update-personal-info');
+        Route::post('/logout', [TeacherLoginController::class, 'logout'])->name('logout');
     });
 });

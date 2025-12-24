@@ -31,9 +31,9 @@
         <!-- Receipt Header with School Branding -->
         <div class="text-center mb-8 pb-6 border-b-4 border-blue-600">
             <div class="mb-4">
-                @if(\App\Models\Setting::get('school_logo'))
+                @if(\App\Models\Setting::get('receipt_logo') || \App\Models\Setting::get('school_logo'))
                 <div class="mb-4">
-                    <img src="{{ url('storage/' . \App\Models\Setting::get('school_logo')) }}" alt="School Logo" class="h-28 mx-auto object-contain" style="max-height: 112px; width: auto;">
+                    <img src="{{ url('storage/' . (\App\Models\Setting::get('receipt_logo') ?? \App\Models\Setting::get('school_logo'))) }}" alt="School Logo" class="h-28 mx-auto object-contain" style="max-height: 112px; width: auto;">
                 </div>
                 @endif
                 <div class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg mb-3">

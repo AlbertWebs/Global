@@ -11,7 +11,7 @@
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 <div class="flex items-center gap-6">
                     <!-- Avatar -->
-                    <div class="w-24 h-24 bg-white bg-opacity-30 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-xl border-4 border-white border-opacity-50">
+                    <div class="w-24 h-24 bg-gradient-to-br from-indigo-700 to-purple-800 rounded-2xl flex items-center justify-center shadow-xl border-4 border-indigo-300 border-opacity-60">
                         <span class="text-4xl font-bold text-white drop-shadow-lg">
                             {{ strtoupper(substr($student->first_name, 0, 1) . substr($student->last_name, 0, 1)) }}
                         </span>
@@ -33,7 +33,7 @@
                                 </svg>
                                 <span>{{ $student->student_number }}</span>
                             </div>
-                            <span class="px-3 py-1 bg-white bg-opacity-30 backdrop-blur-md rounded-full text-sm font-semibold text-white border-2 border-white border-opacity-50 shadow-md">
+                            <span class="px-3 py-1 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full text-sm font-semibold text-white border-2 border-emerald-300 border-opacity-60 shadow-md">
                                 {{ ucfirst($student->status) }}
                             </span>
                         </div>
@@ -41,31 +41,31 @@
                 </div>
                 
                 <!-- Quick Actions -->
-                <div class="flex flex-wrap gap-3">
-                    <a href="{{ route('course-registrations.create') }}?student_id={{ $student->id }}" class="px-5 py-2.5 bg-white bg-opacity-30 backdrop-blur-md text-white rounded-xl hover:bg-opacity-40 transition-all shadow-lg hover:shadow-xl border-2 border-white border-opacity-50 font-semibold flex items-center gap-2">
-                        <svg class="w-5 h-5 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                <div class="flex flex-wrap gap-2">
+                    <a href="{{ route('course-registrations.create') }}?student_id={{ $student->id }}" class="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg text-sm font-medium flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                         </svg>
                         Register Course
                     </a>
-                    <a href="{{ route('billing.index') }}?student_id={{ $student->id }}" class="px-5 py-2.5 bg-white text-purple-600 rounded-xl hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl font-bold flex items-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <a href="{{ route('billing.index') }}?student_id={{ $student->id }}" class="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition-all shadow-md hover:shadow-lg text-sm font-medium flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
                         Process Payment
                     </a>
-                    <a href="{{ route('students.edit', $student->id) }}" class="px-5 py-2.5 bg-white bg-opacity-30 backdrop-blur-md text-white rounded-xl hover:bg-opacity-40 transition-all shadow-lg hover:shadow-xl border-2 border-white border-opacity-50 font-semibold flex items-center gap-2">
-                        <svg class="w-5 h-5 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                    <a href="{{ route('students.edit', $student->id) }}" class="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-lg hover:from-amber-600 hover:to-orange-700 transition-all shadow-md hover:shadow-lg text-sm font-medium flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                         </svg>
                         Edit
                     </a>
                     <button 
                         onclick="sendWelcomeMessage({{ $student->id }})"
-                        class="px-5 py-2.5 bg-green-500 bg-opacity-90 backdrop-blur-md text-white rounded-xl hover:bg-opacity-100 transition-all shadow-lg hover:shadow-xl border-2 border-green-300 border-opacity-50 font-semibold flex items-center gap-2"
+                        class="px-3 py-1.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all shadow-md hover:shadow-lg text-sm font-medium flex items-center gap-1.5"
                         id="welcome-btn-{{ $student->id }}"
                     >
-                        <svg class="w-5 h-5 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
                         </svg>
                         <span id="welcome-text-{{ $student->id }}">Send Welcome SMS</span>
@@ -75,11 +75,90 @@
         </div>
     </div>
 
+    <!-- Student Portal Login Credentials -->
+    <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+        <div class="flex items-start justify-between">
+            <div class="flex-1">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                    Student Portal Login Credentials
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Login URL:</p>
+                        <div class="flex items-center gap-2">
+                            <code class="px-3 py-2 bg-gray-100 rounded-lg text-sm font-mono text-gray-800 flex-1">{{ url('/student/login') }}</code>
+                            <button 
+                                onclick="copyToClipboard('{{ url('/student/login') }}')"
+                                class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                title="Copy URL"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Student Number (Username):</p>
+                        <div class="flex items-center gap-2">
+                            <code class="px-3 py-2 bg-gray-100 rounded-lg text-sm font-mono text-gray-800 flex-1">{{ $student->student_number }}</code>
+                            <button 
+                                onclick="copyToClipboard('{{ $student->student_number }}')"
+                                class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                title="Copy Student Number"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Password:</p>
+                        <div class="flex items-center gap-2">
+                            <code class="px-3 py-2 bg-gray-100 rounded-lg text-sm font-mono text-gray-800 flex-1">{{ $student->student_number }}</code>
+                            <button 
+                                onclick="copyToClipboard('{{ $student->student_number }}')"
+                                class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                title="Copy Password"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 mb-1">Quick Login:</p>
+                        <a 
+                            href="{{ route('student.login') }}" 
+                            target="_blank"
+                            class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                            </svg>
+                            Open Student Portal
+                        </a>
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p class="text-xs text-blue-800">
+                        <strong>Note:</strong> The default password is the student number. Students should change their password after first login for security.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Statistics Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-white bg-opacity-30 rounded-xl flex items-center justify-center shadow-md">
+                <div class="w-12 h-12 bg-blue-700 bg-opacity-80 rounded-xl flex items-center justify-center shadow-md">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
@@ -91,7 +170,7 @@
 
         <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-white bg-opacity-30 rounded-xl flex items-center justify-center shadow-md">
+                <div class="w-12 h-12 bg-green-700 bg-opacity-80 rounded-xl flex items-center justify-center shadow-md">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -103,7 +182,7 @@
 
         <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-white bg-opacity-30 rounded-xl flex items-center justify-center shadow-md">
+                <div class="w-12 h-12 bg-orange-700 bg-opacity-80 rounded-xl flex items-center justify-center shadow-md">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                     </svg>
@@ -115,7 +194,7 @@
 
         <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 bg-white bg-opacity-30 rounded-xl flex items-center justify-center shadow-md">
+                <div class="w-12 h-12 bg-purple-700 bg-opacity-80 rounded-xl flex items-center justify-center shadow-md">
                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                     </svg>
@@ -711,6 +790,28 @@ async function sendWelcomeMessage(studentId) {
             btn.disabled = false;
         }, 3000);
     }
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        // Show a temporary success message
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2';
+        toast.innerHTML = `
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span>Copied to clipboard!</span>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 2000);
+    }).catch(function(err) {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy to clipboard. Please copy manually.');
+    });
 }
 </script>
 @endsection

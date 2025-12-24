@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Contracts\SmsProviderInterface;
 use App\Models\Student;
+use App\Models\Teacher;
 use App\Services\SmsProviders\AfricasTalkingProvider;
 use App\Services\SmsProviders\LogProvider;
 use App\Services\SmsProviders\TwilioProvider;
@@ -111,12 +112,18 @@ class SmsService
     public function sendEnrollmentSMS(Student $student): bool
     {
         $message = config('sms.templates.enrollment', 
-            "Welcome {student_name}! You have been successfully enrolled at {school_name}. Your student number is {student_number}. We look forward to your success!"
+            "Welcome {student_name}! You have been enrolled at {school_name}. Student No: {student_number}. Login to your portal at {login_url} Username: {username} Password: {password}"
         );
 
         // Replace school name placeholder
         $schoolName = \App\Models\Setting::get('school_name', 'Global College');
         $message = str_replace('{school_name}', $schoolName, $message);
+        
+        // Replace login credentials placeholders
+        $loginUrl = url('/student/login');
+        $message = str_replace('{login_url}', $loginUrl, $message);
+        $message = str_replace('{username}', $student->student_number, $message);
+        $message = str_replace('{password}', $student->student_number, $message);
 
         return $this->sendSMSs($message, $student);
     }
@@ -145,6 +152,99 @@ class SmsService
     }
 
     /**
+     * Send teacher enrollment/welcome SMS
+     * 
+     * @param Teacher $teacher
+     * @return bool
+     */
+    public function sendTeacherEnrollmentSMS(Teacher $teacher): bool
+    {
+        try {
+            // Validate teacher has phone number
+            if (!$teacher->phone) {
+                Log::warning("SMS not sent: Teacher {$teacher->id} has no phone number", [
+                    'teacher_id' => $teacher->id,
+                    'teacher_name' => $teacher->full_name,
+                ]);
+                return false;
+            }
+
+            // Validate phone number format
+            if (!PhoneNumberFormatter::isValid($teacher->phone)) {
+                Log::warning("SMS not sent: Invalid phone number format", [
+                    'teacher_id' => $teacher->id,
+                    'phone' => $teacher->phone,
+                ]);
+                return false;
+            }
+
+            // Format phone number to international format
+            $phoneNumber = PhoneNumberFormatter::format($teacher->phone);
+
+            // Get message template
+            $message = config('sms.templates.teacher_enrollment', 
+                "Welcome {teacher_name}! You have been onboarded at {school_name}. Employee No: {employee_number}. Access your portal: {login_url} Username: {username} Password: {password}"
+            );
+
+            // Replace placeholders
+            $schoolName = \App\Models\Setting::get('school_name', 'Global College');
+            $loginUrl = route('teacher.login');
+            $username = $teacher->employee_number;
+            $password = $teacher->employee_number; // Default password is employee number
+
+            $message = str_replace('{teacher_name}', $teacher->full_name, $message);
+            $message = str_replace('{school_name}', $schoolName, $message);
+            $message = str_replace('{employee_number}', $teacher->employee_number, $message);
+            $message = str_replace('{login_url}', $loginUrl, $message);
+            $message = str_replace('{username}', $username, $message);
+            $message = str_replace('{password}', $password, $message);
+
+            // Check rate limiting
+            if ($this->isRateLimited($phoneNumber)) {
+                Log::warning("SMS rate limited", [
+                    'teacher_id' => $teacher->id,
+                    'phone' => $phoneNumber,
+                ]);
+                return false;
+            }
+
+            // Send SMS via provider
+            $result = $this->provider->send($phoneNumber, $message);
+
+            // Record rate limit
+            $this->recordRateLimit($phoneNumber);
+
+            if ($result['success']) {
+                Log::info("Teacher enrollment SMS sent successfully", [
+                    'teacher_id' => $teacher->id,
+                    'teacher_name' => $teacher->full_name,
+                    'phone' => $phoneNumber,
+                    'message_id' => $result['message_id'] ?? null,
+                    'provider' => config('sms.provider', 'log'),
+                ]);
+
+                return true;
+            } else {
+                Log::error("Teacher enrollment SMS send failed", [
+                    'teacher_id' => $teacher->id,
+                    'phone' => $phoneNumber,
+                    'error' => $result['error'] ?? 'Unknown error',
+                    'provider_response' => $result['provider_response'] ?? null,
+                ]);
+
+                return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Exception while sending teacher enrollment SMS", [
+                'teacher_id' => $teacher->id ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return false;
+        }
+    }
+
+    /**
      * Replace placeholders in message with student data
      * 
      * @param string $message
@@ -155,6 +255,7 @@ class SmsService
     {
         $schoolName = \App\Models\Setting::get('school_name', 'Global College');
         $schoolPhone = \App\Models\Setting::get('school_phone', '');
+        $loginUrl = url('/student/login');
 
         $placeholders = [
             '{student_name}' => $student->full_name,
@@ -165,6 +266,9 @@ class SmsService
             '{phone}' => $student->phone ?? '',
             '{school_name}' => $schoolName,
             '{school_phone}' => $schoolPhone,
+            '{login_url}' => $loginUrl,
+            '{username}' => $student->student_number,
+            '{password}' => $student->student_number, // Default password is student number
         ];
 
         return str_replace(array_keys($placeholders), array_values($placeholders), $message);

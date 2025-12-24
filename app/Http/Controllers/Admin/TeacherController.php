@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Teacher;
 use App\Models\Course;
+use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -74,16 +75,42 @@ class TeacherController extends Controller
             'specialization' => 'nullable|string|max:255',
             'hire_date' => 'required|date',
             'status' => 'required|in:active,inactive,on_leave',
+            'address' => 'nullable|string',
+            'course_ids' => 'nullable|array',
+            'course_ids.*' => 'exists:courses,id',
         ]);
 
         // Auto-generate employee number
-        $validated['employee_number'] = $this->generateEmployeeNumber();
-        $validated['password'] = Hash::make('password123'); // Default password
+        $employeeNumber = $this->generateEmployeeNumber();
+        $validated['employee_number'] = $employeeNumber;
+        // Default password is the employee number (will be hashed automatically by model cast)
+        $validated['password'] = $employeeNumber;
+
+        // Extract course_ids before creating teacher
+        $courseIds = $validated['course_ids'] ?? [];
+        unset($validated['course_ids']);
 
         $teacher = Teacher::create($validated);
 
-        return redirect()->route('admin.teachers.index')
-            ->with('success', 'Teacher created successfully! Default password: password123');
+        // Assign courses to teacher
+        if (!empty($courseIds)) {
+            $teacher->courses()->sync($courseIds);
+        }
+
+        // Send welcome SMS
+        try {
+            $smsService = app(SmsService::class);
+            $smsService->sendTeacherEnrollmentSMS($teacher);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send teacher enrollment SMS', [
+                'teacher_id' => $teacher->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't fail the request if SMS fails
+        }
+
+        return redirect()->route('admin.teachers.show', $teacher->id)
+            ->with('success', 'Teacher created successfully! Login credentials are displayed below. Welcome SMS has been sent.');
     }
 
     public function show(Teacher $teacher)
@@ -129,9 +156,19 @@ class TeacherController extends Controller
             'specialization' => 'nullable|string|max:255',
             'hire_date' => 'required|date',
             'status' => 'required|in:active,inactive,on_leave',
+            'address' => 'nullable|string',
+            'course_ids' => 'nullable|array',
+            'course_ids.*' => 'exists:courses,id',
         ]);
 
+        // Extract course_ids before updating teacher
+        $courseIds = $validated['course_ids'] ?? [];
+        unset($validated['course_ids']);
+
         $teacher->update($validated);
+
+        // Update course assignments
+        $teacher->courses()->sync($courseIds);
 
         return redirect()->route('admin.teachers.show', $teacher->id)
             ->with('success', 'Teacher updated successfully!');

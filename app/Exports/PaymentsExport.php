@@ -7,11 +7,12 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class PaymentsExport implements FromCollection, WithHeadings, WithMapping, WithStyles
+class PaymentsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     protected $payments;
 
@@ -59,6 +60,11 @@ class PaymentsExport implements FromCollection, WithHeadings, WithMapping, WithS
             $payment->receipt?->receipt_number ?? 'N/A',
             $payment->cashier->name ?? 'N/A',
         ];
+    }
+
+    public function title(): string
+    {
+        return 'Payments';
     }
 
     public function styles(Worksheet $sheet)

@@ -126,9 +126,9 @@
 </head>
 <body>
     <div class="header">
-        @if(\App\Models\Setting::get('school_logo'))
+        @if(\App\Models\Setting::get('receipt_logo') || \App\Models\Setting::get('school_logo'))
         <div style="text-align: center; margin-bottom: 8px;">
-            <img src="{{ url('storage/' . \App\Models\Setting::get('school_logo')) }}" alt="School Logo" style="max-width: 60mm; max-height: 30mm; object-fit: contain; display: block; margin: 0 auto;">
+            <img src="{{ url('storage/' . (\App\Models\Setting::get('receipt_logo') ?? \App\Models\Setting::get('school_logo'))) }}" alt="School Logo" style="max-width: 60mm; max-height: 30mm; object-fit: contain; display: block; margin: 0 auto;">
         </div>
         @endif
         <h1>{{ \App\Models\Setting::get('school_name', 'Global College') }}</h1>

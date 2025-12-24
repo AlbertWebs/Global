@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             CourseSeeder::class,
             StudentSeeder::class,
             PaymentSeeder::class,
+            TestAccountsSeeder::class, // Add test accounts
         ]);
     }
 }

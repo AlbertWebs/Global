@@ -6,22 +6,32 @@ use App\Models\Course;
 use App\Models\Student;
 use App\Models\StudentResult;
 use App\Models\Announcement;
+use App\Models\Teacher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\Password;
 
 class TeacherPortalController extends Controller
 {
     public function index()
     {
-        // Get the authenticated teacher (placeholder - in production, get from auth)
-        $teacher = (object)[
-            'id' => 1,
-            'name' => 'John Doe',
-            'email' => 'teacher@school.edu',
-            'photo' => null,
-        ];
+        // Get the authenticated teacher from session
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            session()->forget(['teacher_id', 'teacher_logged_in']);
+            return redirect()->route('teacher.login')->with('error', 'Teacher not found. Please login again.');
+        }
         
         // Get courses taught by this teacher
-        $courses = Course::where('status', 'active')->take(5)->get();
+        $courses = $teacher->courses()->where('status', 'active')->take(5)->get();
         
         // Get students in these courses
         $totalStudents = Student::where('status', 'active')->count();
@@ -37,36 +47,53 @@ class TeacherPortalController extends Controller
 
     public function personalInfo()
     {
-        $teacher = (object)[
-            'id' => 1,
-            'name' => 'John Doe',
-            'email' => 'teacher@school.edu',
-            'phone' => '+254 700 000 000',
-            'address' => 'Nairobi, Kenya',
-            'photo' => null,
-        ];
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.login')->with('error', 'Teacher not found.');
+        }
         
         return view('teacher-portal.personal-info', compact('teacher'));
     }
 
     public function courses()
     {
-        $teacher = (object)[
-            'id' => 1,
-            'name' => 'John Doe',
-        ];
+        $teacherId = session('teacher_id');
         
-        $courses = Course::where('status', 'active')->get();
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.login')->with('error', 'Teacher not found.');
+        }
+        
+        $courses = $teacher->courses()->where('status', 'active')->get();
         
         return view('teacher-portal.courses', compact('teacher', 'courses'));
     }
 
     public function studentProgress()
     {
-        $teacher = (object)[
-            'id' => 1,
-            'name' => 'John Doe',
-        ];
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.login')->with('error', 'Teacher not found.');
+        }
         
         $students = Student::where('status', 'active')->with('courseRegistrations.course')->get();
         
@@ -75,12 +102,19 @@ class TeacherPortalController extends Controller
 
     public function postResults()
     {
-        $teacher = (object)[
-            'id' => 1,
-            'name' => 'John Doe',
-        ];
+        $teacherId = session('teacher_id');
         
-        $courses = Course::where('status', 'active')->get();
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.login')->with('error', 'Teacher not found.');
+        }
+        
+        $courses = $teacher->courses()->where('status', 'active')->get();
         $students = Student::where('status', 'active')->get();
         $results = StudentResult::with('student', 'course')->latest()->paginate(20);
         
@@ -108,10 +142,17 @@ class TeacherPortalController extends Controller
 
     public function communicate()
     {
-        $teacher = (object)[
-            'id' => 1,
-            'name' => 'John Doe',
-        ];
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.login')->with('error', 'Teacher not found.');
+        }
         
         $announcements = Announcement::latest()->paginate(20);
         $students = Student::where('status', 'active')->get();
@@ -140,24 +181,133 @@ class TeacherPortalController extends Controller
 
     public function attendance()
     {
-        $teacher = (object)[
-            'id' => 1,
-            'name' => 'John Doe',
-        ];
+        $teacherId = session('teacher_id');
         
-        $courses = Course::where('status', 'active')->get();
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.login')->with('error', 'Teacher not found.');
+        }
+        
+        $courses = $teacher->courses()->where('status', 'active')->get();
         
         return view('teacher-portal.attendance', compact('teacher', 'courses'));
     }
 
     public function settings()
     {
-        $teacher = (object)[
-            'id' => 1,
-            'name' => 'John Doe',
-            'email' => 'teacher@school.edu',
-        ];
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.login')->with('error', 'Teacher not found.');
+        }
         
         return view('teacher-portal.settings', compact('teacher'));
+    }
+
+    public function changePassword(Request $request)
+    {
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.login')->with('error', 'Teacher not found.');
+        }
+
+        $request->validate([
+            'current_password' => [
+                'required',
+                function ($attribute, $value, $fail) use ($teacher) {
+                    if (!Hash::check($value, $teacher->password)) {
+                        $fail('The current password is incorrect.');
+                    }
+                },
+            ],
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ]);
+
+        $teacher->update([
+            'password' => $request->password,
+        ]);
+
+        return redirect()->route('teacher-portal.settings')
+            ->with('success', 'Password changed successfully!');
+    }
+
+    public function uploadPhoto(Request $request)
+    {
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.login')->with('error', 'Teacher not found.');
+        }
+
+        $request->validate([
+            'photo' => ['required', 'image', 'max:2048', 'mimes:jpeg,jpg,png'], // 2MB max
+        ]);
+
+        // Delete old photo if exists
+        if ($teacher->photo && Storage::disk('public')->exists($teacher->photo)) {
+            Storage::disk('public')->delete($teacher->photo);
+        }
+
+        // Store new photo
+        $photoPath = $request->file('photo')->store('teacher-photos', 'public');
+
+        $teacher->update([
+            'photo' => $photoPath,
+        ]);
+
+        return redirect()->route('teacher-portal.personal-info')
+            ->with('success', 'Photo uploaded successfully!');
+    }
+
+    public function updatePersonalInfo(Request $request)
+    {
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.login')->with('error', 'Teacher not found.');
+        }
+
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => 'required|email|unique:teachers,email,' . $teacher->id,
+            'phone' => 'required|string|max:20',
+            'address' => 'nullable|string|max:500',
+        ]);
+
+        $teacher->update($validated);
+
+        return redirect()->route('teacher-portal.personal-info')
+            ->with('success', 'Personal information updated successfully!');
     }
 }

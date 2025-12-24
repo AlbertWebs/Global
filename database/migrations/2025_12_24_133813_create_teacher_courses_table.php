@@ -13,7 +13,14 @@ return new class extends Migration
     {
         Schema::create('teacher_courses', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('teacher_id')->constrained()->onDelete('cascade');
+            $table->foreignId('course_id')->constrained()->onDelete('cascade');
+            $table->string('academic_year')->nullable();
+            $table->string('term')->nullable();
             $table->timestamps();
+            
+            // Ensure a teacher can't be assigned to the same course twice
+            $table->unique(['teacher_id', 'course_id']);
         });
     }
 

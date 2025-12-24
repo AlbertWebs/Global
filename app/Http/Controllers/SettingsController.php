@@ -35,12 +35,19 @@ class SettingsController extends Controller
             'settings' => ['required', 'array'],
             'settings.*' => ['nullable', 'string'],
             'logo' => ['nullable', 'image', 'max:2048'], // 2MB max
+            'receipt_logo' => ['nullable', 'image', 'max:2048'], // 2MB max
         ]);
 
-        // Handle logo upload
+        // Handle normal logo upload
         if ($request->hasFile('logo')) {
             $logoPath = $request->file('logo')->store('logos', 'public');
-            Setting::set('school_logo', $logoPath, 'image', 'school', 'School logo image');
+            Setting::set('school_logo', $logoPath, 'image', 'school', 'School logo image (normal)');
+        }
+
+        // Handle receipt logo upload
+        if ($request->hasFile('receipt_logo')) {
+            $receiptLogoPath = $request->file('receipt_logo')->store('logos', 'public');
+            Setting::set('receipt_logo', $receiptLogoPath, 'image', 'school', 'School logo image (for receipts)');
         }
 
         // Update other settings

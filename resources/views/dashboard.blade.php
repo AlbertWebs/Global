@@ -76,6 +76,33 @@
 </div>
 @endif
 
+<!-- Analytics Charts -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <!-- Student Enrollments Chart -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Student Enrollments (Last 12 Months)</h3>
+        <div class="relative" style="height: 300px;">
+            <canvas id="enrollmentsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Finance/Payments Chart -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Payments Revenue (Last 12 Months)</h3>
+        <div class="relative" style="height: 300px;">
+            <canvas id="paymentsChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Expenses Chart -->
+    <div class="bg-white rounded-lg shadow-md p-6 lg:col-span-2">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Expenses vs Revenue (Last 12 Months)</h3>
+        <div class="relative" style="height: 300px;">
+            <canvas id="expensesChart"></canvas>
+        </div>
+    </div>
+</div>
+
 <div class="bg-white rounded-lg shadow-md p-6">
     <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -99,5 +126,174 @@
         </a>
     </div>
 </div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    @php
+        $defaultChartData = [
+            'months' => [],
+            'enrollments' => [],
+            'payments' => [],
+            'expenses' => []
+        ];
+        $chartDataForJs = $chartData ?? $defaultChartData;
+    @endphp
+    const chartData = @json($chartDataForJs);
+    
+    // Student Enrollments Chart
+    const enrollmentsCtx = document.getElementById('enrollmentsChart');
+    if (enrollmentsCtx) {
+        new Chart(enrollmentsCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.months,
+                datasets: [{
+                    label: 'Enrollments',
+                    data: chartData.enrollments,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Payments Chart
+    const paymentsCtx = document.getElementById('paymentsChart');
+    if (paymentsCtx) {
+        new Chart(paymentsCtx, {
+            type: 'bar',
+            data: {
+                labels: chartData.months,
+                datasets: [{
+                    label: 'Payments (KES)',
+                    data: chartData.payments,
+                    backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                    borderColor: 'rgb(34, 197, 94)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return 'KES ' + context.parsed.y.toLocaleString('en-KE', {minimumFractionDigits: 2});
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'KES ' + value.toLocaleString('en-KE');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Expenses vs Revenue Chart
+    const expensesCtx = document.getElementById('expensesChart');
+    if (expensesCtx) {
+        new Chart(expensesCtx, {
+            type: 'line',
+            data: {
+                labels: chartData.months,
+                datasets: [
+                    {
+                        label: 'Revenue (KES)',
+                        data: chartData.payments,
+                        borderColor: 'rgb(34, 197, 94)',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Expenses (KES)',
+                        data: chartData.expenses,
+                        borderColor: 'rgb(239, 68, 68)',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 2,
+                        yAxisID: 'y'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': KES ' + context.parsed.y.toLocaleString('en-KE', {minimumFractionDigits: 2});
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'KES ' + value.toLocaleString('en-KE');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
 @endsection
 

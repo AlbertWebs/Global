@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BankDeposit;
 use App\Models\LedgerEntry;
 use Illuminate\Http\Request;
 
@@ -51,13 +52,22 @@ class MoneyTraceController extends Controller
         $entries = $query->paginate(50);
 
         // Calculate totals for filtered period
+        // Exclude bank deposits from income calculations (they're transfers, not income)
         $periodTotals = [
             'inflows' => LedgerEntry::whereBetween('transaction_date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
                 ->where('type', 'inflow')
+                ->where(function($query) {
+                    $query->where('entity_type', '!=', BankDeposit::class)
+                          ->orWhereNull('entity_type');
+                })
                 ->when($holdingAccount, fn($q) => $q->where('holding_account', $holdingAccount))
                 ->sum('amount'),
             'outflows' => LedgerEntry::whereBetween('transaction_date', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
                 ->where('type', 'outflow')
+                ->where(function($query) {
+                    $query->where('entity_type', '!=', BankDeposit::class)
+                          ->orWhereNull('entity_type');
+                })
                 ->when($holdingAccount, fn($q) => $q->where('holding_account', $holdingAccount))
                 ->sum('amount'),
         ];
@@ -80,8 +90,14 @@ class MoneyTraceController extends Controller
 
     private function getIncomeBySource($startDate, $endDate): array
     {
+        // Exclude bank deposits - these are transfers, not income
+        // Income only comes from actual payments (Payments), not transfers between accounts
         $inflows = LedgerEntry::where('type', 'inflow')
             ->whereBetween('transaction_date', [$startDate, $endDate])
+            ->where(function($query) {
+                $query->where('entity_type', '!=', BankDeposit::class)
+                      ->orWhereNull('entity_type');
+            })
             ->selectRaw('payment_source, SUM(amount) as total')
             ->groupBy('payment_source')
             ->pluck('total', 'payment_source')

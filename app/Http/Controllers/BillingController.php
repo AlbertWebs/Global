@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\Course;
+use App\Models\CourseRegistration;
 use App\Models\LedgerEntry;
 use App\Models\Payment;
 use App\Models\Receipt;
@@ -80,6 +81,28 @@ class BillingController extends Controller
 
         // Refresh payment to load receipt relationship
         $payment->refresh();
+
+        // Automatically register student for the course if not already registered
+        // Check if registration already exists for this student, course, academic year, month, and year
+        $existingRegistration = CourseRegistration::where('student_id', $validated['student_id'])
+            ->where('course_id', $validated['course_id'])
+            ->where('academic_year', $validated['academic_year'])
+            ->where('month', $validated['month'])
+            ->where('year', $validated['year'])
+            ->first();
+
+        if (!$existingRegistration) {
+            CourseRegistration::create([
+                'student_id' => $validated['student_id'],
+                'course_id' => $validated['course_id'],
+                'academic_year' => $validated['academic_year'],
+                'month' => $validated['month'],
+                'year' => $validated['year'],
+                'registration_date' => now(),
+                'status' => 'registered',
+                'notes' => 'Auto-registered upon payment',
+            ]);
+        }
 
         // Create ledger entry for money trace
         LedgerEntry::createFromPayment($payment);

@@ -32,9 +32,17 @@ class StudentLoginController extends Controller
             ]);
         }
 
-        // Check password (using student_number as default password for now)
-        // In production, you'd have a password field in students table
-        if ($request->password !== $student->student_number) {
+        // Check password
+        // If password is null, fallback to student_number (for backward compatibility)
+        $passwordValid = false;
+        if ($student->password) {
+            $passwordValid = Hash::check($request->password, $student->password);
+        } else {
+            // Fallback: if no password set, use student_number as default
+            $passwordValid = $request->password === $student->student_number;
+        }
+
+        if (!$passwordValid) {
             throw ValidationException::withMessages([
                 'password' => 'Invalid credentials.',
             ]);

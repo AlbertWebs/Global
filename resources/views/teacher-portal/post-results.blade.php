@@ -52,21 +52,15 @@
                     </select>
                 </div>
 
-                <div>
-                    <label for="academic_year" class="block text-sm font-medium text-gray-700 mb-2">Academic Year *</label>
-                    <input type="text" id="academic_year" name="academic_year" value="{{ now()->year }}/{{ now()->year + 1 }}" required placeholder="e.g., 2024/2025" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                </div>
-
-                <div>
-                    <label for="term" class="block text-sm font-medium text-gray-700 mb-2">Term *</label>
-                    <select id="term" name="term" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">Select Term...</option>
-                        <option value="Term 1">Term 1</option>
-                        <option value="Term 2">Term 2</option>
-                        <option value="Term 3">Term 3</option>
-                        <option value="Term 4">Term 4</option>
-                    </select>
-                </div>
+                <!-- Hidden fields with default values -->
+                @php
+                    $year = now()->year;
+                    $month = now()->month;
+                    $academicYear = $month >= 9 ? $year . '/' . ($year + 1) : ($year - 1) . '/' . $year;
+                    $term = ($month >= 9 && $month <= 11) ? 'Term 1' : (($month == 12 || $month <= 2) ? 'Term 2' : (($month >= 3 && $month <= 5) ? 'Term 3' : 'Term 4'));
+                @endphp
+                <input type="hidden" name="academic_year" value="{{ $academicYear }}">
+                <input type="hidden" name="term" value="{{ $term }}">
 
                 <div>
                     <label for="exam_type" class="block text-sm font-medium text-gray-700 mb-2">Exam Type *</label>

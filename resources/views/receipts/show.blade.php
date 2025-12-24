@@ -9,9 +9,9 @@
         <!-- Receipt Header with School Branding -->
         <div class="text-center mb-8 pb-6 border-b-4 border-blue-600">
             <div class="mb-4">
-                @if(\App\Models\Setting::get('school_logo'))
+                @if(\App\Models\Setting::get('receipt_logo') || \App\Models\Setting::get('school_logo'))
                 <div class="mb-4">
-                    <img src="{{ asset('storage/' . \App\Models\Setting::get('school_logo')) }}" alt="School Logo" class="h-24 mx-auto object-contain">
+                    <img src="{{ asset('storage/' . (\App\Models\Setting::get('receipt_logo') ?? \App\Models\Setting::get('school_logo'))) }}" alt="School Logo" class="h-24 mx-auto object-contain">
                 </div>
                 @endif
                 <div class="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg mb-3">

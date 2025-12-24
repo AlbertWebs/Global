@@ -7,11 +7,12 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
-class ExpensesExport implements FromCollection, WithHeadings, WithMapping, WithStyles
+class ExpensesExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     protected $expenses;
 
@@ -49,6 +50,11 @@ class ExpensesExport implements FromCollection, WithHeadings, WithMapping, WithS
             $expense->recorder->name ?? 'N/A',
             $expense->notes ?? 'N/A',
         ];
+    }
+
+    public function title(): string
+    {
+        return 'Expenses';
     }
 
     public function styles(Worksheet $sheet)

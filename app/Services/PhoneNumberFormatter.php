@@ -48,14 +48,27 @@ class PhoneNumberFormatter
         // Remove all non-numeric characters except +
         $cleaned = preg_replace('/[^0-9+]/', '', $phoneNumber);
         
-        // Check if it's a valid international format
+        // Check if it's a valid international format with +
         // Should start with + and have 10-15 digits
         if (preg_match('/^\+[1-9]\d{9,14}$/', $cleaned)) {
             return true;
         }
         
+        // Check if it's a valid international format without + (e.g., 254790841987)
+        // Should start with country code (1-3 digits) and have 10-15 total digits
+        if (preg_match('/^[1-9]\d{9,14}$/', $cleaned)) {
+            return true;
+        }
+        
         // Check if it's a valid local format (will be formatted)
-        if (preg_match('/^0\d{9}$/', $cleaned) || preg_match('/^\d{9,10}$/', $cleaned)) {
+        // Kenyan format: 0XXXXXXXXX (10 digits starting with 0)
+        if (preg_match('/^0\d{9}$/', $cleaned)) {
+            return true;
+        }
+        
+        // Check if it's a valid local format without leading 0 (9-10 digits)
+        // Will be formatted with country code
+        if (preg_match('/^\d{9,10}$/', $cleaned)) {
             return true;
         }
         

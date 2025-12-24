@@ -60,9 +60,9 @@
         <!-- Receipt Header with School Branding -->
         <div class="text-center mb-8 pb-6 bw-header">
             <div class="mb-4">
-                @if(\App\Models\Setting::get('school_logo'))
+                @if(\App\Models\Setting::get('receipt_logo') || \App\Models\Setting::get('school_logo'))
                 <div class="mb-4">
-                    <img src="{{ url('storage/' . \App\Models\Setting::get('school_logo')) }}" alt="School Logo" class="h-28 mx-auto object-contain" style="max-height: 112px; width: auto; filter: grayscale(100%);">
+                    <img src="{{ url('storage/' . (\App\Models\Setting::get('receipt_logo') ?? \App\Models\Setting::get('school_logo'))) }}" alt="School Logo" class="h-28 mx-auto object-contain" style="max-height: 112px; width: auto; filter: grayscale(100%);">
                 </div>
                 @endif
                 <h1 class="text-5xl font-bold" style="color: #000;">{{ \App\Models\Setting::get('school_name', 'Global College') }}</h1>

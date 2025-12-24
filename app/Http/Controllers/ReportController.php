@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exports\ExpensesExport;
+use App\Exports\FinancialReportExport;
 use App\Exports\PaymentsExport;
 use App\Models\BankDeposit;
 use App\Models\CourseRegistration;
@@ -171,14 +172,36 @@ class ReportController extends Controller
             ->latest()
             ->get();
 
+        // Use whereDate for proper date filtering (SQLite compatible)
         $expenses = Expense::with('recorder')
-            ->whereBetween('expense_date', [$dateFrom, $dateTo])
+            ->whereDate('expense_date', '>=', $dateFrom)
+            ->whereDate('expense_date', '<=', $dateTo)
             ->latest('expense_date')
             ->get();
 
+        // Calculate summary
+        $summary = [
+            'total_payments' => $payments->count(),
+            'total_amount_paid' => $payments->sum('amount_paid'),
+            'total_base_price' => $payments->sum('base_price'),
+            'total_discounts' => $payments->sum('discount_amount'),
+            'total_expenses' => $expenses->sum('amount'),
+            'net_income' => $payments->sum('amount_paid') - $expenses->sum('amount'),
+        ];
+
+        // Payment method breakdown
+        $paymentMethodBreakdown = [
+            'mpesa' => $payments->where('payment_method', 'mpesa')->sum('amount_paid'),
+            'cash' => $payments->where('payment_method', 'cash')->sum('amount_paid'),
+            'bank_transfer' => $payments->where('payment_method', 'bank_transfer')->sum('amount_paid'),
+        ];
+
         $fileName = 'financial_report_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
 
-        return Excel::download(new PaymentsExport($payments), $fileName);
+        return Excel::download(
+            new FinancialReportExport($payments, $expenses, $summary, $paymentMethodBreakdown, $dateFrom, $dateTo),
+            $fileName
+        );
     }
 
     public function exportExpenses(Request $request)
@@ -192,13 +215,49 @@ class ReportController extends Controller
         $dateFrom = $request->get('date_from', now()->startOfDay()->toDateString());
         $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
 
+        // Use whereDate for proper date filtering (SQLite compatible)
         $expenses = Expense::with('recorder')
-            ->whereBetween('expense_date', [$dateFrom, $dateTo])
+            ->whereDate('expense_date', '>=', $dateFrom)
+            ->whereDate('expense_date', '<=', $dateTo)
             ->latest('expense_date')
             ->get();
 
         $fileName = 'expenses_report_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
 
         return Excel::download(new ExpensesExport($expenses), $fileName);
+    }
+
+    public function exportPayments(Request $request)
+    {
+        $user = auth()->user();
+        
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Only Super Admin can export reports');
+        }
+
+        $dateFrom = $request->get('date_from', now()->startOfDay()->toDateString());
+        $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
+        $period = $request->get('period', 'custom');
+
+        // Set default periods
+        if ($period === 'today') {
+            $dateFrom = now()->startOfDay()->toDateString();
+            $dateTo = now()->endOfDay()->toDateString();
+        } elseif ($period === 'week') {
+            $dateFrom = now()->startOfWeek()->toDateString();
+            $dateTo = now()->endOfWeek()->toDateString();
+        } elseif ($period === 'month') {
+            $dateFrom = now()->startOfMonth()->toDateString();
+            $dateTo = now()->endOfMonth()->toDateString();
+        }
+
+        $payments = Payment::with(['student', 'course', 'cashier', 'receipt'])
+            ->whereBetween('created_at', [$dateFrom . ' 00:00:00', $dateTo . ' 23:59:59'])
+            ->latest()
+            ->get();
+
+        $fileName = 'payments_report_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
+
+        return Excel::download(new PaymentsExport($payments), $fileName);
     }
 }

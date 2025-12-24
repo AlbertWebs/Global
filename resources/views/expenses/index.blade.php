@@ -49,17 +49,23 @@
         <!-- Payment Method Filter -->
         <div class="md:w-48">
             <label for="payment_method" class="block text-sm font-medium text-gray-700 mb-2">Payment Method</label>
-            <select 
-                id="payment_method" 
-                name="payment_method" 
-                class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition duration-200 bg-white"
-            >
-                <option value="">All Methods</option>
-                <option value="mpesa" {{ $paymentMethodFilter === 'mpesa' ? 'selected' : '' }}>M-Pesa</option>
-                <option value="cash" {{ $paymentMethodFilter === 'cash' ? 'selected' : '' }}>Cash</option>
-                <option value="bank_transfer" {{ $paymentMethodFilter === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
-            </select>
-            <p class="mt-1 text-xs text-gray-500 invisible">Spacer</p>
+            <div class="relative">
+                <select 
+                    id="payment_method" 
+                    name="payment_method" 
+                    class="w-full px-4 py-2.5 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition duration-200 appearance-none bg-white"
+                >
+                    <option value="">All Methods</option>
+                    <option value="mpesa" {{ $paymentMethodFilter === 'mpesa' ? 'selected' : '' }}>M-Pesa</option>
+                    <option value="cash" {{ $paymentMethodFilter === 'cash' ? 'selected' : '' }}>Cash</option>
+                    <option value="bank_transfer" {{ $paymentMethodFilter === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                </select>
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </div>
+            </div>
         </div>
         
         <!-- Date Range -->

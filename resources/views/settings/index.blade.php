@@ -50,7 +50,7 @@ use App\Models\Setting;
                     </div>
 
                     <div>
-                        <label for="school_logo" class="block text-sm font-medium text-gray-700 mb-2">School Logo</label>
+                        <label for="school_logo" class="block text-sm font-medium text-gray-700 mb-2">Normal Logo</label>
                         <div class="flex items-center space-x-4">
                             @if(Setting::get('school_logo'))
                             <img src="{{ asset('storage/' . Setting::get('school_logo')) }}" alt="School Logo" class="h-16 w-16 object-contain border border-gray-300 rounded">
@@ -67,7 +67,30 @@ use App\Models\Setting;
                                     accept="image/*"
                                     class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 >
-                                <p class="text-xs text-gray-500 mt-1">Recommended: 200x200px, PNG or JPG (max 2MB)</p>
+                                <p class="text-xs text-gray-500 mt-1">Used in portal, dashboard, etc. Recommended: 200x200px, PNG or JPG (max 2MB)</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="receipt_logo" class="block text-sm font-medium text-gray-700 mb-2">Receipt Logo</label>
+                        <div class="flex items-center space-x-4">
+                            @if(Setting::get('receipt_logo'))
+                            <img src="{{ asset('storage/' . Setting::get('receipt_logo')) }}" alt="Receipt Logo" class="h-16 w-16 object-contain border border-gray-300 rounded">
+                            @else
+                            <div class="h-16 w-16 bg-gray-100 border border-gray-300 rounded flex items-center justify-center">
+                                <span class="text-gray-400 text-xs">No Logo</span>
+                            </div>
+                            @endif
+                            <div class="flex-1">
+                                <input 
+                                    type="file" 
+                                    id="receipt_logo" 
+                                    name="receipt_logo" 
+                                    accept="image/*"
+                                    class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                <p class="text-xs text-gray-500 mt-1">Used on receipts only. Recommended: 200x200px, PNG or JPG (max 2MB)</p>
                             </div>
                         </div>
                     </div>

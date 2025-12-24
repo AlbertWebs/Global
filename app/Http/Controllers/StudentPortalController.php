@@ -3,19 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\Student;
+use App\Models\StudentResult;
+use App\Models\Announcement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rules\Password;
 
 class StudentPortalController extends Controller
 {
     public function index()
     {
-        // Get the authenticated student (assuming student_id is stored in session or auth)
-        // For now, we'll get the first student as a placeholder
-        // In production, you'd get this from authentication
-        $student = Student::first();
+        // Get the authenticated student from session
+        $studentId = session('student_id');
+        
+        if (!$studentId) {
+            return redirect()->route('student.login')->with('error', 'Please login to access the student portal.');
+        }
+
+        $student = Student::find($studentId);
         
         if (!$student) {
-            return redirect()->route('dashboard')->with('error', 'Student not found');
+            session()->forget(['student_id', 'student_logged_in']);
+            return redirect()->route('student.login')->with('error', 'Student not found. Please login again.');
         }
 
         $student->load('payments.course', 'courseRegistrations.course');
@@ -42,10 +52,16 @@ class StudentPortalController extends Controller
 
     public function financialInfo()
     {
-        $student = Student::first();
+        $studentId = session('student_id');
+        
+        if (!$studentId) {
+            return redirect()->route('student.login')->with('error', 'Please login to access the student portal.');
+        }
+
+        $student = Student::find($studentId);
         
         if (!$student) {
-            return redirect()->route('dashboard')->with('error', 'Student not found');
+            return redirect()->route('student.login')->with('error', 'Student not found.');
         }
 
         $student->load('payments.course', 'payments.receipt');
@@ -55,10 +71,16 @@ class StudentPortalController extends Controller
 
     public function courses()
     {
-        $student = Student::first();
+        $studentId = session('student_id');
+        
+        if (!$studentId) {
+            return redirect()->route('student.login')->with('error', 'Please login to access the student portal.');
+        }
+
+        $student = Student::find($studentId);
         
         if (!$student) {
-            return redirect()->route('dashboard')->with('error', 'Student not found');
+            return redirect()->route('student.login')->with('error', 'Student not found.');
         }
 
         $student->load('courseRegistrations.course');
@@ -66,29 +88,125 @@ class StudentPortalController extends Controller
         return view('student-portal.courses', compact('student'));
     }
 
-    public function results()
+    public function announcements()
     {
-        $student = Student::first();
+        $studentId = session('student_id');
         
-        if (!$student) {
-            return redirect()->route('dashboard')->with('error', 'Student not found');
+        if (!$studentId) {
+            return redirect()->route('student.login')->with('error', 'Please login to access the student portal.');
         }
 
-        // Placeholder for results data
-        $results = [];
+        $student = Student::find($studentId);
         
-        return view('student-portal.results', compact('student', 'results'));
+        if (!$student) {
+            return redirect()->route('student.login')->with('error', 'Student not found.');
+        }
+
+        // Load announcements targeted to students or all
+        $announcements = Announcement::where('status', 'active')
+            ->where(function($query) {
+                $query->where('target_audience', 'all')
+                      ->orWhere('target_audience', 'students');
+            })
+            ->with('postedBy')
+            ->orderBy('priority', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return view('student-portal.announcements', compact('student', 'announcements'));
     }
 
     public function settings()
     {
-        $student = Student::first();
+        $studentId = session('student_id');
+        
+        if (!$studentId) {
+            return redirect()->route('student.login')->with('error', 'Please login to access the student portal.');
+        }
+
+        $student = Student::find($studentId);
         
         if (!$student) {
-            return redirect()->route('dashboard')->with('error', 'Student not found');
+            return redirect()->route('student.login')->with('error', 'Student not found.');
         }
 
         return view('student-portal.settings', compact('student'));
+    }
+
+    public function changePassword(Request $request)
+    {
+        $studentId = session('student_id');
+        
+        if (!$studentId) {
+            return redirect()->route('student.login')->with('error', 'Please login to access the student portal.');
+        }
+
+        $student = Student::find($studentId);
+        
+        if (!$student) {
+            return redirect()->route('student.login')->with('error', 'Student not found.');
+        }
+
+        $request->validate([
+            'current_password' => [
+                'required',
+                function ($attribute, $value, $fail) use ($student) {
+                    // If password is null, check against student_number (backward compatibility)
+                    if ($student->password) {
+                        if (!Hash::check($value, $student->password)) {
+                            $fail('The current password is incorrect.');
+                        }
+                    } else {
+                        // Fallback: if no password set, use student_number as default
+                        if ($value !== $student->student_number) {
+                            $fail('The current password is incorrect.');
+                        }
+                    }
+                },
+            ],
+            'password' => ['required', 'confirmed', Password::defaults()],
+        ]);
+
+        $student->update([
+            'password' => $request->password,
+        ]);
+
+        return redirect()->route('student-portal.settings')
+            ->with('success', 'Password changed successfully!');
+    }
+
+    public function uploadPhoto(Request $request)
+    {
+        $studentId = session('student_id');
+        
+        if (!$studentId) {
+            return redirect()->route('student.login')->with('error', 'Please login to access the student portal.');
+        }
+
+        $student = Student::find($studentId);
+        
+        if (!$student) {
+            return redirect()->route('student.login')->with('error', 'Student not found.');
+        }
+
+        $request->validate([
+            'photo' => ['required', 'image', 'max:2048', 'mimes:jpeg,jpg,png'], // 2MB max
+        ]);
+
+        // Delete old photo if exists
+        if ($student->photo && Storage::disk('public')->exists($student->photo)) {
+            Storage::disk('public')->delete($student->photo);
+        }
+
+        // Store new photo
+        $photoPath = $request->file('photo')->store('student-photos', 'public');
+
+        $student->update([
+            'photo' => $photoPath,
+        ]);
+
+        return redirect()->route('student-portal.settings')
+            ->with('success', 'Photo uploaded successfully!');
     }
 }
 

@@ -46,6 +46,21 @@ class BankDepositController extends Controller
         return view('bank-deposits.create');
     }
 
+    public function getBalance(Request $request)
+    {
+        $request->validate([
+            'source_account' => ['required', 'in:cash_on_hand,mpesa_wallet'],
+        ]);
+
+        $balance = LedgerEntry::getBalance($request->source_account);
+
+        return response()->json([
+            'balance' => $balance,
+            'formatted_balance' => number_format($balance, 2),
+            'has_balance' => $balance > 0,
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -62,28 +77,31 @@ class BankDepositController extends Controller
         ]);
 
         // Create ledger entries for the transfer
-        // Outflow from source account
+        // Note: This is a transfer between accounts, NOT new income
+        // The income was already recorded when the original payment was received
+        
+        // Outflow from source account (cash on hand or M-Pesa wallet)
         LedgerEntry::create([
             'type' => 'outflow',
             'payment_source' => $deposit->source_account === 'cash_on_hand' ? 'cash' : 'mpesa',
             'holding_account' => $deposit->source_account,
             'amount' => $deposit->amount,
             'reference_number' => $deposit->reference_number,
-            'description' => "Bank deposit from {$deposit->source_account_label}",
+            'description' => "Transfer to bank: {$deposit->source_account_label} → Bank Account",
             'entity_type' => BankDeposit::class,
             'entity_id' => $deposit->id,
             'recorded_by' => auth()->id(),
             'transaction_date' => $deposit->deposit_date,
         ]);
 
-        // Inflow to bank account
+        // Inflow to bank account (transfer, not income)
         LedgerEntry::create([
             'type' => 'inflow',
             'payment_source' => 'bank_transfer',
             'holding_account' => 'bank_account',
             'amount' => $deposit->amount,
             'reference_number' => $deposit->reference_number,
-            'description' => "Bank deposit from {$deposit->source_account_label}",
+            'description' => "Transfer from {$deposit->source_account_label} to Bank Account",
             'entity_type' => BankDeposit::class,
             'entity_id' => $deposit->id,
             'recorded_by' => auth()->id(),
@@ -147,14 +165,14 @@ class BankDepositController extends Controller
                 ->where('entity_id', $bankDeposit->id)
                 ->delete();
 
-            // Create new ledger entries
+            // Create new ledger entries (transfer, not income)
             LedgerEntry::create([
                 'type' => 'outflow',
                 'payment_source' => $bankDeposit->source_account === 'cash_on_hand' ? 'cash' : 'mpesa',
                 'holding_account' => $bankDeposit->source_account,
                 'amount' => $bankDeposit->amount,
                 'reference_number' => $bankDeposit->reference_number,
-                'description' => "Bank deposit from {$bankDeposit->source_account_label}",
+                'description' => "Transfer to bank: {$bankDeposit->source_account_label} → Bank Account",
                 'entity_type' => BankDeposit::class,
                 'entity_id' => $bankDeposit->id,
                 'recorded_by' => auth()->id(),
@@ -167,7 +185,7 @@ class BankDepositController extends Controller
                 'holding_account' => 'bank_account',
                 'amount' => $bankDeposit->amount,
                 'reference_number' => $bankDeposit->reference_number,
-                'description' => "Bank deposit from {$bankDeposit->source_account_label}",
+                'description' => "Transfer from {$bankDeposit->source_account_label} to Bank Account",
                 'entity_type' => BankDeposit::class,
                 'entity_id' => $bankDeposit->id,
                 'recorded_by' => auth()->id(),

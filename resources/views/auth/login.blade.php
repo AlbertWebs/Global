@@ -72,6 +72,15 @@
                     <strong>Cashier:</strong> cashier@globalcollege.edu / password
                 </p>
             </div>
+
+            <div class="mt-6 pt-6 border-t border-gray-200 text-center space-y-2">
+                <a href="{{ route('student.login') }}" class="block text-sm text-blue-600 hover:text-blue-800 font-medium">
+                    Student Login →
+                </a>
+                <a href="{{ route('teacher.login') }}" class="block text-sm text-green-600 hover:text-green-800 font-medium">
+                    Teacher Login →
+                </a>
+            </div>
         </div>
     </div>
 </body>

@@ -100,17 +100,23 @@
                             <label for="payment_method" class="block text-sm font-semibold text-gray-700 mb-2">
                                 Payment Method <span class="text-red-500">*</span>
                             </label>
-                            <select 
-                                id="payment_method" 
-                                name="payment_method" 
-                                required 
-                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition duration-200 appearance-none bg-white"
-                            >
-                                <option value="">Select Payment Method</option>
-                                <option value="mpesa" {{ old('payment_method') === 'mpesa' ? 'selected' : '' }}>M-Pesa</option>
-                                <option value="cash" {{ old('payment_method') === 'cash' ? 'selected' : '' }}>Cash</option>
-                                <option value="bank_transfer" {{ old('payment_method') === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
-                            </select>
+                            <div class="relative">
+                                <select 
+                                    id="payment_method" 
+                                    name="payment_method" 
+                                    required 
+                                    class="w-full px-4 py-3 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition duration-200 appearance-none bg-white"
+                                >
+                                    <option value="mpesa" {{ old('payment_method') === 'mpesa' ? 'selected' : '' }}>M-Pesa</option>
+                                    <option value="cash" {{ old('payment_method', 'cash') === 'cash' ? 'selected' : '' }}>Cash</option>
+                                    <option value="bank_transfer" {{ old('payment_method') === 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
                             @error('payment_method')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
