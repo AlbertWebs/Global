@@ -26,17 +26,33 @@ class ZettatelProvider implements SmsProviderInterface
         try {
             $url = 'https://portal.zettatel.com/SMSApi/send';
 
-            $response = Http::asForm()->post($url, [
+            // Ensure phone number doesn't have plus sign
+            $phoneNumber = ltrim($phoneNumber, '+');
+
+            Log::info('Sending SMS via Zettatel', [
+                'phone' => $phoneNumber,
+                'sender_id' => $this->senderId,
+                'message_length' => strlen($message),
+            ]);
+
+            $response = Http::timeout(30)->asForm()->post($url, [
                 'apikey' => $this->apiKey,
                 'senderid' => $this->senderId,
                 'number' => $phoneNumber,
                 'message' => $message,
             ]);
 
+            $statusCode = $response->status();
+            $responseBody = $response->body();
             $result = $response->json();
 
+            Log::info('Zettatel API Response', [
+                'status_code' => $statusCode,
+                'response_body' => $responseBody,
+                'parsed_json' => $result,
+            ]);
+
             // Check if response is successful
-            // Adjust this based on Zettatel's actual response format
             if ($response->successful()) {
                 // Check the actual response structure from Zettatel
                 // Common patterns: status: 'success', statusCode: 200, etc.
@@ -54,21 +70,42 @@ class ZettatelProvider implements SmsProviderInterface
                         'status' => 'sent',
                         'provider_response' => $result,
                     ];
+                } elseif (isset($result['status']) && strtolower($result['status']) === 'success') {
+                    return [
+                        'success' => true,
+                        'message_id' => $result['messageId'] ?? $result['id'] ?? null,
+                        'status' => 'sent',
+                        'provider_response' => $result,
+                    ];
                 }
+            }
+
+            // If we get here, the request didn't succeed
+            $errorMessage = 'Unknown error';
+            if (is_array($result)) {
+                $errorMessage = $result['message'] ?? $result['error'] ?? $result['status'] ?? 'Unknown error';
+            } elseif (!empty($responseBody)) {
+                $errorMessage = $responseBody;
             }
 
             return [
                 'success' => false,
-                'error' => $result['message'] ?? $result['error'] ?? 'Unknown error',
-                'provider_response' => $result,
+                'error' => $errorMessage,
+                'provider_response' => $result ?: $responseBody,
+                'status_code' => $statusCode,
             ];
         } catch (\Exception $e) {
-            Log::error('Zettatel SMS send failed', [
+            Log::error('Zettatel SMS send exception', [
                 'phone' => $phoneNumber,
                 'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
             ]);
 
-            throw new \Exception('Failed to send SMS via Zettatel: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+                'provider_response' => null,
+            ];
         }
     }
 
