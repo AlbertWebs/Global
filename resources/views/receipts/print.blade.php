@@ -10,9 +10,19 @@
             body { margin: 0; padding: 20px; }
             .no-print { display: none; }
             .print-break { page-break-after: always; }
+            img {
+                max-width: 100%;
+                height: auto;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
         }
     </style>
 </head>
@@ -23,7 +33,7 @@
             <div class="mb-4">
                 @if(\App\Models\Setting::get('school_logo'))
                 <div class="mb-4">
-                    <img src="{{ asset('storage/' . \App\Models\Setting::get('school_logo')) }}" alt="School Logo" class="h-28 mx-auto object-contain">
+                    <img src="{{ url('storage/' . \App\Models\Setting::get('school_logo')) }}" alt="School Logo" class="h-28 mx-auto object-contain" style="max-height: 112px; width: auto;">
                 </div>
                 @endif
                 <div class="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg mb-3">

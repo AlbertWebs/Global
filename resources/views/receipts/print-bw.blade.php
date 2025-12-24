@@ -14,6 +14,12 @@
                 color: #000 !important;
                 background: #fff !important;
             }
+            img {
+                max-width: 100%;
+                height: auto;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -56,7 +62,7 @@
             <div class="mb-4">
                 @if(\App\Models\Setting::get('school_logo'))
                 <div class="mb-4">
-                    <img src="{{ asset('storage/' . \App\Models\Setting::get('school_logo')) }}" alt="School Logo" class="h-28 mx-auto object-contain" style="filter: grayscale(100%);">
+                    <img src="{{ url('storage/' . \App\Models\Setting::get('school_logo')) }}" alt="School Logo" class="h-28 mx-auto object-contain" style="max-height: 112px; width: auto; filter: grayscale(100%);">
                 </div>
                 @endif
                 <h1 class="text-5xl font-bold" style="color: #000;">{{ \App\Models\Setting::get('school_name', 'Global College') }}</h1>

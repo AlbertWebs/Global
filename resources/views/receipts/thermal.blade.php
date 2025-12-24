@@ -34,6 +34,12 @@
                 size: 80mm auto;
                 margin: 0;
             }
+            img {
+                max-width: 100%;
+                height: auto;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
         
         .header {
@@ -122,7 +128,7 @@
     <div class="header">
         @if(\App\Models\Setting::get('school_logo'))
         <div style="text-align: center; margin-bottom: 8px;">
-            <img src="{{ asset('storage/' . \App\Models\Setting::get('school_logo')) }}" alt="School Logo" style="max-width: 60mm; max-height: 30mm; object-fit: contain;">
+            <img src="{{ url('storage/' . \App\Models\Setting::get('school_logo')) }}" alt="School Logo" style="max-width: 60mm; max-height: 30mm; object-fit: contain; display: block; margin: 0 auto;">
         </div>
         @endif
         <h1>{{ \App\Models\Setting::get('school_name', 'Global College') }}</h1>
