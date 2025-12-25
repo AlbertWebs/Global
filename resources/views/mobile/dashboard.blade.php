@@ -86,16 +86,16 @@
         </div>
         @endif
 
-        <!-- Term Summaries -->
+        <!-- Monthly Summaries -->
         @if(count($termSummaries) > 0)
         <div class="px-4 mb-4">
-            <h2 class="text-lg font-semibold text-gray-900 mb-3">Term Summaries</h2>
+            <h2 class="text-lg font-semibold text-gray-900 mb-3">Monthly Summaries</h2>
             <div class="space-y-2">
                 @foreach($termSummaries as $summary)
                 <div class="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
                     <div class="flex items-center justify-between mb-2">
                         <div>
-                            <p class="font-semibold text-sm text-gray-900">{{ $summary['term'] }}</p>
+                            <p class="font-semibold text-sm text-gray-900">{{ $summary['period'] ?? ($summary['month'] . ' ' . $summary['year']) }}</p>
                             <p class="text-xs text-gray-500">{{ $summary['academic_year'] }}</p>
                         </div>
                         <span class="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded">
@@ -131,8 +131,8 @@
                         <div class="flex-1">
                             <p class="font-semibold text-sm text-gray-900">{{ $transaction->student->full_name }}</p>
                             <p class="text-xs text-gray-600">{{ $transaction->course->name }}</p>
-                            @if($transaction->academic_year && $transaction->term)
-                            <p class="text-xs text-gray-500 mt-1">{{ $transaction->term }} - {{ $transaction->academic_year }}</p>
+                            @if($transaction->academic_year && $transaction->month)
+                            <p class="text-xs text-gray-500 mt-1">{{ $transaction->month }} {{ $transaction->year ?? '' }} - {{ $transaction->academic_year }}</p>
                             @endif
                         </div>
                         <div class="text-right">

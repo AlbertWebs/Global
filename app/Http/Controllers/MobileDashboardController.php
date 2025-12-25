@@ -119,34 +119,39 @@ class MobileDashboardController extends Controller
             ];
         }
 
-        // Check for students without payments in current term
-        $studentsWithoutTermPayments = Student::whereDoesntHave('payments', function ($query) use ($academicYear, $term) {
+        // Check for students without payments in current month (monthly billing system)
+        $currentMonth = now()->format('F Y'); // e.g., "December 2024"
+        $currentYear = now()->year;
+        
+        $studentsWithoutMonthlyPayments = Student::whereDoesntHave('payments', function ($query) use ($academicYear, $currentMonth, $currentYear) {
             $query->where('academic_year', $academicYear)
-                  ->where('term', $term);
+                  ->where('month', $currentMonth)
+                  ->where('year', $currentYear);
         })
         ->where('status', 'active')
         ->count();
 
-        if ($studentsWithoutTermPayments > 0) {
+        if ($studentsWithoutMonthlyPayments > 0) {
             $issues[] = [
                 'type' => 'info',
-                'title' => 'Students Without Term Payments',
-                'message' => $studentsWithoutTermPayments . ' active student(s) have no payments for ' . $term . ' ' . $academicYear,
-                'count' => $studentsWithoutTermPayments,
+                'title' => 'Students Without Monthly Payments',
+                'message' => $studentsWithoutMonthlyPayments . ' active student(s) have no payments for ' . $currentMonth . ' ' . $academicYear,
+                'count' => $studentsWithoutMonthlyPayments,
             ];
         }
 
-        // Check for payments without term/academic year (data inconsistency)
-        $paymentsWithoutTerm = Payment::whereNull('academic_year')
-            ->orWhereNull('term')
+        // Check for payments without month/academic year (data inconsistency)
+        $paymentsWithoutMonth = Payment::whereNull('academic_year')
+            ->orWhereNull('month')
+            ->orWhereNull('year')
             ->count();
 
-        if ($paymentsWithoutTerm > 0) {
+        if ($paymentsWithoutMonth > 0) {
             $issues[] = [
                 'type' => 'error',
                 'title' => 'Data Inconsistency Detected',
-                'message' => $paymentsWithoutTerm . ' payment(s) missing term or academic year information',
-                'count' => $paymentsWithoutTerm,
+                'message' => $paymentsWithoutMonth . ' payment(s) missing month, year, or academic year information',
+                'count' => $paymentsWithoutMonth,
             ];
         }
 
@@ -172,23 +177,28 @@ class MobileDashboardController extends Controller
     {
         $summaries = [];
         
-        // Get unique academic years and terms from payments
-        $terms = Payment::select('academic_year', 'term')
+        // Get unique academic years and months from payments (monthly billing system)
+        $monthlyData = Payment::select('academic_year', 'month', 'year')
             ->whereNotNull('academic_year')
-            ->whereNotNull('term')
+            ->whereNotNull('month')
+            ->whereNotNull('year')
             ->distinct()
             ->orderBy('academic_year', 'desc')
-            ->orderBy('term', 'desc')
+            ->orderBy('year', 'desc')
+            ->orderBy('month', 'desc')
             ->get();
 
-        foreach ($terms as $termData) {
-            $payments = Payment::where('academic_year', $termData->academic_year)
-                ->where('term', $termData->term)
+        foreach ($monthlyData as $data) {
+            $payments = Payment::where('academic_year', $data->academic_year)
+                ->where('month', $data->month)
+                ->where('year', $data->year)
                 ->get();
 
             $summaries[] = [
-                'academic_year' => $termData->academic_year,
-                'term' => $termData->term,
+                'academic_year' => $data->academic_year,
+                'period' => $data->month . ' ' . $data->year, // e.g., "December 2024"
+                'month' => $data->month,
+                'year' => $data->year,
                 'total_payments' => $payments->count(),
                 'total_amount' => $payments->sum('amount_paid'),
                 'total_discounts' => $payments->sum('discount_amount'),
