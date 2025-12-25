@@ -8,17 +8,17 @@ use Illuminate\Support\Facades\Log;
 
 class ZettatelProvider implements SmsProviderInterface
 {
-    protected string $userid;
-    protected string $password;
+    protected ?string $userid;
+    protected ?string $password;
     protected string $senderId;
     protected string $baseUrl;
 
     public function __construct()
     {
-        $this->userid = config('sms.zettatel.userid');
-        $this->password = config('sms.zettatel.password');
-        $this->senderId = config('sms.zettatel.sender_id', 'SCHOOL');
-        $this->baseUrl = config('sms.zettatel.base_url', 'https://portal.zettatel.com');
+        $this->userid = config('sms.zettatel.userid') ?: null;
+        $this->password = config('sms.zettatel.password') ?: null;
+        $this->senderId = config('sms.zettatel.sender_id', 'SCHOOL') ?: 'SCHOOL';
+        $this->baseUrl = config('sms.zettatel.base_url', 'https://portal.zettatel.com') ?: 'https://portal.zettatel.com';
     }
 
     public function send(string $phoneNumber, string $message): array
