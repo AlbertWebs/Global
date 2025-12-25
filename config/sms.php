@@ -26,7 +26,7 @@ return [
     |
     */
 
-    'rate_limit' => env('SMS_RATE_LIMIT', 5), // Max 5 SMS per hour per number
+    'rate_limit' => env('SMS_RATE_LIMIT', 50), // Max 50 SMS per hour per number
 
     /*
     |--------------------------------------------------------------------------

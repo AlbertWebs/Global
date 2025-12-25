@@ -11,6 +11,7 @@
     <link rel="manifest" href="{{ asset('manifest.json') }}">
     <title>@yield('title', 'Global College Billing System')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('head')
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -185,6 +186,14 @@
                         </div>
                         <span class="{{ request()->routeIs('role-permissions.*') ? 'text-gray-900 font-semibold' : 'text-blue-100 font-medium group-hover:text-gray-900' }}">Permissions</span>
                     </a>
+                    <a href="{{ route('bulk-sms.index') }}" class="flex items-center px-4 py-3 rounded-xl hover:bg-white hover:bg-opacity-20 hover:shadow-lg transition-all duration-200 group {{ request()->routeIs('bulk-sms.*') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
+                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-3 {{ request()->routeIs('bulk-sms.*') ? 'bg-opacity-30' : '' }} group-hover:bg-opacity-30">
+                            <svg class="w-5 h-5 {{ request()->routeIs('bulk-sms.*') ? 'text-blue-900' : 'text-blue-200 group-hover:text-blue-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                            </svg>
+                        </div>
+                        <span class="{{ request()->routeIs('bulk-sms.*') ? 'text-gray-900 font-semibold' : 'text-blue-100 font-medium group-hover:text-gray-900' }}">Bulk SMS</span>
+                    </a>
                     @endif
 
                     <div class="pt-4 border-t border-blue-700 border-opacity-50">
@@ -320,6 +329,7 @@
             </main>
         </div>
     </div>
+    @stack('scripts')
 </body>
 </html>
 

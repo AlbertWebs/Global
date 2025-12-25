@@ -117,6 +117,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
+    // Bulk SMS (Super Admin only - checked in controller)
+    Route::get('/bulk-sms', [\App\Http\Controllers\BulkSmsController::class, 'index'])->name('bulk-sms.index');
+    Route::post('/bulk-sms/send', [\App\Http\Controllers\BulkSmsController::class, 'send'])->name('bulk-sms.send');
+    Route::get('/bulk-sms/students', [\App\Http\Controllers\BulkSmsController::class, 'getStudents'])->name('bulk-sms.students');
+    Route::get('/bulk-sms/teachers', [\App\Http\Controllers\BulkSmsController::class, 'getTeachers'])->name('bulk-sms.teachers');
+
     // Data Purge (Super Admin only - checked in controller)
     Route::get('/data-purge', [DataPurgeController::class, 'index'])->name('data-purge.index');
     Route::post('/data-purge', [DataPurgeController::class, 'purge'])->name('data-purge.purge');

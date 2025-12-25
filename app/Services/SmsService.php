@@ -281,6 +281,73 @@ class SmsService
     }
 
     /**
+     * Send SMS to a custom phone number (not tied to a student or teacher)
+     * 
+     * @param string $phoneNumber The phone number to send to
+     * @param string $message The message to send
+     * @return bool
+     */
+    public function sendToPhoneNumber(string $phoneNumber, string $message): bool
+    {
+        try {
+            // Validate phone number format
+            if (!PhoneNumberFormatter::isValid($phoneNumber)) {
+                Log::warning("SMS not sent: Invalid phone number format", [
+                    'phone' => $phoneNumber,
+                ]);
+                return false;
+            }
+
+            // Format phone number to international format
+            $formattedPhone = PhoneNumberFormatter::format($phoneNumber);
+            
+            // Remove plus sign before sending (some providers don't accept it)
+            $phoneNumberForSending = ltrim($formattedPhone, '+');
+
+            // Check rate limiting (use original format for cache key)
+            if ($this->isRateLimited($formattedPhone)) {
+                Log::warning("SMS rate limited", [
+                    'phone' => $formattedPhone,
+                ]);
+                return false;
+            }
+
+            // Send SMS via provider (without plus sign)
+            $result = $this->provider->send($phoneNumberForSending, $message);
+
+            // Record rate limit
+            $this->recordRateLimit($formattedPhone);
+
+            if ($result['success']) {
+                // Log successful SMS
+                Log::info("SMS sent successfully to custom number", [
+                    'phone' => $formattedPhone,
+                    'message_id' => $result['message_id'] ?? null,
+                    'provider' => config('sms.provider', 'log'),
+                ]);
+
+                return true;
+            } else {
+                Log::error("SMS send failed to custom number", [
+                    'phone' => $formattedPhone,
+                    'error' => $result['error'] ?? 'Unknown error',
+                    'provider_response' => $result['provider_response'] ?? null,
+                ]);
+
+                return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Exception while sending SMS to custom number", [
+                'phone' => $phoneNumber,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
      * Resolve SMS provider based on configuration
      * 
      * @return SmsProviderInterface
@@ -305,7 +372,7 @@ class SmsService
      */
     protected function isRateLimited(string $phoneNumber): bool
     {
-        $rateLimit = config('sms.rate_limit', 5); // Max 5 SMS per hour per number
+        $rateLimit = config('sms.rate_limit', 50); // Max 50 SMS per hour per number
         $key = "sms_rate_limit:{$phoneNumber}";
         
         $count = Cache::get($key, 0);
@@ -338,6 +405,86 @@ class SmsService
                 'phone' => $phoneNumber,
                 'error' => $e->getMessage(),
             ]);
+        }
+    }
+
+    /**
+     * Send custom SMS to a teacher
+     * 
+     * @param string $message The message to send
+     * @param Teacher $teacher The teacher to send the message to
+     * @return bool
+     */
+    public function sendTeacherSMS(string $message, Teacher $teacher): bool
+    {
+        try {
+            // Validate teacher has phone number
+            if (!$teacher->phone) {
+                Log::warning("SMS not sent: Teacher {$teacher->id} has no phone number", [
+                    'teacher_id' => $teacher->id,
+                    'teacher_name' => $teacher->full_name,
+                ]);
+                return false;
+            }
+
+            // Validate phone number format
+            if (!PhoneNumberFormatter::isValid($teacher->phone)) {
+                Log::warning("SMS not sent: Invalid phone number format", [
+                    'teacher_id' => $teacher->id,
+                    'phone' => $teacher->phone,
+                ]);
+                return false;
+            }
+
+            // Format phone number to international format
+            $phoneNumber = PhoneNumberFormatter::format($teacher->phone);
+            
+            // Remove plus sign before sending (some providers don't accept it)
+            $phoneNumberForSending = ltrim($phoneNumber, '+');
+
+            // Check rate limiting (use original format for cache key)
+            if ($this->isRateLimited($phoneNumber)) {
+                Log::warning("SMS rate limited", [
+                    'teacher_id' => $teacher->id,
+                    'phone' => $phoneNumber,
+                ]);
+                return false;
+            }
+
+            // Send SMS via provider (without plus sign)
+            $result = $this->provider->send($phoneNumberForSending, $message);
+
+            // Record rate limit
+            $this->recordRateLimit($phoneNumber);
+
+            if ($result['success']) {
+                Log::info("Teacher SMS sent successfully", [
+                    'teacher_id' => $teacher->id,
+                    'teacher_name' => $teacher->full_name,
+                    'phone' => $phoneNumber,
+                    'message_id' => $result['message_id'] ?? null,
+                    'provider' => config('sms.provider', 'log'),
+                ]);
+
+                return true;
+            } else {
+                Log::error("Teacher SMS send failed", [
+                    'teacher_id' => $teacher->id,
+                    'phone' => $phoneNumber,
+                    'error' => $result['error'] ?? 'Unknown error',
+                    'provider_response' => $result['provider_response'] ?? null,
+                ]);
+
+                return false;
+            }
+        } catch (\Exception $e) {
+            Log::error("Exception while sending teacher SMS", [
+                'teacher_id' => $teacher->id ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return false;
         }
     }
 
