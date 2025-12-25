@@ -8,13 +8,17 @@ use Illuminate\Support\Facades\Log;
 
 class ZettatelProvider implements SmsProviderInterface
 {
-    protected string $apiKey;
+    protected string $userid;
+    protected string $password;
     protected string $senderId;
+    protected string $baseUrl;
 
     public function __construct()
     {
-        $this->apiKey = config('sms.zettatel.api_key');
+        $this->userid = config('sms.zettatel.userid');
+        $this->password = config('sms.zettatel.password');
         $this->senderId = config('sms.zettatel.sender_id', 'SCHOOL');
+        $this->baseUrl = config('sms.zettatel.base_url', 'https://portal.zettatel.com');
     }
 
     public function send(string $phoneNumber, string $message): array
@@ -24,13 +28,6 @@ class ZettatelProvider implements SmsProviderInterface
         }
 
         try {
-            // Try different possible endpoints
-            $endpoints = [
-                'https://portal.zettatel.com/SMSApi/send',
-                'https://portal.zettatel.com/api/send',
-                'https://portal.zettatel.com/api/SendSMS',
-            ];
-
             // Ensure phone number doesn't have plus sign
             $phoneNumber = ltrim($phoneNumber, '+');
 
@@ -40,18 +37,45 @@ class ZettatelProvider implements SmsProviderInterface
                 'message_length' => strlen($message),
             ]);
 
+            // Configure HTTP client with SSL verification disabled for local development
+            // Note: In production, ensure proper SSL certificates are configured
+            $httpClient = Http::timeout(30)->withoutVerifying();
+
+            // Use the correct endpoint and parameters according to Zettatel API documentation
+            // Endpoint: /SMSApi/send or /send (POST method with form-data)
+            $endpoints = [
+                $this->baseUrl . '/SMSApi/send',
+                $this->baseUrl . '/send',
+            ];
+
+            // Prepare parameters according to API documentation
+            $params = [
+                'userid' => $this->userid,
+                'password' => $this->password,
+                'mobile' => $phoneNumber, // Use 'mobile' not 'number'
+                'senderid' => $this->senderId,
+                'msg' => $message, // Use 'msg' not 'message'
+                'sendMethod' => 'quick', // Required: quick, group, or bulkupload
+                'msgType' => 'text', // Required: text or unicode
+                'output' => 'json', // Response format: json, plain, or xml
+                'duplicatecheck' => 'true', // Check for duplicates
+            ];
+
             $lastError = null;
             $lastResponse = null;
 
+            // Try each endpoint
             foreach ($endpoints as $url) {
                 try {
-                    // Try POST with form data
-                    $response = Http::timeout(30)->asForm()->post($url, [
-                        'apikey' => $this->apiKey,
+                    Log::info('Zettatel API attempt', [
+                        'url' => $url,
+                        'method' => 'POST',
+                        'mobile' => $phoneNumber,
                         'senderid' => $this->senderId,
-                        'number' => $phoneNumber,
-                        'message' => $message,
                     ]);
+
+                    // Send POST request with form-data
+                    $response = $httpClient->asForm()->post($url, $params);
 
                     $statusCode = $response->status();
                     $responseBody = $response->body();
@@ -59,13 +83,48 @@ class ZettatelProvider implements SmsProviderInterface
                     Log::info('Zettatel API Response', [
                         'url' => $url,
                         'status_code' => $statusCode,
-                        'response_body' => $responseBody,
+                        'response_body' => substr($responseBody, 0, 500), // Limit log size
                     ]);
 
-                    // Parse pipe-delimited response format: "status=success | messageId=12345"
+                    // Try JSON parsing first (since output=json)
+                    $result = $response->json();
+                    if (is_array($result)) {
+                        // Check for success in JSON response
+                        if (isset($result['status']) && (strtolower($result['status']) === 'success' || $result['status'] === '1')) {
+                            Log::info('Zettatel SMS sent successfully (JSON)', [
+                                'phone' => $phoneNumber,
+                                'message_id' => $result['messageId'] ?? $result['messageid'] ?? $result['id'] ?? $result['msgid'] ?? null,
+                            ]);
+                            return [
+                                'success' => true,
+                                'message_id' => $result['messageId'] ?? $result['messageid'] ?? $result['id'] ?? $result['msgid'] ?? null,
+                                'status' => 'sent',
+                                'provider_response' => $result,
+                            ];
+                        }
+                        
+                        // Check for error in JSON response
+                        if (isset($result['status']) && strtolower($result['status']) === 'error') {
+                            $errorMsg = $result['reason'] ?? $result['error'] ?? $result['message'] ?? 'Unknown error';
+                            Log::warning('Zettatel API error response (JSON)', [
+                                'url' => $url,
+                                'error' => $errorMsg,
+                                'error_code' => $result['errorCode'] ?? null,
+                            ]);
+                            $lastError = $errorMsg;
+                            $lastResponse = $result;
+                            continue;
+                        }
+                    }
+
+                    // Fallback: Parse pipe-delimited response format: "status=success | messageId=12345"
                     $parsed = $this->parseResponse($responseBody);
                     
                     if (isset($parsed['status']) && strtolower($parsed['status']) === 'success') {
+                        Log::info('Zettatel SMS sent successfully (pipe-delimited)', [
+                            'phone' => $phoneNumber,
+                            'message_id' => $parsed['messageId'] ?? $parsed['messageid'] ?? $parsed['id'] ?? null,
+                        ]);
                         return [
                             'success' => true,
                             'message_id' => $parsed['messageId'] ?? $parsed['messageid'] ?? $parsed['id'] ?? null,
@@ -74,29 +133,25 @@ class ZettatelProvider implements SmsProviderInterface
                         ];
                     }
 
-                    // If error, try next endpoint
+                    // If error in pipe-delimited format
                     if (isset($parsed['status']) && strtolower($parsed['status']) === 'error') {
-                        $lastError = $parsed['reason'] ?? $parsed['error'] ?? $responseBody;
+                        $errorMsg = $parsed['reason'] ?? $parsed['error'] ?? $responseBody;
+                        Log::warning('Zettatel API error response (pipe-delimited)', [
+                            'url' => $url,
+                            'error' => $errorMsg,
+                            'error_code' => $parsed['errorCode'] ?? null,
+                        ]);
+                        $lastError = $errorMsg;
                         $lastResponse = $parsed;
                         continue;
                     }
 
-                    // Try JSON parsing
-                    $result = $response->json();
-                    if (is_array($result)) {
-                        if (isset($result['status']) && strtolower($result['status']) === 'success') {
-                            return [
-                                'success' => true,
-                                'message_id' => $result['messageId'] ?? $result['messageid'] ?? $result['id'] ?? null,
-                                'status' => 'sent',
-                                'provider_response' => $result,
-                            ];
-                        }
-                        $lastError = $result['message'] ?? $result['error'] ?? $result['reason'] ?? 'Unknown error';
-                        $lastResponse = $result;
-                    }
+                    // If we got here, response format is unexpected
+                    $lastError = 'Unexpected response format';
+                    $lastResponse = $responseBody;
+                    
                 } catch (\Exception $e) {
-                    Log::warning('Zettatel endpoint failed', [
+                    Log::warning('Zettatel endpoint exception', [
                         'url' => $url,
                         'error' => $e->getMessage(),
                     ]);
@@ -105,31 +160,17 @@ class ZettatelProvider implements SmsProviderInterface
                 }
             }
 
-            // If all endpoints failed, try GET method as last resort
-            $url = 'https://portal.zettatel.com/SMSApi/send';
-            $response = Http::timeout(30)->get($url, [
-                'apikey' => $this->apiKey,
-                'senderid' => $this->senderId,
-                'number' => $phoneNumber,
-                'message' => $message,
+            // All attempts failed
+            Log::error('Zettatel SMS send failed - all attempts exhausted', [
+                'phone' => $phoneNumber,
+                'last_error' => $lastError,
+                'last_response' => $lastResponse,
             ]);
-
-            $responseBody = $response->body();
-            $parsed = $this->parseResponse($responseBody);
-            
-            if (isset($parsed['status']) && strtolower($parsed['status']) === 'success') {
-                return [
-                    'success' => true,
-                    'message_id' => $parsed['messageId'] ?? $parsed['messageid'] ?? $parsed['id'] ?? null,
-                    'status' => 'sent',
-                    'provider_response' => $parsed,
-                ];
-            }
 
             return [
                 'success' => false,
-                'error' => $lastError ?? ($parsed['reason'] ?? $parsed['error'] ?? 'Unknown error'),
-                'provider_response' => $lastResponse ?: $parsed ?: $responseBody,
+                'error' => $lastError ?? 'All API endpoints failed. Please check your Zettatel API configuration.',
+                'provider_response' => $lastResponse,
             ];
         } catch (\Exception $e) {
             Log::error('Zettatel SMS send exception', [
@@ -148,7 +189,7 @@ class ZettatelProvider implements SmsProviderInterface
 
     protected function isConfigured(): bool
     {
-        return !empty($this->apiKey);
+        return !empty($this->userid) && !empty($this->password);
     }
 
     /**

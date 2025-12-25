@@ -63,8 +63,10 @@ return [
     */
 
     'zettatel' => [
-        'api_key' => env('SMS_API'), // Use SMS_API token from .env
+        'userid' => env('ZETTATEL_USERID', env('SMS_API')), // User ID/Username, fallback to SMS_API if not set
+        'password' => env('ZETTATEL_PASSWORD', env('SMS_PASSWORD')), // Password for authentication
         'sender_id' => env('ZETTATEL_SENDER_ID', 'SCHOOL'),
+        'base_url' => env('ZETTATEL_BASE_URL', 'https://portal.zettatel.com'),
     ],
 
     /*
