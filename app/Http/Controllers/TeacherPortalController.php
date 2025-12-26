@@ -410,10 +410,21 @@ class TeacherPortalController extends Controller
         $courses = $teacher->courses()->where('status', 'active')->get();
         
         // Get attendance records for the teacher's courses
-        $attendances = Attendance::whereIn('course_id', $courses->pluck('id'))
-            ->with('student', 'course')
-            ->latest('attendance_date')
-            ->paginate(20);
+        $attendances = collect();
+        if ($courses->isNotEmpty()) {
+            $attendances = Attendance::whereIn('course_id', $courses->pluck('id'))
+                ->with('student', 'course')
+                ->latest('attendance_date')
+                ->paginate(20);
+        } else {
+            // Create empty paginator if no courses
+            $attendances = new \Illuminate\Pagination\LengthAwarePaginator(
+                collect([]),
+                0,
+                20,
+                1
+            );
+        }
         
         return view('teacher-portal.attendance', compact('teacher', 'courses', 'attendances'));
     }
