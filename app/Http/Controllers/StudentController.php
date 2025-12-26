@@ -56,14 +56,22 @@ class StudentController extends Controller
                 'phone' => ['required', 'string', 'max:20'],
                 'gender' => ['required', 'in:male,female,other'],
                 'email' => ['nullable', 'email', 'max:255'],
-                'level_of_education' => ['required', 'string', 'max:255'],
+                'level_of_education' => ['required', 'string', 'max:255', 'in:Primary,High School,Diploma,Bachelor,Master,PhD'],
                 'nationality' => ['required', 'string', 'max:255'],
                 'id_passport_number' => ['required', 'string', 'max:255'],
-                'next_of_kin_name' => ['required', 'string', 'max:255'],
-                'next_of_kin_mobile' => ['required', 'string', 'max:20'],
+                'next_of_kin_name' => ['nullable', 'string', 'max:255'],
+                'next_of_kin_mobile' => ['nullable', 'string', 'max:20'],
                 'address' => ['nullable', 'string'],
                 'status' => ['required', 'in:active,inactive,graduated'],
             ]);
+            
+            // Auto-capitalize text fields
+            $validated['first_name'] = ucwords(strtolower(trim($validated['first_name'])));
+            $validated['middle_name'] = $validated['middle_name'] ? ucwords(strtolower(trim($validated['middle_name']))) : null;
+            $validated['last_name'] = ucwords(strtolower(trim($validated['last_name'])));
+            $validated['nationality'] = ucwords(strtolower(trim($validated['nationality'])));
+            $validated['next_of_kin_name'] = $validated['next_of_kin_name'] ? ucwords(strtolower(trim($validated['next_of_kin_name']))) : null;
+            $validated['address'] = $validated['address'] ? ucwords(strtolower(trim($validated['address']))) : null;
 
             // Auto-generate admission number
             $validated['admission_number'] = $this->generateAdmissionNumber();
@@ -80,6 +88,18 @@ class StudentController extends Controller
             } catch (\Exception $e) {
                 // Log error but don't fail the enrollment
                 \Log::error("Failed to send enrollment SMS", [
+                    'student_id' => $student->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
+            // Send enrollment email
+            try {
+                $emailService = app(\App\Services\EmailService::class);
+                $emailService->sendEnrollmentEmail($student);
+            } catch (\Exception $e) {
+                // Log error but don't fail the enrollment
+                \Log::error("Failed to send enrollment email", [
                     'student_id' => $student->id,
                     'error' => $e->getMessage(),
                 ]);
@@ -275,14 +295,22 @@ class StudentController extends Controller
             'phone' => ['required', 'string', 'max:20'],
             'gender' => ['required', 'in:male,female,other'],
             'email' => ['nullable', 'email', 'max:255'],
-            'level_of_education' => ['required', 'string', 'max:255'],
+            'level_of_education' => ['required', 'string', 'max:255', 'in:Primary,High School,Diploma,Bachelor,Master,PhD'],
             'nationality' => ['required', 'string', 'max:255'],
             'id_passport_number' => ['required', 'string', 'max:255'],
-            'next_of_kin_name' => ['required', 'string', 'max:255'],
-            'next_of_kin_mobile' => ['required', 'string', 'max:20'],
+            'next_of_kin_name' => ['nullable', 'string', 'max:255'],
+            'next_of_kin_mobile' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string'],
             'status' => ['required', 'in:active,inactive,graduated'],
         ]);
+        
+        // Auto-capitalize text fields
+        $validated['first_name'] = ucwords(strtolower(trim($validated['first_name'])));
+        $validated['middle_name'] = $validated['middle_name'] ? ucwords(strtolower(trim($validated['middle_name']))) : null;
+        $validated['last_name'] = ucwords(strtolower(trim($validated['last_name'])));
+        $validated['nationality'] = ucwords(strtolower(trim($validated['nationality'])));
+        $validated['next_of_kin_name'] = $validated['next_of_kin_name'] ? ucwords(strtolower(trim($validated['next_of_kin_name']))) : null;
+        $validated['address'] = $validated['address'] ? ucwords(strtolower(trim($validated['address']))) : null;
 
         $student->update($validated);
 

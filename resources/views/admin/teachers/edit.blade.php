@@ -1,19 +1,20 @@
 @extends('layouts.app')
 
-@section('title', 'Add Teacher')
-@section('page-title', 'Add New Teacher')
+@section('title', 'Edit Teacher')
+@section('page-title', 'Edit Teacher')
 
 @section('content')
 <div class="max-w-6xl mx-auto">
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
         <!-- Header -->
         <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
-            <h2 class="text-2xl font-bold text-white">Teacher Onboarding Form</h2>
-            <p class="text-blue-100 mt-1">Please fill in all required fields marked with *</p>
+            <h2 class="text-2xl font-bold text-white">Edit Teacher Information</h2>
+            <p class="text-blue-100 mt-1">Update teacher details below</p>
         </div>
 
-        <form method="POST" action="{{ route('admin.teachers.store') }}" enctype="multipart/form-data" class="p-8">
+        <form method="POST" action="{{ route('admin.teachers.update', $teacher->id) }}" enctype="multipart/form-data" class="p-8">
             @csrf
+            @method('PUT')
 
             <!-- Personal Information Section -->
             <div class="mb-8">
@@ -35,7 +36,7 @@
                             type="text" 
                             id="first_name" 
                             name="first_name" 
-                            value="{{ old('first_name') }}"
+                            value="{{ old('first_name', $teacher->first_name) }}"
                             required
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Enter first name"
@@ -53,7 +54,7 @@
                             type="text" 
                             id="last_name" 
                             name="last_name" 
-                            value="{{ old('last_name') }}"
+                            value="{{ old('last_name', $teacher->last_name) }}"
                             required
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Enter last name"
@@ -71,7 +72,7 @@
                             type="email" 
                             id="email" 
                             name="email" 
-                            value="{{ old('email') }}"
+                            value="{{ old('email', $teacher->email) }}"
                             required
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="teacher@example.com"
@@ -89,7 +90,7 @@
                             type="text" 
                             id="phone" 
                             name="phone" 
-                            value="{{ old('phone') }}"
+                            value="{{ old('phone', $teacher->phone) }}"
                             required
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="254712345678"
@@ -107,7 +108,7 @@
                             type="date" 
                             id="date_of_birth" 
                             name="date_of_birth" 
-                            value="{{ old('date_of_birth') }}"
+                            value="{{ old('date_of_birth', $teacher->date_of_birth?->format('Y-m-d')) }}"
                             required
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
@@ -127,9 +128,9 @@
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                         >
                             <option value="">Select gender...</option>
-                            <option value="male" {{ old('gender') === 'male' ? 'selected' : '' }}>Male</option>
-                            <option value="female" {{ old('gender') === 'female' ? 'selected' : '' }}>Female</option>
-                            <option value="other" {{ old('gender') === 'other' ? 'selected' : '' }}>Other</option>
+                            <option value="male" {{ old('gender', $teacher->gender) === 'male' ? 'selected' : '' }}>Male</option>
+                            <option value="female" {{ old('gender', $teacher->gender) === 'female' ? 'selected' : '' }}>Female</option>
+                            <option value="other" {{ old('gender', $teacher->gender) === 'other' ? 'selected' : '' }}>Other</option>
                         </select>
                         @error('gender')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -160,11 +161,11 @@
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                         >
                             <option value="">Select qualification...</option>
-                            <option value="Certificate" {{ old('qualification') === 'Certificate' ? 'selected' : '' }}>Certificate</option>
-                            <option value="Diploma" {{ old('qualification') === 'Diploma' ? 'selected' : '' }}>Diploma</option>
-                            <option value="Degree" {{ old('qualification') === 'Degree' ? 'selected' : '' }}>Degree</option>
-                            <option value="Masters" {{ old('qualification') === 'Masters' ? 'selected' : '' }}>Masters</option>
-                            <option value="PhD" {{ old('qualification') === 'PhD' ? 'selected' : '' }}>PhD</option>
+                            <option value="Certificate" {{ old('qualification', $teacher->qualification) === 'Certificate' ? 'selected' : '' }}>Certificate</option>
+                            <option value="Diploma" {{ old('qualification', $teacher->qualification) === 'Diploma' ? 'selected' : '' }}>Diploma</option>
+                            <option value="Degree" {{ old('qualification', $teacher->qualification) === 'Degree' ? 'selected' : '' }}>Degree</option>
+                            <option value="Masters" {{ old('qualification', $teacher->qualification) === 'Masters' ? 'selected' : '' }}>Masters</option>
+                            <option value="PhD" {{ old('qualification', $teacher->qualification) === 'PhD' ? 'selected' : '' }}>PhD</option>
                         </select>
                         @error('qualification')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -179,7 +180,7 @@
                             type="text" 
                             id="specialization" 
                             name="specialization" 
-                            value="{{ old('specialization') }}"
+                            value="{{ old('specialization', $teacher->specialization) }}"
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="e.g., Software Development"
                         >
@@ -196,7 +197,7 @@
                             type="date" 
                             id="hire_date" 
                             name="hire_date" 
-                            value="{{ old('hire_date') }}"
+                            value="{{ old('hire_date', $teacher->hire_date?->format('Y-m-d')) }}"
                             required
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         >
@@ -216,9 +217,9 @@
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                         >
                             <option value="">Select status...</option>
-                            <option value="active" {{ old('status') === 'active' ? 'selected' : '' }}>Active</option>
-                            <option value="inactive" {{ old('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                            <option value="on_leave" {{ old('status') === 'on_leave' ? 'selected' : '' }}>On Leave</option>
+                            <option value="active" {{ old('status', $teacher->status) === 'active' ? 'selected' : '' }}>Active</option>
+                            <option value="inactive" {{ old('status', $teacher->status) === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            <option value="on_leave" {{ old('status', $teacher->status) === 'on_leave' ? 'selected' : '' }}>On Leave</option>
                         </select>
                         @error('status')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -235,7 +236,7 @@
                             rows="3"
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Enter address (optional)"
-                        >{{ old('address') }}</textarea>
+                        >{{ old('address', $teacher->address) }}</textarea>
                         @error('address')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -266,12 +267,12 @@
                                     type="checkbox" 
                                     name="course_ids[]" 
                                     value="{{ $course->id }}"
-                                    {{ in_array($course->id, old('course_ids', [])) ? 'checked' : '' }}
+                                    {{ in_array($course->id, old('course_ids', $teacher->courses->pluck('id')->toArray())) ? 'checked' : '' }}
                                     class="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                 >
                                 <div class="ml-3">
                                     <div class="text-sm font-medium text-gray-900">{{ $course->name }}</div>
-                                    <div class="text-xs text-gray-500">KES {{ number_format($course->price, 2) }}</div>
+                                    <div class="text-xs text-gray-500">KES {{ number_format($course->base_price ?? $course->price ?? 0, 2) }}</div>
                                 </div>
                             </label>
                         @endforeach
@@ -288,7 +289,7 @@
             <!-- Form Actions -->
             <div class="flex items-center justify-end gap-4 pt-6 border-t border-gray-200">
                 <a 
-                    href="{{ route('admin.teachers.index') }}" 
+                    href="{{ route('admin.teachers.show', $teacher->id) }}" 
                     class="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                 >
                     Cancel
@@ -299,9 +300,9 @@
                 >
                     <span class="flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
-                        Create Teacher
+                        Update Teacher
                     </span>
                 </button>
             </div>

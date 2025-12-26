@@ -13,17 +13,19 @@
         
         body {
             font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.4;
+            font-size: 11px;
+            line-height: 1.3;
             width: 80mm; /* Standard thermal printer width */
+            max-width: 80mm;
             margin: 0 auto;
-            padding: 5mm;
+            padding: 2mm;
             background: white;
         }
         
         @media print {
             body {
                 width: 80mm;
+                max-width: 80mm;
                 margin: 0;
                 padding: 0;
             }
@@ -34,8 +36,13 @@
                 size: 80mm auto;
                 margin: 0;
             }
+            * {
+                margin: 0;
+                padding: 0;
+            }
             img {
-                max-width: 100%;
+                max-width: 70mm;
+                max-height: 25mm;
                 height: auto;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;

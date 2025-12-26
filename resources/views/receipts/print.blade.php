@@ -7,9 +7,16 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         @media print {
-            body { margin: 0; padding: 20px; }
+            body { 
+                margin: 0; 
+                padding: 10mm;
+            }
             .no-print { display: none; }
             .print-break { page-break-after: always; }
+            @page {
+                size: A5;
+                margin: 10mm;
+            }
             img {
                 max-width: 100%;
                 height: auto;
@@ -23,6 +30,12 @@
         img {
             max-width: 100%;
             height: auto;
+        }
+        @media screen {
+            body {
+                max-width: 148mm; /* A5 width */
+                margin: 0 auto;
+            }
         }
     </style>
 </head>

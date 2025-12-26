@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\BalancesExport;
+use App\Exports\BankDepositsExport;
+use App\Exports\CourseRegistrationsExport;
 use App\Exports\ExpensesExport;
 use App\Exports\FinancialReportExport;
 use App\Exports\PaymentsExport;
+use App\Exports\ReceiptsExport;
+use App\Exports\StudentsRegisteredExport;
 use App\Models\BankDeposit;
 use App\Models\CourseRegistration;
 use App\Models\Expense;
 use App\Models\Payment;
+use App\Models\Receipt;
 use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +22,17 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
+    public function module()
+    {
+        $user = auth()->user();
+        
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Only Super Admin can view reports');
+        }
+
+        return view('reports.module');
+    }
+
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -259,5 +276,128 @@ class ReportController extends Controller
         $fileName = 'payments_report_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
 
         return Excel::download(new PaymentsExport($payments), $fileName);
+    }
+
+    public function exportStudentsRegistered(Request $request)
+    {
+        $user = auth()->user();
+        
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Only Super Admin can export reports');
+        }
+
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        $query = Student::with('payments');
+
+        if ($dateFrom) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->whereDate('created_at', '<=', $dateTo);
+        }
+
+        $students = $query->latest()->get();
+        
+        $dateRange = $dateFrom && $dateTo ? '_' . $dateFrom . '_to_' . $dateTo : '';
+        $fileName = 'students_registered' . $dateRange . '_' . now()->format('Y-m-d') . '.xlsx';
+
+        return Excel::download(new StudentsRegisteredExport($students), $fileName);
+    }
+
+    public function exportBalances(Request $request)
+    {
+        $user = auth()->user();
+        
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Only Super Admin can export reports');
+        }
+
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        $query = Student::with(['payments' => function($q) use ($dateFrom, $dateTo) {
+            if ($dateFrom) {
+                $q->whereDate('created_at', '>=', $dateFrom);
+            }
+            if ($dateTo) {
+                $q->whereDate('created_at', '<=', $dateTo);
+            }
+        }]);
+
+        $students = $query->latest()->get();
+        
+        $dateRange = $dateFrom && $dateTo ? '_' . $dateFrom . '_to_' . $dateTo : '';
+        $fileName = 'balances_report' . $dateRange . '_' . now()->format('Y-m-d') . '.xlsx';
+
+        return Excel::download(new BalancesExport($students), $fileName);
+    }
+
+    public function exportCourseRegistrations(Request $request)
+    {
+        $user = auth()->user();
+        
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Only Super Admin can export reports');
+        }
+
+        $dateFrom = $request->get('date_from', now()->startOfYear()->toDateString());
+        $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
+
+        $registrations = CourseRegistration::with(['student', 'course'])
+            ->whereDate('registration_date', '>=', $dateFrom)
+            ->whereDate('registration_date', '<=', $dateTo)
+            ->latest('registration_date')
+            ->get();
+
+        $fileName = 'course_registrations_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
+
+        return Excel::download(new CourseRegistrationsExport($registrations), $fileName);
+    }
+
+    public function exportBankDeposits(Request $request)
+    {
+        $user = auth()->user();
+        
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Only Super Admin can export reports');
+        }
+
+        $dateFrom = $request->get('date_from', now()->startOfDay()->toDateString());
+        $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
+
+        $deposits = BankDeposit::with('recorder')
+            ->whereDate('deposit_date', '>=', $dateFrom)
+            ->whereDate('deposit_date', '<=', $dateTo)
+            ->latest('deposit_date')
+            ->get();
+
+        $fileName = 'bank_deposits_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
+
+        return Excel::download(new BankDepositsExport($deposits), $fileName);
+    }
+
+    public function exportReceipts(Request $request)
+    {
+        $user = auth()->user();
+        
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Only Super Admin can export reports');
+        }
+
+        $dateFrom = $request->get('date_from', now()->startOfDay()->toDateString());
+        $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
+
+        $receipts = Receipt::with(['payment.student', 'payment.course', 'payment.cashier'])
+            ->whereDate('receipt_date', '>=', $dateFrom)
+            ->whereDate('receipt_date', '<=', $dateTo)
+            ->latest('receipt_date')
+            ->get();
+
+        $fileName = 'receipts_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
+
+        return Excel::download(new ReceiptsExport($receipts), $fileName);
     }
 }

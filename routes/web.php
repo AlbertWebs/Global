@@ -83,10 +83,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/mobile', [MobileDashboardController::class, 'index'])->name('mobile.dashboard');
 
     // Reports (Super Admin only - checked in controller)
-    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports', [ReportController::class, 'module'])->name('reports.index');
+    Route::get('/reports/financial', [ReportController::class, 'index'])->name('reports.financial');
     Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
     Route::get('/reports/export-payments', [ReportController::class, 'exportPayments'])->name('reports.export-payments');
     Route::get('/reports/export-expenses', [ReportController::class, 'exportExpenses'])->name('reports.export-expenses');
+    Route::get('/reports/export-students-registered', [ReportController::class, 'exportStudentsRegistered'])->name('reports.export-students-registered');
+    Route::get('/reports/export-balances', [ReportController::class, 'exportBalances'])->name('reports.export-balances');
+    Route::get('/reports/export-course-registrations', [ReportController::class, 'exportCourseRegistrations'])->name('reports.export-course-registrations');
+    Route::get('/reports/export-bank-deposits', [ReportController::class, 'exportBankDeposits'])->name('reports.export-bank-deposits');
+    Route::get('/reports/export-receipts', [ReportController::class, 'exportReceipts'])->name('reports.export-receipts');
 
     // Fee Balances (Super Admin only - checked in controller)
     Route::get('/fee-balances', [FeeBalanceController::class, 'index'])->name('fee-balances.index');

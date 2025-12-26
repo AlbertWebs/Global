@@ -219,7 +219,6 @@
                         >
                             <option value="">Select level...</option>
                             <option value="Primary" {{ old('level_of_education', $student->level_of_education) === 'Primary' ? 'selected' : '' }}>Primary</option>
-                            <option value="Secondary" {{ old('level_of_education', $student->level_of_education) === 'Secondary' ? 'selected' : '' }}>Secondary</option>
                             <option value="High School" {{ old('level_of_education', $student->level_of_education) === 'High School' ? 'selected' : '' }}>High School</option>
                             <option value="Diploma" {{ old('level_of_education', $student->level_of_education) === 'Diploma' ? 'selected' : '' }}>Diploma</option>
                             <option value="Bachelor" {{ old('level_of_education', $student->level_of_education) === 'Bachelor' ? 'selected' : '' }}>Bachelor</option>
@@ -269,7 +268,7 @@
                 </div>
             </div>
 
-            <!-- Next of Kin Section -->
+            <!-- Guardian Section -->
             <div class="mb-8 pt-8 border-t border-gray-200">
                 <div class="flex items-center mb-6">
                     <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3">
@@ -277,22 +276,21 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900">Next of Kin</h3>
+                    <h3 class="text-xl font-bold text-gray-900">Guardian</h3>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label for="next_of_kin_name" class="block text-sm font-semibold text-gray-700 mb-2">
-                            Next of Kin Name <span class="text-red-500">*</span>
+                            Guardian Name
                         </label>
                         <input 
                             type="text" 
                             id="next_of_kin_name" 
                             name="next_of_kin_name" 
                             value="{{ old('next_of_kin_name', $student->next_of_kin_name) }}"
-                            required
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                            placeholder="Enter full name"
+                            placeholder="Enter full name (optional)"
                         >
                         @error('next_of_kin_name')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
@@ -301,16 +299,15 @@
 
                     <div>
                         <label for="next_of_kin_mobile" class="block text-sm font-semibold text-gray-700 mb-2">
-                            Next of Kin Mobile Number <span class="text-red-500">*</span>
+                            Guardian Mobile Number
                         </label>
                         <input 
                             type="tel" 
                             id="next_of_kin_mobile" 
                             name="next_of_kin_mobile" 
                             value="{{ old('next_of_kin_mobile', $student->next_of_kin_mobile) }}"
-                            required
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                            placeholder="+254 700 000 000"
+                            placeholder="+254 700 000 000 (optional)"
                         >
                         @error('next_of_kin_mobile')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>

@@ -313,10 +313,10 @@
                             @endif
                         </div>
 
-                        <!-- Next of Kin -->
+                        <!-- Guardian -->
                         @if($student->next_of_kin_name)
                         <div class="mt-6 pt-6 border-t border-gray-200">
-                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Next of Kin</h4>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Guardian</h4>
                             <div class="space-y-2">
                                 <p class="text-gray-900 font-medium">{{ $student->next_of_kin_name }}</p>
                                 @if($student->next_of_kin_mobile)

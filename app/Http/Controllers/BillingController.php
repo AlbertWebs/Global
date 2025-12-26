@@ -72,10 +72,10 @@ class BillingController extends Controller
             'notes' => $validated['notes'],
         ]);
 
-        // Generate receipt
+        // Generate receipt with serialized receipt number
         $receipt = Receipt::create([
             'payment_id' => $payment->id,
-            'receipt_number' => 'RCP-' . strtoupper(Str::random(8)),
+            'receipt_number' => Receipt::generateReceiptNumber(),
             'receipt_date' => now(),
         ]);
 
@@ -107,7 +107,7 @@ class BillingController extends Controller
         // Create ledger entry for money trace
         LedgerEntry::createFromPayment($payment);
 
-        // Send payment confirmation SMS (queued for async processing)
+        // Send payment confirmation SMS
         try {
             $smsService = app(\App\Services\SmsService::class);
             $smsService->sendPaymentSMS(
@@ -119,6 +119,23 @@ class BillingController extends Controller
         } catch (\Exception $e) {
             // Log error but don't fail the payment
             \Log::error("Failed to send payment SMS", [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Send payment confirmation email
+        try {
+            $emailService = app(\App\Services\EmailService::class);
+            $emailService->sendPaymentEmail(
+                $payment->student,
+                $payment->amount_paid,
+                $payment->course->name,
+                $receipt->receipt_number
+            );
+        } catch (\Exception $e) {
+            // Log error but don't fail the payment
+            \Log::error("Failed to send payment email", [
                 'payment_id' => $payment->id,
                 'error' => $e->getMessage(),
             ]);

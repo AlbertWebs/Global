@@ -24,6 +24,42 @@
                     });
             });
         }
+        
+        // Auto-capitalization for text inputs
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to capitalize text (Title Case)
+            function capitalizeText(text) {
+                return text.toLowerCase().replace(/\b\w/g, function(char) {
+                    return char.toUpperCase();
+                });
+            }
+            
+            // Apply to all text inputs with specific classes or IDs
+            const textInputs = document.querySelectorAll('input[type="text"]:not([readonly]):not([disabled]), textarea:not([readonly]):not([disabled])');
+            
+            textInputs.forEach(input => {
+                // Skip email, phone, and ID/passport fields
+                const id = input.id || '';
+                const name = input.name || '';
+                const type = input.type || '';
+                
+                if (id.includes('email') || name.includes('email') || 
+                    id.includes('phone') || name.includes('phone') ||
+                    id.includes('mobile') || name.includes('mobile') ||
+                    id.includes('id_passport') || name.includes('id_passport') ||
+                    id.includes('student_number') || name.includes('student_number') ||
+                    id.includes('admission_number') || name.includes('admission_number')) {
+                    return; // Skip these fields
+                }
+                
+                // Apply on blur
+                input.addEventListener('blur', function() {
+                    if (this.value && this.value.trim()) {
+                        this.value = capitalizeText(this.value.trim());
+                    }
+                });
+            });
+        });
     </script>
 </head>
 <body class="bg-gray-50">
@@ -35,18 +71,18 @@
         >
             <div class="flex flex-col h-full">
                 <!-- Logo -->
-                <div class="flex items-center justify-between h-20 px-6 bg-gradient-to-r from-blue-700 to-indigo-700 shadow-lg border-b border-blue-600">
-                    <div class="flex items-center space-x-3">
-                        <div class="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-md">
-                            <span class="text-blue-600 font-bold text-xl">GC</span>
+                <div class="flex items-center justify-between h-16 px-4 bg-gradient-to-r from-blue-700 to-indigo-700 shadow-lg border-b border-blue-600">
+                    <div class="flex items-center space-x-2 min-w-0 flex-1">
+                        <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                            <span class="text-blue-600 font-bold text-sm">GC</span>
                         </div>
-                        <div>
-                            <h1 class="text-white text-xl font-bold">Global College</h1>
-                            <p class="text-blue-200 text-xs">Billing System</p>
+                        <div class="min-w-0 flex-1">
+                            <h1 class="text-white text-sm font-bold truncate">{{ \App\Models\Setting::get('school_name', 'Global College') }}</h1>
+                            <p class="text-blue-200 text-xs truncate">Billing System</p>
                         </div>
                     </div>
-                    <button @click="sidebarOpen = false" class="lg:hidden text-white hover:text-blue-200 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button @click="sidebarOpen = false" class="lg:hidden text-white hover:text-blue-200 transition-colors flex-shrink-0 ml-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
