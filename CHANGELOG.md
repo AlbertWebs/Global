@@ -6,7 +6,85 @@ All notable changes to the School Management System will be documented in this f
 
 ### Added
 
+#### Announcements Module - Enhanced
+- **File Attachments Support**
+  - Teachers can now attach files (PDF, DOCX, Images) to announcements
+  - Supported formats: PDF, DOC, DOCX, JPG, JPEG, PNG (max 10MB)
+  - Files stored in `storage/app/public/announcement-attachments/`
+  - Teachers can view (PDF/Images) and download attachments they've shared
+  - Students can download attachments from their portal
+  - File type icons displayed for better UX
+  - View button for PDF and image files opens in new tab
+
+- **Course & Group Targeting**
+  - Teachers can target announcements to specific courses
+  - Teachers can target announcements to specific students/groups
+  - Multi-select dropdowns for course and student selection
+  - Announcements automatically filtered for students based on their course registrations
+  - If no specific targeting is set, announcement is visible to all students
+
+#### Exams & Results - Full Functionality
+- **Student Results Viewing**
+  - Added `/student-portal/results` route for students to view their results
+  - Results page displays published results grouped by academic year and term
+  - Shows course, exam type, score, grade, and remarks
+  - Color-coded grades (A=green, B=blue, C=yellow, D=orange, F=red)
+  - Overall performance summary with statistics
+  - Results filtered to show only published results for the logged-in student
+
+- **Results Posting Enhancement**
+  - Teachers can post results with automatic grade calculation
+  - Results default to "published" status for immediate student visibility
+  - Status can be set to pending, published, or archived
+  - Posted by field tracks which teacher posted the result
+  - **Searchable Student Selection**: Replaced dropdown with searchable input field
+    - Real-time filtering as teacher types (searches by student name or number)
+    - Dropdown shows matching students with full name and student number
+    - Selected student displayed as removable tag
+    - Much easier to find students when there are many enrolled
+
+#### Users & Roles - Verified
+- **User Creation & Management**
+  - User creation functionality verified and working
+  - Role assignment during user creation works correctly
+  - Password hashing implemented securely
+  - Email uniqueness validation enforced
+
+- **Role Permissions**
+  - Role permissions management verified and working
+  - Super Admin can assign permissions to roles
+  - Permissions grouped by module for better organization
+  - Permission changes sync correctly to roles
+
+### Fixed
+- **Receipts Index Page Error**: Fixed "Attempt to read property 'full_name' on null" error
+  - Added null checks in receipts index view to handle orphaned receipts gracefully
+  - Updated controller to filter out receipts with missing payment, student, or course relationships
+  - Orphaned receipts (where payment/student/course was deleted) are now excluded from the list
+  - View displays "Not Found" messages as a safety net if any orphaned receipts appear
+
+### Added
+
 #### Student Management
+- **Education Level Options Updated**
+  - Removed "Secondary" option from Level of Education dropdown
+  - Kept only: Primary, High School, Diploma, Bachelor, Master, PhD
+  - Updated validation to enforce allowed education levels
+
+- **Guardian Information (Previously Next of Kin)**
+  - Renamed "Next of Kin" to "Guardian" across all forms and displays
+  - Made Guardian Name and Guardian Mobile Number optional fields
+  - Updated form validation to allow nullable guardian fields
+  - Updated student profile display to show "Guardian" instead of "Next of Kin"
+
+- **Student Photo Upload**
+  - Admins can now upload student photos during student creation and editing
+  - Photo upload field added to student create and edit forms with preview functionality
+  - Photos stored in `storage/app/public/student-photos/` directory
+  - Supported formats: JPG, JPEG, PNG (maximum file size: 2MB)
+  - Student profile page displays uploaded photo or initials avatar if no photo is uploaded
+  - Old photos are automatically deleted when replaced during editing
+  - Real-time photo preview before form submission
 - **Education Level Options Updated**
   - Removed "Secondary" option from Level of Education dropdown
   - Kept only: Primary, High School, Diploma, Bachelor, Master, PhD

@@ -139,6 +139,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/financial-info', [StudentPortalController::class, 'financialInfo'])->name('financial-info');
         Route::get('/courses', [StudentPortalController::class, 'courses'])->name('courses');
         Route::get('/announcements', [StudentPortalController::class, 'announcements'])->name('announcements');
+        Route::get('/results', [StudentPortalController::class, 'results'])->name('results');
         Route::get('/settings', [StudentPortalController::class, 'settings'])->name('settings');
         Route::post('/change-password', [StudentPortalController::class, 'changePassword'])->name('change-password');
         Route::post('/upload-photo', [StudentPortalController::class, 'uploadPhoto'])->name('upload-photo');
@@ -159,6 +160,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/student-progress', [TeacherPortalController::class, 'studentProgress'])->name('student-progress');
         Route::get('/post-results', [TeacherPortalController::class, 'postResults'])->name('post-results');
         Route::post('/post-results', [TeacherPortalController::class, 'storeResult'])->name('store-result');
+        Route::get('/results/{id}/edit', [TeacherPortalController::class, 'editResult'])->name('edit-result');
+        Route::put('/results/{id}', [TeacherPortalController::class, 'updateResult'])->name('update-result');
         Route::get('/communicate', [TeacherPortalController::class, 'communicate'])->name('communicate');
         Route::post('/communicate', [TeacherPortalController::class, 'storeAnnouncement'])->name('store-announcement');
         Route::get('/attendance', [TeacherPortalController::class, 'attendance'])->name('attendance');

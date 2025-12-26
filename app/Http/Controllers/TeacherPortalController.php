@@ -123,6 +123,12 @@ class TeacherPortalController extends Controller
 
     public function storeResult(Request $request)
     {
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
         $validated = $request->validate([
             'student_id' => 'required|exists:students,id',
             'course_id' => 'required|exists:courses,id',
@@ -132,12 +138,78 @@ class TeacherPortalController extends Controller
             'score' => 'required|numeric|min:0|max:100',
             'grade' => 'nullable|string',
             'remarks' => 'nullable|string',
+            'status' => 'nullable|in:pending,published,archived',
         ]);
 
-        StudentResult::create($validated);
+        // Calculate grade if not provided
+        if (empty($validated['grade'])) {
+            $result = new StudentResult();
+            $result->score = $validated['score'];
+            $validated['grade'] = $result->calculateGrade();
+        }
+
+        StudentResult::create([
+            ...$validated,
+            'status' => $validated['status'] ?? 'published', // Default to published
+            'posted_by' => auth()->id() ?? null,
+        ]);
 
         return redirect()->route('teacher-portal.post-results')
             ->with('success', 'Result posted successfully!');
+    }
+
+    public function editResult($id)
+    {
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $result = StudentResult::with('student', 'course')->findOrFail($id);
+        $teacher = Teacher::find($teacherId);
+        $courses = $teacher->courses()->where('status', 'active')->get();
+        $students = Student::where('status', 'active')->get();
+        
+        return view('teacher-portal.edit-result', compact('result', 'teacher', 'courses', 'students'));
+    }
+
+    public function updateResult(Request $request, $id)
+    {
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $result = StudentResult::findOrFail($id);
+
+        $validated = $request->validate([
+            'student_id' => 'required|exists:students,id',
+            'course_id' => 'required|exists:courses,id',
+            'academic_year' => 'required|string',
+            'term' => 'required|string',
+            'exam_type' => 'required|string',
+            'score' => 'required|numeric|min:0|max:100',
+            'grade' => 'nullable|string',
+            'remarks' => 'nullable|string',
+            'status' => 'nullable|in:pending,published,archived',
+        ]);
+
+        // Calculate grade if not provided
+        if (empty($validated['grade'])) {
+            $tempResult = new StudentResult();
+            $tempResult->score = $validated['score'];
+            $validated['grade'] = $tempResult->calculateGrade();
+        }
+
+        $result->update([
+            ...$validated,
+            'status' => $validated['status'] ?? $result->status,
+        ]);
+
+        return redirect()->route('teacher-portal.post-results')
+            ->with('success', 'Result updated successfully!');
     }
 
     public function communicate()
@@ -156,8 +228,9 @@ class TeacherPortalController extends Controller
         
         $announcements = Announcement::latest()->paginate(20);
         $students = Student::where('status', 'active')->get();
+        $courses = Course::where('status', 'active')->get();
         
-        return view('teacher-portal.communicate', compact('teacher', 'announcements', 'students'));
+        return view('teacher-portal.communicate', compact('teacher', 'announcements', 'students', 'courses'));
     }
 
     public function storeAnnouncement(Request $request)
@@ -167,12 +240,49 @@ class TeacherPortalController extends Controller
             'message' => 'required|string',
             'target_audience' => 'required|in:all,students,parents',
             'priority' => 'required|in:low,medium,high',
+            'target_courses' => 'nullable|array',
+            'target_courses.*' => 'exists:courses,id',
+            'target_student_groups' => 'nullable|array',
+            'target_student_groups.*' => 'exists:students,id',
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240', // 10MB max
         ]);
 
+        $attachmentPath = null;
+        $attachmentName = null;
+        $attachmentType = null;
+
+        // Handle file upload
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $attachmentName = $file->getClientOriginalName();
+            $attachmentPath = $file->store('announcement-attachments', 'public');
+            
+            // Determine file type
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (in_array($extension, ['pdf'])) {
+                $attachmentType = 'pdf';
+            } elseif (in_array($extension, ['doc', 'docx'])) {
+                $attachmentType = 'docx';
+            } elseif (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])) {
+                $attachmentType = 'image';
+            } else {
+                $attachmentType = 'file';
+            }
+        }
+
         Announcement::create([
-            ...$validated,
+            'title' => $validated['title'],
+            'message' => $validated['message'],
+            'target_audience' => $validated['target_audience'],
+            'priority' => $validated['priority'],
+            'target_courses' => $validated['target_courses'] ?? null,
+            'target_student_groups' => $validated['target_student_groups'] ?? null,
+            'attachment_path' => $attachmentPath,
+            'attachment_name' => $attachmentName,
+            'attachment_type' => $attachmentType,
             'posted_by' => auth()->id() ?? 1,
             'status' => 'active',
+            'published_at' => now(),
         ]);
 
         return redirect()->route('teacher-portal.communicate')

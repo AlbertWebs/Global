@@ -102,8 +102,11 @@ class StudentPortalController extends Controller
             return redirect()->route('student.login')->with('error', 'Student not found.');
         }
 
-        // Load announcements targeted to students or all
-        $announcements = Announcement::where('status', 'active')
+        // Get student's course IDs
+        $studentCourseIds = $student->courseRegistrations()->pluck('course_id')->toArray();
+        
+        // Load all active announcements for students
+        $allAnnouncements = Announcement::where('status', 'active')
             ->where(function($query) {
                 $query->where('target_audience', 'all')
                       ->orWhere('target_audience', 'students');
@@ -112,6 +115,30 @@ class StudentPortalController extends Controller
             ->orderBy('priority', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
+        
+        // Filter announcements based on targeting
+        $announcements = $allAnnouncements->filter(function($announcement) use ($student, $studentCourseIds) {
+            // If no specific targeting, include it
+            if (empty($announcement->target_courses) && empty($announcement->target_student_groups)) {
+                return true;
+            }
+            
+            // Check if student is specifically targeted
+            if (!empty($announcement->target_student_groups) && in_array($student->id, $announcement->target_student_groups)) {
+                return true;
+            }
+            
+            // Check if any of student's courses are targeted
+            if (!empty($announcement->target_courses) && !empty($studentCourseIds)) {
+                foreach ($studentCourseIds as $courseId) {
+                    if (in_array($courseId, $announcement->target_courses)) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        });
         
         return view('student-portal.announcements', compact('student', 'announcements'));
     }

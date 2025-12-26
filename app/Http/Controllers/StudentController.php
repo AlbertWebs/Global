@@ -63,6 +63,7 @@ class StudentController extends Controller
                 'next_of_kin_mobile' => ['nullable', 'string', 'max:20'],
                 'address' => ['nullable', 'string'],
                 'status' => ['required', 'in:active,inactive,graduated'],
+                'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png', 'max:2048'], // 2MB max
             ]);
             
             // Auto-capitalize text fields
@@ -72,6 +73,12 @@ class StudentController extends Controller
             $validated['nationality'] = ucwords(strtolower(trim($validated['nationality'])));
             $validated['next_of_kin_name'] = $validated['next_of_kin_name'] ? ucwords(strtolower(trim($validated['next_of_kin_name']))) : null;
             $validated['address'] = $validated['address'] ? ucwords(strtolower(trim($validated['address']))) : null;
+
+            // Handle photo upload
+            if ($request->hasFile('photo')) {
+                $photoPath = $request->file('photo')->store('student-photos', 'public');
+                $validated['photo'] = $photoPath;
+            }
 
             // Auto-generate admission number
             $validated['admission_number'] = $this->generateAdmissionNumber();
@@ -302,6 +309,7 @@ class StudentController extends Controller
             'next_of_kin_mobile' => ['nullable', 'string', 'max:20'],
             'address' => ['nullable', 'string'],
             'status' => ['required', 'in:active,inactive,graduated'],
+            'photo' => ['nullable', 'image', 'mimes:jpeg,jpg,png', 'max:2048'], // 2MB max
         ]);
         
         // Auto-capitalize text fields
@@ -311,6 +319,16 @@ class StudentController extends Controller
         $validated['nationality'] = ucwords(strtolower(trim($validated['nationality'])));
         $validated['next_of_kin_name'] = $validated['next_of_kin_name'] ? ucwords(strtolower(trim($validated['next_of_kin_name']))) : null;
         $validated['address'] = $validated['address'] ? ucwords(strtolower(trim($validated['address']))) : null;
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            // Delete old photo if exists
+            if ($student->photo && Storage::disk('public')->exists($student->photo)) {
+                Storage::disk('public')->delete($student->photo);
+            }
+            $photoPath = $request->file('photo')->store('student-photos', 'public');
+            $validated['photo'] = $photoPath;
+        }
 
         $student->update($validated);
 

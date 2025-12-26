@@ -38,6 +38,9 @@
                         Courses
                     </a>
                     <a href="{{ route('student-portal.announcements') }}" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('student-portal.announcements') ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}">
+                        Announcements
+                    </a>
+                    <a href="{{ route('student-portal.results') }}" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('student-portal.results') ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}">
                         Results
                     </a>
                     <a href="{{ route('student-portal.settings') }}" class="px-4 py-2 rounded-lg text-sm font-medium transition-all {{ request()->routeIs('student-portal.settings') ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}">

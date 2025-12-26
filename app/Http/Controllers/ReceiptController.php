@@ -62,11 +62,16 @@ class ReceiptController extends Controller
         
         if ($user->isSuperAdmin()) {
             $receipts = Receipt::with(['payment.student', 'payment.course'])
+                ->whereHas('payment', function($query) {
+                    $query->whereHas('student')->whereHas('course');
+                })
                 ->latest()
                 ->paginate(20);
         } else {
             $receipts = Receipt::whereHas('payment', function($query) use ($user) {
-                $query->where('cashier_id', $user->id);
+                $query->where('cashier_id', $user->id)
+                    ->whereHas('student')
+                    ->whereHas('course');
             })
             ->with(['payment.student', 'payment.course'])
             ->latest()

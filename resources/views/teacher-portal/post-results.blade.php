@@ -33,13 +33,45 @@
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label for="student_id" class="block text-sm font-medium text-gray-700 mb-2">Student *</label>
-                    <select id="student_id" name="student_id" required x-model="selectedStudent" @change="loadStudentCourses" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                        <option value="">Select Student...</option>
-                        @foreach($students as $student)
-                        <option value="{{ $student->id }}">{{ $student->full_name }} ({{ $student->student_number }})</option>
-                        @endforeach
-                    </select>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Student *</label>
+                    <div class="relative" x-data="{ studentSearch: '', showStudentDropdown: false }">
+                        <input 
+                            type="text" 
+                            x-model="studentSearch" 
+                            @focus="showStudentDropdown = true"
+                            @click.away="showStudentDropdown = false"
+                            @input="showStudentDropdown = true"
+                            placeholder="Search student by name or number..."
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            :value="selectedStudentName"
+                            readonly
+                        >
+                        <input type="hidden" name="student_id" x-model="selectedStudent" required>
+                        <div x-show="showStudentDropdown" x-cloak class="absolute z-10 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div class="p-2">
+                                @foreach($students as $student)
+                                    <div 
+                                        class="px-3 py-2 hover:bg-blue-50 cursor-pointer rounded"
+                                        x-show="!studentSearch || ('{{ strtolower($student->full_name . ' ' . $student->student_number) }}').includes(studentSearch.toLowerCase())"
+                                        @click="selectedStudent = '{{ $student->id }}'; selectedStudentName = '{{ $student->full_name }} ({{ $student->student_number }})'; studentSearch = ''; showStudentDropdown = false; loadStudentCourses();"
+                                    >
+                                        <div class="font-medium text-gray-900">{{ $student->full_name }}</div>
+                                        <div class="text-sm text-gray-500">{{ $student->student_number }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                    <div x-show="selectedStudent" class="mt-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                            <span x-text="selectedStudentName"></span>
+                            <button type="button" @click="selectedStudent = ''; selectedStudentName = '';" class="ml-2 text-blue-600 hover:text-blue-800">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </span>
+                    </div>
                 </div>
 
                 <div>
@@ -155,7 +187,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $result->created_at->format('M d, Y') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button class="text-blue-600 hover:text-blue-900">Edit</button>
+                            <a href="{{ route('teacher-portal.edit-result', $result->id) }}" class="text-blue-600 hover:text-blue-900 font-medium">Edit</a>
                         </td>
                     </tr>
                     @empty
@@ -174,6 +206,7 @@ function postResults() {
     return {
         activeTab: 'post',
         selectedStudent: '',
+        selectedStudentName: '',
         score: '',
         grade: '',
         searchQuery: '',
@@ -192,6 +225,7 @@ function postResults() {
         },
         resetForm() {
             this.selectedStudent = '';
+            this.selectedStudentName = '';
             this.score = '';
             this.grade = '';
         }

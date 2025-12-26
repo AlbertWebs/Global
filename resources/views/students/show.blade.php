@@ -11,10 +11,14 @@
             <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                 <div class="flex items-center gap-6">
                     <!-- Avatar -->
-                    <div class="w-24 h-24 bg-gradient-to-br from-indigo-700 to-purple-800 rounded-2xl flex items-center justify-center shadow-xl border-4 border-indigo-300 border-opacity-60">
-                        <span class="text-4xl font-bold text-white drop-shadow-lg">
-                            {{ strtoupper(substr($student->first_name, 0, 1) . substr($student->last_name, 0, 1)) }}
-                        </span>
+                    <div class="w-24 h-24 rounded-2xl overflow-hidden shadow-xl border-4 border-indigo-300 border-opacity-60 flex items-center justify-center bg-gradient-to-br from-indigo-700 to-purple-800">
+                        @if($student->photo)
+                            <img src="{{ asset('storage/' . $student->photo) }}" alt="{{ $student->full_name }}" class="w-full h-full object-cover">
+                        @else
+                            <span class="text-4xl font-bold text-white drop-shadow-lg">
+                                {{ strtoupper(substr($student->first_name, 0, 1) . substr($student->last_name, 0, 1)) }}
+                            </span>
+                        @endif
                     </div>
                     
                     <!-- Student Info -->
