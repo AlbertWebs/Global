@@ -164,7 +164,12 @@ Route::middleware('auth')->group(function () {
         Route::put('/results/{id}', [TeacherPortalController::class, 'updateResult'])->name('update-result');
         Route::get('/communicate', [TeacherPortalController::class, 'communicate'])->name('communicate');
         Route::post('/communicate', [TeacherPortalController::class, 'storeAnnouncement'])->name('store-announcement');
+        Route::get('/announcements/{id}/edit', [TeacherPortalController::class, 'editAnnouncement'])->name('edit-announcement');
+        Route::put('/announcements/{id}', [TeacherPortalController::class, 'updateAnnouncement'])->name('update-announcement');
+        Route::delete('/announcements/{id}', [TeacherPortalController::class, 'deleteAnnouncement'])->name('delete-announcement');
         Route::get('/attendance', [TeacherPortalController::class, 'attendance'])->name('attendance');
+        Route::post('/attendance', [TeacherPortalController::class, 'markAttendance'])->name('mark-attendance');
+        Route::get('/courses/{courseId}/students', [TeacherPortalController::class, 'getCourseStudents'])->name('course-students');
         Route::get('/settings', [TeacherPortalController::class, 'settings'])->name('settings');
         Route::post('/change-password', [TeacherPortalController::class, 'changePassword'])->name('change-password');
         Route::post('/upload-photo', [TeacherPortalController::class, 'uploadPhoto'])->name('upload-photo');

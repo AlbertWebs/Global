@@ -19,9 +19,18 @@ All notable changes to the School Management System will be documented in this f
 - **Course & Group Targeting**
   - Teachers can target announcements to specific courses
   - Teachers can target announcements to specific students/groups
-  - Multi-select dropdowns for course and student selection
+  - Searchable dropdowns for course and student selection with real-time filtering
+  - Selected courses and students displayed as removable tags
   - Announcements automatically filtered for students based on their course registrations
   - If no specific targeting is set, announcement is visible to all students
+
+- **Edit & Delete Announcements**
+  - Teachers can now edit their posted announcements
+  - Edit form pre-populated with existing announcement data
+  - Can update title, message, target audience, priority, targeting, and attachment
+  - Can replace existing attachment with new file
+  - Teachers can delete announcements with confirmation dialog
+  - Deleted announcements remove associated files from storage
 
 #### Exams & Results - Full Functionality
 - **Student Results Viewing**
@@ -42,6 +51,10 @@ All notable changes to the School Management System will be documented in this f
     - Dropdown shows matching students with full name and student number
     - Selected student displayed as removable tag
     - Much easier to find students when there are many enrolled
+  - **Edit Results**: Teachers can now edit posted results
+    - Edit form pre-populated with existing result data
+    - Can update all result fields including score, grade, status, and remarks
+    - Automatic grade recalculation when score is updated
 
 #### Users & Roles - Verified
 - **User Creation & Management**
@@ -55,6 +68,19 @@ All notable changes to the School Management System will be documented in this f
   - Super Admin can assign permissions to roles
   - Permissions grouped by module for better organization
   - Permission changes sync correctly to roles
+
+#### Attendance Management - Full Functionality
+- **Attendance Tracking System**
+  - Teachers can mark attendance for students in their courses
+  - Select course and date to mark attendance
+  - Students automatically loaded based on course selection
+  - Attendance status options: Present, Absent, Late, Excused
+  - Optional notes field for each attendance record
+  - Prevents duplicate attendance records for same student, course, and date
+  - Attendance records displayed in table format with filtering
+  - Search and filter by course functionality
+  - Color-coded status badges (Present=green, Absent=red, Late=yellow, Excused=blue)
+  - Pagination for attendance records
 
 ### Fixed
 - **Receipts Index Page Error**: Fixed "Attempt to read property 'full_name' on null" error

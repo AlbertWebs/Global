@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\StudentResult;
 use App\Models\Announcement;
 use App\Models\Teacher;
+use App\Models\Attendance;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -289,6 +290,109 @@ class TeacherPortalController extends Controller
             ->with('success', 'Announcement posted successfully!');
     }
 
+    public function editAnnouncement($id)
+    {
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $announcement = Announcement::findOrFail($id);
+        $teacher = Teacher::find($teacherId);
+        $students = Student::where('status', 'active')->get();
+        $courses = Course::where('status', 'active')->get();
+        
+        return view('teacher-portal.edit-announcement', compact('announcement', 'teacher', 'students', 'courses'));
+    }
+
+    public function updateAnnouncement(Request $request, $id)
+    {
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $announcement = Announcement::findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'message' => 'required|string',
+            'target_audience' => 'required|in:all,students,parents',
+            'priority' => 'required|in:low,medium,high',
+            'target_courses' => 'nullable|array',
+            'target_courses.*' => 'exists:courses,id',
+            'target_student_groups' => 'nullable|array',
+            'target_student_groups.*' => 'exists:students,id',
+            'attachment' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240', // 10MB max
+        ]);
+
+        $attachmentPath = $announcement->attachment_path;
+        $attachmentName = $announcement->attachment_name;
+        $attachmentType = $announcement->attachment_type;
+
+        // Handle file upload if new file is provided
+        if ($request->hasFile('attachment')) {
+            // Delete old attachment if exists
+            if ($announcement->attachment_path && Storage::disk('public')->exists($announcement->attachment_path)) {
+                Storage::disk('public')->delete($announcement->attachment_path);
+            }
+
+            $file = $request->file('attachment');
+            $attachmentName = $file->getClientOriginalName();
+            $attachmentPath = $file->store('announcement-attachments', 'public');
+            
+            // Determine file type
+            $extension = strtolower($file->getClientOriginalExtension());
+            if (in_array($extension, ['pdf'])) {
+                $attachmentType = 'pdf';
+            } elseif (in_array($extension, ['doc', 'docx'])) {
+                $attachmentType = 'docx';
+            } elseif (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'])) {
+                $attachmentType = 'image';
+            } else {
+                $attachmentType = 'file';
+            }
+        }
+
+        $announcement->update([
+            'title' => $validated['title'],
+            'message' => $validated['message'],
+            'target_audience' => $validated['target_audience'],
+            'priority' => $validated['priority'],
+            'target_courses' => $validated['target_courses'] ?? null,
+            'target_student_groups' => $validated['target_student_groups'] ?? null,
+            'attachment_path' => $attachmentPath,
+            'attachment_name' => $attachmentName,
+            'attachment_type' => $attachmentType,
+        ]);
+
+        return redirect()->route('teacher-portal.communicate')
+            ->with('success', 'Announcement updated successfully!');
+    }
+
+    public function deleteAnnouncement($id)
+    {
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $announcement = Announcement::findOrFail($id);
+
+        // Delete attachment if exists
+        if ($announcement->attachment_path && Storage::disk('public')->exists($announcement->attachment_path)) {
+            Storage::disk('public')->delete($announcement->attachment_path);
+        }
+
+        $announcement->delete();
+
+        return redirect()->route('teacher-portal.communicate')
+            ->with('success', 'Announcement deleted successfully!');
+    }
+
     public function attendance()
     {
         $teacherId = session('teacher_id');
@@ -305,7 +409,97 @@ class TeacherPortalController extends Controller
         
         $courses = $teacher->courses()->where('status', 'active')->get();
         
-        return view('teacher-portal.attendance', compact('teacher', 'courses'));
+        // Get attendance records for the teacher's courses
+        $attendances = Attendance::whereIn('course_id', $courses->pluck('id'))
+            ->with('student', 'course')
+            ->latest('attendance_date')
+            ->paginate(20);
+        
+        return view('teacher-portal.attendance', compact('teacher', 'courses', 'attendances'));
+    }
+
+    public function markAttendance(Request $request)
+    {
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return redirect()->route('teacher.login')->with('error', 'Please login to access the teacher portal.');
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            return redirect()->route('teacher.login')->with('error', 'Teacher not found.');
+        }
+
+        $validated = $request->validate([
+            'course_id' => 'required|exists:courses,id',
+            'attendance_date' => 'required|date',
+            'attendances' => 'required|array',
+            'attendances.*.student_id' => 'required|exists:students,id',
+            'attendances.*.status' => 'required|in:present,absent,late,excused',
+            'attendances.*.notes' => 'nullable|string',
+        ]);
+
+        // Verify teacher teaches this course
+        if (!$teacher->courses()->where('courses.id', $validated['course_id'])->exists()) {
+            return redirect()->route('teacher-portal.attendance')
+                ->with('error', 'You do not teach this course.');
+        }
+
+        $marked = 0;
+        foreach ($validated['attendances'] as $attendanceData) {
+            Attendance::updateOrCreate(
+                [
+                    'student_id' => $attendanceData['student_id'],
+                    'course_id' => $validated['course_id'],
+                    'attendance_date' => $validated['attendance_date'],
+                ],
+                [
+                    'teacher_id' => $teacher->id,
+                    'status' => $attendanceData['status'],
+                    'notes' => $attendanceData['notes'] ?? null,
+                ]
+            );
+            $marked++;
+        }
+
+        return redirect()->route('teacher-portal.attendance')
+            ->with('success', "Attendance marked successfully for {$marked} student(s).");
+    }
+
+    public function getCourseStudents($courseId)
+    {
+        $teacherId = session('teacher_id');
+        
+        if (!$teacherId) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $teacher = Teacher::find($teacherId);
+        
+        if (!$teacher) {
+            return response()->json(['error' => 'Teacher not found'], 404);
+        }
+
+        // Verify teacher teaches this course
+        if (!$teacher->courses()->where('courses.id', $courseId)->exists()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $course = Course::findOrFail($courseId);
+        $students = $course->registeredStudents()
+            ->where('status', 'active')
+            ->get()
+            ->map(function($student) {
+                return [
+                    'id' => $student->id,
+                    'full_name' => $student->full_name,
+                    'student_number' => $student->student_number,
+                ];
+            });
+
+        return response()->json(['students' => $students]);
     }
 
     public function settings()
