@@ -4,6 +4,14 @@ All notable changes to the School Management System will be documented in this f
 
 ## [Unreleased] - 2025-12-24
 
+### Changed
+- **Sidebar Menu**: Changed "Payments" menu item to "Record Payment" for better clarity
+- **Billing Page Student Selection**: Replaced dropdown with searchable input field
+  - Real-time filtering as user types (searches by student name or number)
+  - Dropdown shows matching students with full name and student number
+  - Selected student displayed as removable tag
+  - Much easier to find students when there are many enrolled
+
 ### Added
 
 #### Announcements Module - Enhanced

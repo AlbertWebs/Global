@@ -13,22 +13,45 @@
 
             <!-- Student Selection -->
             <div class="mb-6">
-                <label for="student_id" class="block text-sm font-medium text-gray-700 mb-2">Select Student *</label>
-                <select 
-                    id="student_id" 
-                    name="student_id" 
-                    x-model="studentId"
-                    @change="loadStudentInfo"
-                    required
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="">Choose a student...</option>
-                    @foreach($students as $student)
-                        <option value="{{ $student->id }}" {{ isset($selectedStudentId) && $selectedStudentId == $student->id ? 'selected' : '' }}>
-                            {{ $student->full_name }} ({{ $student->student_number }})
-                        </option>
-                    @endforeach
-                </select>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select Student *</label>
+                <div class="relative" x-data="{ studentSearch: '', showStudentDropdown: false }">
+                    <input 
+                        type="text" 
+                        x-model="studentSearch" 
+                        @focus="showStudentDropdown = true"
+                        @click.away="showStudentDropdown = false"
+                        @input="showStudentDropdown = true"
+                        placeholder="Search student by name or number..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        :value="selectedStudentName"
+                        readonly
+                    >
+                    <input type="hidden" name="student_id" x-model="studentId" required>
+                    <div x-show="showStudentDropdown" x-cloak class="absolute z-10 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                        <div class="p-2">
+                            @foreach($students as $student)
+                                <div 
+                                    class="px-3 py-2 hover:bg-blue-50 cursor-pointer rounded"
+                                    x-show="!studentSearch || ('{{ strtolower($student->full_name . ' ' . $student->student_number) }}').includes(studentSearch.toLowerCase())"
+                                    @click="studentId = '{{ $student->id }}'; selectedStudentName = '{{ $student->full_name }} ({{ $student->student_number }})'; studentSearch = ''; showStudentDropdown = false; loadStudentInfo();"
+                                >
+                                    <div class="font-medium text-gray-900">{{ $student->full_name }}</div>
+                                    <div class="text-sm text-gray-500">{{ $student->student_number }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                <div x-show="studentId" class="mt-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                        <span x-text="selectedStudentName"></span>
+                        <button type="button" @click="studentId = ''; selectedStudentName = ''; loadStudentInfo();" class="ml-2 text-blue-600 hover:text-blue-800">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </span>
+                </div>
             </div>
 
             <!-- Course Selection -->
@@ -239,6 +262,7 @@
 function billingForm() {
     return {
         studentId: '{{ $selectedStudentId ?? '' }}',
+        selectedStudentName: '{{ isset($selectedStudentId) && $students->firstWhere("id", $selectedStudentId) ? $students->firstWhere("id", $selectedStudentId)->full_name . " (" . $students->firstWhere("id", $selectedStudentId)->student_number . ")" : "" }}',
         courseId: '',
         agreedAmount: '',
         amountPaid: '',
@@ -268,6 +292,7 @@ function billingForm() {
                 this.studentCourses = [];
                 this.courseId = '';
                 this.courseInfo = null;
+                this.selectedStudentName = '';
                 // Show all courses when no student is selected
                 this.$nextTick(() => {
                     const select = this.$refs.courseSelect;

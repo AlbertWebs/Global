@@ -114,7 +114,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                             </svg>
                         </div>
-                        <span class="{{ request()->routeIs('billing.*') ? 'text-gray-900 font-semibold' : 'text-blue-100 font-medium group-hover:text-gray-900' }}">Payments</span>
+                        <span class="{{ request()->routeIs('billing.*') ? 'text-gray-900 font-semibold' : 'text-blue-100 font-medium group-hover:text-gray-900' }}">Record Payment</span>
                     </a>
 
                     <a href="{{ route('courses.index') }}" class="flex items-center px-4 py-3 rounded-xl hover:bg-white hover:bg-opacity-20 hover:shadow-lg transition-all duration-200 group {{ request()->routeIs('courses.*') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
