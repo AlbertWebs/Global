@@ -22,22 +22,20 @@ class BalancesExport implements FromCollection, WithHeadings, WithMapping, WithS
 
     public function collection()
     {
-        return $this->students;
+        return $this->students->filter(function ($student) {
+            $totalAgreed = $student->payments->sum('agreed_amount');
+            $totalPaid = $student->payments->sum('amount_paid');
+            return ($totalAgreed - $totalPaid) > 0;
+        });
     }
 
     public function headings(): array
     {
         return [
-            'Student Number',
             'Admission Number',
             'Full Name',
-            'Email',
-            'Phone',
-            'Total Agreed Amount (KES)',
-            'Total Paid (KES)',
+            'Amount Paid (KES)',
             'Outstanding Balance (KES)',
-            'Number of Payments',
-            'Status',
         ];
     }
 
@@ -45,19 +43,13 @@ class BalancesExport implements FromCollection, WithHeadings, WithMapping, WithS
     {
         $totalAgreed = $student->payments->sum('agreed_amount');
         $totalPaid = $student->payments->sum('amount_paid');
-        $balance = max(0, $totalAgreed - $totalPaid);
+        $balance = $totalAgreed - $totalPaid;
 
         return [
-            $student->student_number ?? 'N/A',
             $student->admission_number ?? 'N/A',
             $student->full_name,
-            $student->email ?? 'N/A',
-            $student->phone ?? 'N/A',
-            number_format($totalAgreed, 2),
             number_format($totalPaid, 2),
             number_format($balance, 2),
-            $student->payments->count(),
-            ucfirst($student->status ?? 'N/A'),
         ];
     }
 

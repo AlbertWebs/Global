@@ -55,6 +55,14 @@
                 <p class="text-sm text-gray-600 font-medium">Activity Logs</p>
                 <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['activity_logs']) }}</p>
             </div>
+            <div class="bg-teal-50 p-4 rounded-lg border-l-4 border-teal-500">
+                <p class="text-sm text-gray-600 font-medium">Courses</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['courses'] ?? 0) }}</p>
+            </div>
+            <div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                <p class="text-sm text-gray-600 font-medium">Teachers</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['teachers'] ?? 0) }}</p>
+            </div>
         </div>
     </div>
 
@@ -62,7 +70,7 @@
     <div class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-6">Select Data to Purge</h2>
 
-        <form method="POST" action="{{ route('data-purge.purge') }}" id="purgeForm" x-data="{ showConfirm: false }">
+        <form method="POST" action="{{ route('data-purge.purge') }}" id="purgeForm" x-data="{ purgeAll: false }" @submit="console.log(new FormData($event.target)); return true;">
             @csrf
 
             <!-- Purge All Option -->
@@ -73,11 +81,23 @@
                         name="purge_all" 
                         value="1"
                         class="w-5 h-5 text-red-600 border-red-300 rounded focus:ring-red-500"
-                        @change="showConfirm = $event.target.checked"
+                        x-model="purgeAll"
+                        @change="if (purgeAll) { 
+                            $refs.students.checked = false; 
+                            $refs.payments.checked = false; 
+                            $refs.receipts.checked = false; 
+                            $refs.expenses.checked = false; 
+                            $refs.course_registrations.checked = false; 
+                            $refs.bank_deposits.checked = false; 
+                            $refs.ledger_entries.checked = false; 
+                            $refs.activity_logs.checked = false; 
+                            $refs.courses.checked = false; 
+                            $refs.teachers.checked = false; 
+                        }"
                     >
                     <div class="ml-3">
                         <p class="text-lg font-bold text-red-900">Purge All Data (Except Users)</p>
-                        <p class="text-sm text-red-700 mt-1">This will delete ALL data including students, payments, expenses, course registrations, bank deposits, receipts, ledger entries, and activity logs. Only users will remain.</p>
+                        <p class="text-sm text-red-700 mt-1">This will delete ALL data including students, payments, expenses, course registrations, bank deposits, receipts, ledger entries, activity logs, courses, and teachers. Only users will remain.</p>
                     </div>
                 </label>
             </div>
@@ -87,7 +107,7 @@
 
                 <div class="space-y-4">
                     <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-                        <input type="checkbox" name="purge_students" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                        <input type="checkbox" name="purge_students" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="students" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
                         <div class="ml-3">
                             <p class="font-medium text-gray-900">Students ({{ number_format($counts['students']) }})</p>
                             <p class="text-sm text-gray-600">This will also delete related payments, receipts, and course registrations</p>
@@ -95,7 +115,7 @@
                     </label>
 
                     <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-                        <input type="checkbox" name="purge_payments" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                        <input type="checkbox" name="purge_payments" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="payments" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
                         <div class="ml-3">
                             <p class="font-medium text-gray-900">Payments ({{ number_format($counts['payments']) }})</p>
                             <p class="text-sm text-gray-600">This will also delete related receipts</p>
@@ -103,62 +123,62 @@
                     </label>
 
                     <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-                        <input type="checkbox" name="purge_receipts" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                        <input type="checkbox" name="purge_receipts" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="receipts" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
                         <div class="ml-3">
                             <p class="font-medium text-gray-900">Receipts ({{ number_format($counts['receipts']) }})</p>
                         </div>
                     </label>
 
                     <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-                        <input type="checkbox" name="purge_expenses" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                        <input type="checkbox" name="purge_expenses" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="expenses" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
                         <div class="ml-3">
                             <p class="font-medium text-gray-900">Expenses ({{ number_format($counts['expenses']) }})</p>
                         </div>
                     </label>
 
                     <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-                        <input type="checkbox" name="purge_course_registrations" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                        <input type="checkbox" name="purge_course_registrations" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="course_registrations" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
                         <div class="ml-3">
                             <p class="font-medium text-gray-900">Course Registrations ({{ number_format($counts['course_registrations']) }})</p>
                         </div>
                     </label>
 
                     <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-                        <input type="checkbox" name="purge_bank_deposits" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                        <input type="checkbox" name="purge_bank_deposits" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="bank_deposits" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
                         <div class="ml-3">
                             <p class="font-medium text-gray-900">Bank Deposits ({{ number_format($counts['bank_deposits']) }})</p>
                         </div>
                     </label>
 
                     <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-                        <input type="checkbox" name="purge_ledger_entries" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                        <input type="checkbox" name="purge_ledger_entries" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="ledger_entries" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
                         <div class="ml-3">
                             <p class="font-medium text-gray-900">Ledger Entries ({{ number_format($counts['ledger_entries']) }})</p>
                         </div>
                     </label>
 
                     <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
-                        <input type="checkbox" name="purge_activity_logs" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                        <input type="checkbox" name="purge_activity_logs" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="activity_logs" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
                         <div class="ml-3">
                             <p class="font-medium text-gray-900">Activity Logs ({{ number_format($counts['activity_logs']) }})</p>
                         </div>
                     </label>
-                </div>
-            </div>
 
-            <!-- Confirmation -->
-            <div class="mt-8 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
-                <label for="confirm_text" class="block text-sm font-bold text-yellow-900 mb-2">
-                    Type "DELETE ALL DATA" to confirm:
-                </label>
-                <input 
-                    type="text" 
-                    id="confirm_text" 
-                    name="confirm_text" 
-                    required
-                    class="w-full px-4 py-3 border-2 border-yellow-400 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
-                    placeholder="DELETE ALL DATA"
-                >
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" name="purge_courses" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="courses" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">Courses ({{ number_format($counts['courses'] ?? 0) }})</p>
+                            <p class="text-sm text-gray-600">This will also delete related course registrations</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" name="purge_teachers" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="teachers" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">Teachers ({{ number_format($counts['teachers'] ?? 0) }})</p>
+                        </div>
+                    </label>
+                </div>
             </div>
 
             <!-- Submit Button -->

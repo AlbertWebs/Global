@@ -6,8 +6,27 @@
     <title>Receipt #{{ $receipt->receipt_number }} - Global College</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        @page {
+            size: A5;
+            margin: 0;
+        }
+        body {
+            width: 148mm;
+            height: 210mm;
+            margin: 0;
+            padding: 5mm; /* Reduced padding for A5 */
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #000;
+            background: #fff;
+            font-size: 0.75rem; /* Base font size for A5 */
+        }
+        .max-w-3xl {
+            max-width: none !important; /* Override Tailwind's max-width */
+            width: 100%;
+        }
         @media print {
-            body { margin: 0; padding: 20px; }
+            body { margin: 0; padding: 5mm; }
             .no-print { display: none; }
             .print-break { page-break-after: always; }
             * {
@@ -20,11 +39,85 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            color: #000;
-            background: #fff;
+            h1 {
+                font-size: 1.5rem !important; /* text-2xl */
+            }
+            .text-5xl {
+                font-size: 1.5rem !important; /* text-2xl */
+            }
+            .text-4xl {
+                font-size: 2rem !important; /* text-3xl */
+            }
+            .text-2xl {
+                font-size: 1.125rem !important; /* text-lg */
+            }
+            .text-xl {
+                font-size: 1rem !important; /* text-base */
+            }
+            .text-lg {
+                font-size: 0.875rem !important; /* text-sm */
+            }
+            .text-base {
+                font-size: 0.875rem !important; /* text-sm */
+            }
+            .text-sm {
+                font-size: 0.75rem !important; /* text-xs */
+            }
+            .text-xs {
+                font-size: 0.625rem !important; /* text-xxs, custom */
+            }
+            .h-28 {
+                height: 32px !important;
+                max-height: 32px !important;
+            }
+            .mb-8 {
+                margin-bottom: 0.25rem !important;
+            }
+            .mb-6 {
+                margin-bottom: 0.25rem !important;
+            }
+            .mb-4 {
+                margin-bottom: 0.25rem !important;
+            }
+            .mt-12 {
+                margin-top: 0.75rem !important;
+            }
+            .mt-8 {
+                margin-top: 0.5rem !important;
+            }
+            .pb-6 {
+                padding-bottom: 0.5rem !important;
+            }
+            .p-4 {
+                padding: 0.5rem !important;
+            }
+            .p-5 {
+                padding: 0.75rem !important;
+            }
+            .px-6 {
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+            }
+            .py-5 {
+                padding-top: 0.3rem !important;
+                padding-bottom: 0.3rem !important;
+            }
+            .py-4 {
+                padding-top: 0.2rem !important;
+                padding-bottom: 0.2rem !important;
+            }
+            .gap-6 {
+                gap: 0.5rem !important;
+            }
+            .gap-4 {
+                gap: 0.5rem !important;
+            }
+            .pt-6 {
+                padding-top: 0.5rem !important;
+            }
+            .p-6 {
+                padding: 0.75rem !important;
+            }
         }
         
         /* Black and White Styles */
@@ -55,14 +148,14 @@
         }
     </style>
 </head>
-<body class="bg-white p-8">
+    <body class="bg-white p-4">
     <div class="max-w-3xl mx-auto">
         <!-- Receipt Header with School Branding -->
         <div class="text-center mb-8 pb-6 bw-header">
             <div class="mb-4">
                 @if(\App\Models\Setting::get('receipt_logo') || \App\Models\Setting::get('school_logo'))
-                <div class="mb-4">
-                    <img src="{{ url('storage/' . (\App\Models\Setting::get('receipt_logo') ?? \App\Models\Setting::get('school_logo'))) }}" alt="School Logo" class="h-28 mx-auto object-contain" style="max-height: 112px; width: auto; filter: grayscale(100%);">
+                <div class="mb-2">
+                    <img src="{{ url('storage/' . (\App\Models\Setting::get('receipt_logo') ?? \App\Models\Setting::get('school_logo'))) }}" alt="School Logo" class="h-8 mx-auto object-contain" style="max-height: 32px; width: auto; filter: grayscale(100%);">
                 </div>
                 @endif
                 <h1 class="text-5xl font-bold" style="color: #000;">{{ \App\Models\Setting::get('school_name', 'Global College') }}</h1>
@@ -81,7 +174,6 @@
             <div class="p-4 rounded-lg bw-box text-right">
                 <p class="text-xs mb-1 font-bold uppercase" style="color: #000;">Date</p>
                 <p class="text-2xl font-bold" style="color: #000;">{{ $receipt->receipt_date->format('F d, Y') }}</p>
-                <p class="text-sm mt-1" style="color: #000;">{{ $receipt->receipt_date->format('h:i A') }}</p>
             </div>
         </div>
 
@@ -96,21 +188,9 @@
                     <p class="text-xl font-bold" style="color: #000;">{{ $receipt->payment->student->full_name }}</p>
                 </div>
                 <div>
-                    <p class="text-xs mb-1 font-medium" style="color: #666;">Student Number</p>
-                    <p class="text-xl font-bold" style="color: #000;">{{ $receipt->payment->student->student_number }}</p>
+                    <p class="text-xs mb-1 font-medium" style="color: #666;">Admission Number</p>
+                    <p class="text-xl font-bold" style="color: #000;">{{ $receipt->payment->student->admission_number }}</p>
                 </div>
-                @if($receipt->payment->student->email)
-                <div>
-                    <p class="text-xs mb-1 font-medium" style="color: #666;">Email Address</p>
-                    <p class="text-sm" style="color: #000;">{{ $receipt->payment->student->email }}</p>
-                </div>
-                @endif
-                @if($receipt->payment->student->phone)
-                <div>
-                    <p class="text-xs mb-1 font-medium" style="color: #666;">Phone Number</p>
-                    <p class="text-sm" style="color: #000;">{{ $receipt->payment->student->phone }}</p>
-                </div>
-                @endif
             </div>
         </div>
 
@@ -131,10 +211,6 @@
                         <tr class="bw-divider">
                             <td class="px-6 py-5">
                                 <p class="font-bold text-xl" style="color: #000;">{{ $receipt->payment->course->name }}</p>
-                                <p class="text-sm mt-1" style="color: #666;">Course Code: {{ $receipt->payment->course->code }}</p>
-                                @if($receipt->payment->academic_year && $receipt->payment->month)
-                                <p class="text-xs mt-1 font-medium" style="color: #666;">{{ $receipt->payment->month }} - {{ $receipt->payment->academic_year }}</p>
-                                @endif
                             </td>
                             <td class="px-6 py-5 text-right">
                                 <p class="font-bold text-xl" style="color: #000;">KES {{ number_format($receipt->payment->amount_paid, 2) }}</p>
@@ -206,9 +282,7 @@
         <!-- Footer Message -->
         <div class="mt-12 pt-6 bw-divider text-center bw-bg-light p-6 rounded-lg">
             <p class="text-base font-bold mb-2" style="color: #000;">Thank you for your payment!</p>
-            <p class="text-sm mb-1" style="color: #000;">This is an official computer-generated receipt from {{ \App\Models\Setting::get('school_name', 'Global College') }}</p>
-            <p class="text-xs mt-2" style="color: #666;">Please keep this receipt for your records</p>
-            <p class="text-xs mt-4" style="color: #666;">For inquiries, contact: {{ \App\Models\Setting::get('school_email', 'info@globalcollege.edu') }} | {{ \App\Models\Setting::get('school_phone', '+254 700 000 000') }}</p>
+            <p class="text-xs mt-2" style="color: #666;">This is an official receipt. Please keep for your records. For inquiries, contact {{ \App\Models\Setting::get('school_email', 'info@globalcollege.edu') }} or {{ \App\Models\Setting::get('school_phone', '+254 700 000 000') }}</p>
         </div>
 
         <!-- Print Buttons -->
