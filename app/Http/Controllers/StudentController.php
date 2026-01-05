@@ -192,6 +192,7 @@ class StudentController extends Controller
         // Outstanding balances per course
         $courseBalances = \App\Models\Balance::where('student_id', $student->id)
             ->with('course')
+            ->where('outstanding_balance', '>', 0)
             ->get()
             ->map(function($balance) {
                 return [
@@ -408,4 +409,15 @@ class StudentController extends Controller
             ], 500);
         }
     }
-}
+
+    /**
+     * Get student's wallet balance via API
+     *
+     * @param  \App\Models\Student  $student
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getWalletBalance(Student $student)
+    {
+        $wallet = Wallet::where('student_id', $student->id)->first();
+        return response()->json(['balance' => $wallet ? $wallet->balance : 0]);
+    }}

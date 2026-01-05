@@ -235,6 +235,9 @@
                 <button @click="activeTab = 'quick-payment'" :class="activeTab === 'quick-payment' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-6 py-4 text-sm font-medium border-b-2 transition-colors">
                     Quick Payment
                 </button>
+                <button @click="activeTab = 'payment-logs'" :class="activeTab === 'payment-logs' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'" class="px-6 py-4 text-sm font-medium border-b-2 transition-colors">
+                    Payment Logs
+                </button>
             </nav>
         </div>
 
@@ -653,6 +656,27 @@
                         </button>
                     </div>
                 </form>
+            </div>
+            
+            <!-- Payment Logs Tab -->
+            <div x-show="activeTab === 'payment-logs'" class="space-y-6">
+                <div class="bg-white rounded-xl shadow-lg p-6 flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-gray-900">Student Payment Logs</h3>
+                    <div class="flex space-x-3">
+                        <a href="{{ route('payment-logs.index', ['student_id' => $student->id]) }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                            <span>View All Logs</span>
+                        </a>
+                        <a href="{{ route('payment-logs.export-excel', ['student_id' => $student->id]) }}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                            </svg>
+                            <span>Export to Excel</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

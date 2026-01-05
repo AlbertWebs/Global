@@ -31,9 +31,13 @@ class BillingController extends Controller
         $selectedStudent = null;
         if ($selectedStudentId) {
             $selectedStudent = Student::find($selectedStudentId);
+            $studentWallet = Wallet::where('student_id', $selectedStudentId)->first();
+            $walletBalance = $studentWallet ? $studentWallet->balance : 0;
+        } else {
+            $walletBalance = 0;
         }
         
-        return view('billing.index', compact('students', 'courses', 'currentAcademicYear', 'currentMonth', 'currentYear', 'selectedStudentId', 'selectedStudent'));
+        return view('billing.index', compact('students', 'courses', 'currentAcademicYear', 'currentMonth', 'currentYear', 'selectedStudentId', 'selectedStudent', 'walletBalance'));
     }
 
     public function getStudentBalance($studentId, $courseId)
@@ -75,6 +79,12 @@ class BillingController extends Controller
         ]);
     }
 
+    private function getStudentOverallOutstandingBalance($studentId): float
+    {
+        return \App\Models\Balance::where('student_id', $studentId)
+            ->sum('outstanding_balance');
+    }
+
     private function getCurrentAcademicYear(): string
     {
         $year = now()->year;
@@ -102,8 +112,42 @@ class BillingController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $course = Course::findOrFail($validated['course_id']);
+        $studentId = $validated['student_id'];
+        $cashPaymentAmount = $validated['amount_paid']; // Rename for clarity: this is the actual cash/bank amount paid
+        $wallet = Wallet::firstOrNew(['student_id' => $studentId]);
+        $initialWalletBalance = $wallet->balance;
+        $amountFromWallet = 0;
 
+        // If there's a wallet balance, use it first to reduce the overall payment amount
+        // This `amountFromWallet` is the portion of the wallet that *could* be used for the entire transaction
+        if ($initialWalletBalance > 0 && ($cashPaymentAmount > 0 || $request->has('use_wallet'))) { // Allow wallet use even with 0 cash payment
+            $totalAmountConsideredForPayment = $cashPaymentAmount + $initialWalletBalance; // Temporary sum to determine wallet usage limit
+            
+            // Determine how much from wallet to actually use based on what's available and needed for the transaction
+            // For now, let's assume the user intends to use wallet up to the cashPaymentAmount or full wallet balance if cash is 0
+            $amountFromWallet = min($initialWalletBalance, $cashPaymentAmount + $this->getStudentOverallOutstandingBalance($studentId)); // Use wallet for agreed amount and overall outstanding
+            
+            if ($amountFromWallet > 0) {
+                $wallet->balance -= $amountFromWallet;
+                $wallet->save();
+    
+                // Log wallet usage as a distinct transaction
+                PaymentLog::create([
+                    'student_id' => $studentId,
+                    'description' => 'Wallet Funds Applied',
+                    'amount_paid' => $amountFromWallet,
+                    'balance_before' => $initialWalletBalance,
+                    'balance_after' => $wallet->balance,
+                    'wallet_balance_after' => $wallet->balance,
+                    'payment_date' => now(),
+                ]);
+            }
+        }
+
+        // The total effective payment for distribution (cash + amount actually taken from wallet)
+        $totalEffectivePaymentForDistribution = $cashPaymentAmount + $amountFromWallet;
+
+        $course = Course::findOrFail($validated['course_id']);
         $totalDiscount = $validated['discount_amount'] ?? 0;
         
         $payment = Payment::create([
@@ -113,7 +157,7 @@ class BillingController extends Controller
             'month' => $validated['month'],
             'year' => $validated['year'],
             'agreed_amount' => $validated['agreed_amount'],
-            'amount_paid' => $validated['amount_paid'],
+            'amount_paid' => $cashPaymentAmount, // This is the cash/bank amount only
             'base_price' => $course->base_price,
             'discount_amount' => $totalDiscount,
             'cashier_id' => auth()->id(),
@@ -131,7 +175,6 @@ class BillingController extends Controller
         // Refresh payment to load receipt relationship
         $payment->refresh();
 
-        // Update or create Balance record
         // Update or create Balance record for the current course
         $currentCourseBalance = \App\Models\Balance::firstOrNew(
             ['student_id' => $validated['student_id'], 'course_id' => $validated['course_id']]
@@ -144,17 +187,19 @@ class BillingController extends Controller
             $currentCourseBalance->total_paid = 0;
         }
 
-        // Apply payment to the current course balance first
-        $amountToApplyToCurrentCourse = min($currentCourseBalance->agreed_amount - $currentCourseBalance->total_paid, $validated['amount_paid']);
+        $amountNeededForCurrentCourse = $currentCourseBalance->agreed_amount - $currentCourseBalance->total_paid;
+        
+        // Apply portion of total effective payment to the current course balance first
+        $amountToApplyToCurrentCourse = min($amountNeededForCurrentCourse, $totalEffectivePaymentForDistribution);
         $currentCourseBalance->total_paid += $amountToApplyToCurrentCourse;
-        $remainingPayment = $validated['amount_paid'] - $amountToApplyToCurrentCourse;
+        $totalEffectivePaymentForDistribution -= $amountToApplyToCurrentCourse; // Deduct from total effective payment
 
         $currentCourseBalance->outstanding_balance = max(0, $currentCourseBalance->agreed_amount - $currentCourseBalance->total_paid);
         $currentCourseBalance->status = ($currentCourseBalance->outstanding_balance <= 0) ? 'cleared' : 'partially_paid';
         $currentCourseBalance->last_payment_date = now();
         $currentCourseBalance->save();
 
-        // Log payment for the current course
+        // Log payment for the current course (this log represents the actual amount applied to THIS course from the total effective payment)
         PaymentLog::create([
             'student_id' => $validated['student_id'],
             'course_id' => $validated['course_id'],
@@ -163,13 +208,13 @@ class BillingController extends Controller
             'base_price' => $currentCourseBalance->base_price,
             'agreed_amount' => $currentCourseBalance->agreed_amount,
             'amount_paid' => $amountToApplyToCurrentCourse,
-            'balance_before' => $currentCourseBalance->getOriginal('outstanding_balance') + $amountToApplyToCurrentCourse, // Calculate balance before
+            'balance_before' => $currentCourseBalance->getOriginal('outstanding_balance') + $amountToApplyToCurrentCourse, // Correct calculation of balance before
             'balance_after' => $currentCourseBalance->outstanding_balance,
             'payment_date' => now(),
         ]);
 
-        // Distribute any remaining payment to other outstanding balances
-        if ($remainingPayment > 0) {
+        // Distribute any remaining effective payment to other outstanding balances
+        if ($totalEffectivePaymentForDistribution > 0) {
             $otherOutstandingBalances = \App\Models\Balance::where('student_id', $validated['student_id'])
                 ->where('course_id', '!=', $validated['course_id'])
                 ->where('outstanding_balance', '>', 0)
@@ -177,16 +222,16 @@ class BillingController extends Controller
                 ->get();
 
             foreach ($otherOutstandingBalances as $otherBalance) {
-                if ($remainingPayment <= 0) break;
+                if ($totalEffectivePaymentForDistribution <= 0) break;
 
-                $amountToApply = min($otherBalance->outstanding_balance, $remainingPayment);
+                $amountToApply = min($otherBalance->outstanding_balance, $totalEffectivePaymentForDistribution);
                 $otherBalance->total_paid += $amountToApply;
                 $otherBalance->outstanding_balance -= $amountToApply;
                 $otherBalance->status = ($otherBalance->outstanding_balance <= 0) ? 'cleared' : 'partially_paid';
                 $otherBalance->last_payment_date = now();
                 $otherBalance->save();
                 
-                $remainingPayment -= $amountToApply;
+                $totalEffectivePaymentForDistribution -= $amountToApply;
 
                 // Log payment for other outstanding balances
                 PaymentLog::create([
@@ -197,25 +242,25 @@ class BillingController extends Controller
                     'base_price' => $otherBalance->base_price,
                     'agreed_amount' => $otherBalance->agreed_amount,
                     'amount_paid' => $amountToApply,
-                    'balance_before' => $otherBalance->getOriginal('outstanding_balance') + $amountToApply, // Calculate balance before
+                    'balance_before' => $otherBalance->getOriginal('outstanding_balance') + $amountToApply, // Correct calculation of balance before
                     'balance_after' => $otherBalance->outstanding_balance,
                     'payment_date' => now(),
                 ]);
             }
         }
 
-        // Handle any remaining payment as a wallet top-up
-        if ($remainingPayment > 0) {
+        // Any remaining effective payment is considered an overpayment and topped up to the wallet
+        if ($totalEffectivePaymentForDistribution > 0) {
             $wallet = Wallet::firstOrNew(['student_id' => $validated['student_id']]);
-            $wallet->balance += $remainingPayment;
+            $wallet->balance += $totalEffectivePaymentForDistribution;
             $wallet->save();
 
-            // Log wallet top-up
+            // Log wallet top-up (if it was an overpayment beyond all outstanding balances)
             PaymentLog::create([
                 'student_id' => $validated['student_id'],
                 'payment_id' => $payment->id,
-                'description' => 'Wallet Top-up',
-                'amount_paid' => $remainingPayment,
+                'description' => 'Wallet Top-up from Overpayment',
+                'amount_paid' => $totalEffectivePaymentForDistribution,
                 'balance_before' => $wallet->getOriginal('balance') ?? 0, // Assuming it's 0 if new
                 'balance_after' => $wallet->balance,
                 'wallet_balance_after' => $wallet->balance,
@@ -227,7 +272,7 @@ class BillingController extends Controller
                 $smsService = app(\App\Services\SmsService::class);
                 $smsService->sendWalletTopUpSMS(
                     $payment->student,
-                    $remainingPayment,
+                    $totalEffectivePaymentForDistribution,
                     $wallet->balance
                 );
             } catch (\Exception $e) {

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
             $table->foreignId('course_id')->nullable()->constrained('courses')->onDelete('set null');
-            $table->foreignId('payment_id')->constrained('payments')->onDelete('cascade');
+            $table->foreignId('payment_id')->nullable()->constrained('payments')->onDelete('cascade');
             $table->string('description'); // e.g., "Course fee for AI", "Wallet Top-up"
             $table->decimal('base_price', 10, 2)->nullable();
             $table->decimal('agreed_amount', 10, 2)->nullable();

@@ -22,7 +22,14 @@ class ReceiptController extends Controller
                             ->where('course_id', $receipt->payment->course_id)
                             ->first();
 
-        return view('receipts.show', compact('receipt', 'balance'));
+        // Fetch the amount paid from wallet for this specific payment, if any
+        $walletPaymentLog = \App\Models\PaymentLog::where('payment_id', $receipt->payment->id)
+            ->where('description', 'Wallet Funds Applied')
+            ->first();
+
+        $walletAmountUsed = $walletPaymentLog ? $walletPaymentLog->amount_paid : 0;
+
+        return view('receipts.show', compact('receipt', 'balance', 'walletAmountUsed'));
     }
 
     public function print($id)

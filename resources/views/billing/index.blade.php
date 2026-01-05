@@ -245,6 +245,10 @@
                     <span class="text-gray-600">Overall Outstanding Balance:</span>
                     <span class="font-bold text-orange-700" x-text="'KES ' + studentOverallBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                 </div>
+                <div x-show="walletBalance > 0" class="flex justify-between items-center mb-2">
+                    <span class="text-gray-600">Wallet Balance:</span>
+                    <span class="font-bold text-green-700" x-text="'KES ' + walletBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                </div>
                 <div x-show="parseFloat(agreedAmount) > 0" class="flex justify-between items-center mb-2" :class="{'mt-2 border-t pt-2': studentOverallBalance > 0}">
                     <span class="text-gray-600">Agreed Amount for Selected Course:</span>
                     <span class="font-bold text-blue-700" x-text="'KES ' + parseFloat(agreedAmount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
@@ -264,9 +268,17 @@
                         <span class="text-gray-600">Total Due for Transaction:</span>
                         <span class="font-semibold" x-text="'KES ' + totalAmountDueForPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                     </div>
+                    <div x-show="usedWalletAmount > 0" class="flex justify-between">
+                        <span class="text-gray-600">Amount from Wallet:</span>
+                        <span class="font-semibold text-green-600" x-text="'KES ' + usedWalletAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                    </div>
                     <div class="flex justify-between">
-                        <span class="text-gray-600">Amount Paid:</span>
+                        <span class="text-gray-600">Amount Paid (Cash/Bank):</span>
                         <span class="font-semibold" x-text="'KES ' + (amountPaid ? parseFloat(amountPaid).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00')"></span>
+                    </div>
+                    <div class="flex justify-between pt-2 border-t border-gray-300">
+                        <span class="text-gray-600">Total Paid:</span>
+                        <span class="font-bold text-green-600" x-text="'KES ' + (parseFloat(amountPaid || 0) + parseFloat(usedWalletAmount || 0)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                     </div>
                     <div x-show="balance > 0" class="flex justify-between pt-2 border-t border-gray-300">
                         <span class="text-gray-600">Outstanding Balance:</span>
@@ -311,6 +323,8 @@ function billingForm() {
         studentOverallBalance: 0, // New property for student's overall outstanding balance
         studentCourseBalances: [], // New property for detailed course balances
         totalAmountDueForPayment: 0, // Total amount due: overall balance + agreedAmount for selected course
+        walletBalance: {{ $walletBalance ?? 0 }}, // Initialize wallet balance from backend
+        usedWalletAmount: 0,
         
         courseInfo: null,
         studentCourses: [],
@@ -341,6 +355,7 @@ function billingForm() {
                 this.studentOverallBalance = 0; // Reset total balance
                 this.studentCourseBalances = []; // Reset detailed balances
                 this.totalAmountDueForPayment = 0; // Reset total amount due
+                this.walletBalance = 0; // Reset wallet balance
                 // Show all courses when no student is selected
                 this.$nextTick(() => {
                     const select = this.$refs.courseSelect;
@@ -373,6 +388,12 @@ function billingForm() {
 
                 this.studentOverallBalance = parseFloat(overallBalanceData.total_outstanding_balance || 0);
                 this.studentCourseBalances = overallBalanceData.course_balances || [];
+
+                // Fetch wallet balance for the student
+                const walletUrl = `/api/students/${this.studentId}/wallet-balance`;
+                const walletResponse = await fetch(walletUrl);
+                const walletData = await walletResponse.json();
+                this.walletBalance = parseFloat(walletData.balance || 0);
                 
                 // Reset agreedAmount when student changes to prevent carry-over from previous selections.
                 // It will be populated when a course is selected.
@@ -466,7 +487,7 @@ function billingForm() {
         calculateBalance() {
             const base = parseFloat(this.basePrice) || 0;
             const agreed = parseFloat(this.agreedAmount) || 0;
-            const paid = parseFloat(this.amountPaid) || 0;
+            let paid = parseFloat(this.amountPaid) || 0;
 
             // Automatically calculate discount if agreed amount is less than base price
             if (agreed < base) {
@@ -478,9 +499,22 @@ function billingForm() {
             // Update total amount due based on current agreedAmount input
             this.totalAmountDueForPayment = this.studentOverallBalance + parseFloat(this.agreedAmount || 0);
 
+            // Calculate how much wallet balance to use
+            let amountFromWallet = 0;
+            if (this.walletBalance > 0 && paid < this.totalAmountDueForPayment) {
+                // Use wallet balance up to the remaining amount due or available wallet balance
+                amountFromWallet = Math.min(this.walletBalance, this.totalAmountDueForPayment - paid);
+                this.usedWalletAmount = amountFromWallet;
+            } else {
+                this.usedWalletAmount = 0;
+            }
+
+            // Add wallet amount to paid amount for summary calculation
+            const totalPaidIncludingWallet = paid + amountFromWallet;
+
             // Calculate balance after applying discount and considering the total amount due
             const totalPayable = this.totalAmountDueForPayment;
-            this.balance = Math.max(0, totalPayable - paid);
+            this.balance = Math.max(0, totalPayable - totalPaidIncludingWallet);
         },
         
         getYearFromMonth(monthString) {

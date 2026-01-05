@@ -61,6 +61,7 @@ Route::middleware('auth')->group(function () {
 
     // API for course registrations
     Route::get('/api/students/{studentId}/registered-courses', [CourseRegistrationController::class, 'getRegisteredCoursesForStudent'])->name('api.students.registered-courses');
+    Route::get('/api/students/{student}/wallet-balance', [StudentController::class, 'getWalletBalance'])->name('api.students.wallet-balance');
 
     // Billing
     Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
@@ -113,6 +114,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class);
 
     // Payment Logs (Super Admin only - checked in controller)
+    Route::get('/payment-logs/export-excel', [\App\Http\Controllers\PaymentLogController::class, 'exportExcel'])->name('payment-logs.export-excel');
     Route::resource('payment-logs', \App\Http\Controllers\PaymentLogController::class)->only(['index', 'show']);
 
     // Teachers Management (Super Admin only - checked in controller)
