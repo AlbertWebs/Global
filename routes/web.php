@@ -59,6 +59,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/course-registrations', [CourseRegistrationController::class, 'store'])->name('course-registrations.store');
     Route::delete('/course-registrations/{courseRegistration}', [CourseRegistrationController::class, 'destroy'])->name('course-registrations.destroy');
 
+    // API for course registrations
+    Route::get('/api/students/{studentId}/registered-courses', [CourseRegistrationController::class, 'getRegisteredCoursesForStudent'])->name('api.students.registered-courses');
+
     // Billing
     Route::get('/billing', [BillingController::class, 'index'])->name('billing.index');
     Route::post('/billing', [BillingController::class, 'store'])->name('billing.store');

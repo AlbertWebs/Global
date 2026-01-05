@@ -20,7 +20,7 @@
     
     <div class="bg-white rounded-lg shadow-md p-6">
 
-        <form method="POST" action="{{ route('course-registrations.store') }}">
+        <form method="POST" action="{{ route('course-registrations.store') }}" @submit.prevent="validateForm">
             @csrf
 
             <!-- Student Selection -->
@@ -72,6 +72,8 @@
                                 type="checkbox" 
                                 name="course_ids[]" 
                                 value="{{ $course->id }}"
+                                x-bind:disabled="!studentId || isCourseRegistered({{ $course->id }})"
+                                x-on:change="updateSelectedCourseCount()"
                                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                             >
                             <div class="ml-3 flex-1">
@@ -87,7 +89,8 @@
                         <p class="text-gray-500 text-sm">No active courses available.</p>
                     @endif
                 </div>
-                <p class="mt-2 text-sm text-gray-500">Select one or more courses to register the student</p>
+    <p class="mt-2 text-sm text-gray-500" x-show="!studentId">Please select a student first to enable course selection.</p>
+                <p class="mt-2 text-sm text-red-600" x-show="formErrors.course_selection" x-text="formErrors.course_selection"></p>
                 @error('course_ids')
                     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
@@ -112,6 +115,7 @@
                 </a>
                 <button 
                     type="submit" 
+                    x-bind:disabled="!studentId || loadingCourses"
                     class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl"
                 >
                     Register Courses
@@ -122,22 +126,126 @@
 </div>
 
 <script>
-function registrationForm() {
-    return {
-        studentId: '{{ $selectedStudentId ?? '' }}',
-        
-        init() {
-            // If student is pre-selected, trigger any necessary actions
-            if (this.studentId) {
-                this.loadStudentInfo();
+        function registrationForm() {
+            return {
+                studentId: '{{ $selectedStudentId ?? '' }}',
+                loadingCourses: false,
+                registeredCourses: [],
+                formErrors: {},
+
+                // New reactive property for selected course count
+                selectedCourseCount: 0,
+
+                init() {
+                    console.log('Alpine.js component initialized.');
+                    this.loadStudentInfo(); // Always load student info on init to set initial state of courses
+                },
+
+                async loadStudentInfo() {
+                    console.log('loadStudentInfo called. Student ID:', this.studentId);
+                    this.registeredCourses = []; // Reset previously registered courses
+                    this.formErrors = {}; // Reset form errors
+
+                    // Reset all course checkboxes and enable them by default
+                    document.querySelectorAll('input[name="course_ids[]"]').forEach(checkbox => {
+                        checkbox.checked = false;
+                        checkbox.disabled = false;
+                        checkbox.closest('label').classList.remove('opacity-50', 'cursor-not-allowed', 'line-through');
+                        checkbox.closest('label').querySelector('.registration-status')?.remove();
+                    });
+                    this.updateSelectedCourseCount(); // Update count after resetting checkboxes
+
+                    if (!this.studentId) {
+                        console.log('No student ID selected. Courses remain disabled.');
+                        return;
+                    }
+
+                    this.loadingCourses = true;
+                    console.log('Fetching registered courses for student:', this.studentId);
+                    try {
+                        const response = await fetch(`/api/students/${this.studentId}/registered-courses`);
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        const data = await response.json();
+                        this.registeredCourses = data.registered_course_ids;
+                        console.log('Registered courses received:', this.registeredCourses);
+                        this.updateCourseCheckboxes();
+                    } catch (error) {
+                        console.error('Error fetching registered courses:', error);
+                        // Optionally, display an error message to the user
+                    } finally {
+                        this.loadingCourses = false;
+                        console.log('Finished loading courses. loadingCourses:', this.loadingCourses);
+                    }
+                },
+
+                updateCourseCheckboxes() {
+                    console.log('Updating course checkboxes. Registered courses:', this.registeredCourses);
+                    document.querySelectorAll('input[name="course_ids[]"]').forEach(checkbox => {
+                        const courseId = parseInt(checkbox.value);
+                        const label = checkbox.closest('label');
+
+                        if (this.registeredCourses.includes(courseId)) {
+                            checkbox.checked = false; // Ensure it's unchecked if already registered
+                            checkbox.disabled = true; // Disable if already registered
+                            label.classList.add('opacity-50', 'cursor-not-allowed', 'line-through');
+                            // Add a status indicator if not already present
+                            if (!label.querySelector('.registration-status')) {
+                                const statusSpan = document.createElement('span');
+                                statusSpan.classList.add('ml-auto', 'text-xs', 'text-red-500', 'registration-status');
+                                statusSpan.textContent = 'Already Registered';
+                                label.appendChild(statusSpan);
+                            }
+                        } else {
+                            checkbox.disabled = false; // Enable if not registered
+                            label.classList.remove('opacity-50', 'cursor-not-allowed', 'line-through');
+                            label.querySelector('.registration-status')?.remove();
+                        }
+                    });
+                    this.updateSelectedCourseCount(); // Update count after changing checkboxes
+                },
+
+                updateSelectedCourseCount() {
+                    this.selectedCourseCount = Array.from(
+                        document.querySelectorAll('input[name="course_ids[]"]:checked:not([disabled])')
+                    ).length;
+                    console.log('Selected course count updated:', this.selectedCourseCount);
+                },
+
+                isCourseRegistered(courseId) {
+                    return this.registeredCourses.includes(courseId);
+                },
+
+                validateForm(event) {
+                    console.log('validateForm called.');
+                    this.formErrors = {};
+
+                    if (!this.studentId) {
+                        this.formErrors.student_id = 'Please select a student.';
+                        console.log('Validation Error: No student selected.');
+                    }
+
+                    if (this.selectedCourseCount === 0) {
+                        this.formErrors.course_selection = 'Please select at least one course.';
+                        console.log('Validation Error: No course selected.');
+                    }
+                    console.log('Current formErrors:', this.formErrors);
+
+                    if (Object.keys(this.formErrors).length > 0) {
+                        console.log('Preventing form submission due0 to errors.');
+                        event.preventDefault();
+                    } else {
+                        console.log('Validation successful. Explicitly submitting form.');
+                        event.target.submit(); // Explicitly submit the form
+                    }
+                },
+
+                get hasSelectedCourses() {
+                    return this.selectedCourseCount > 0;
+                }
             }
-        },
-        
-        loadStudentInfo() {
-            // Can be extended to load student info if needed
         }
-    }
-}
 </script>
 @endsection
 

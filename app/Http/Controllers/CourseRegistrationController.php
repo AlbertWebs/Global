@@ -49,35 +49,40 @@ class CourseRegistrationController extends Controller
 
     public function store(Request $request)
     {
+        $currentMonth = now()->format('F Y');
+        $currentYear = now()->year;
+        $currentAcademicYear = $this->getCurrentAcademicYear();
+
         $validated = $request->validate([
             'student_id' => ['required', 'exists:students,id'],
             'course_ids' => ['required', 'array', 'min:1'],
-            'course_ids.*' => ['exists:courses,id'],
+            'course_ids.*' => ['exists:courses,id',
+                function ($attribute, $value, $fail) use ($request, $currentAcademicYear, $currentMonth, $currentYear) {
+                    $studentId = $request->input('student_id');
+                    if (!$studentId) {
+                        $fail('A student must be selected before registering courses.');
+                        return;
+                    }
+
+                    $existing = CourseRegistration::where('student_id', $studentId)
+                        ->where('course_id', $value)
+                        ->where('academic_year', $currentAcademicYear)
+                        ->where('month', $currentMonth)
+                        ->where('year', $currentYear)
+                        ->first();
+
+                    if ($existing) {
+                        $course = Course::find($value);
+                        $fail("Student is already registered for {$course->name} in {$currentMonth} {$currentYear}.");
+                    }
+                },
+            ],
             'academic_year' => ['required', 'string'],
             'notes' => ['nullable', 'string'],
         ]);
 
         $registrations = [];
-        $errors = [];
-        $currentMonth = now()->format('F Y'); // e.g., "December 2024"
-        $currentYear = now()->year;
-
         foreach ($validated['course_ids'] as $courseId) {
-            // Check if student is already registered for this course in this month/year
-            // This allows the same course to be registered in different months
-            $existing = CourseRegistration::where('student_id', $validated['student_id'])
-                ->where('course_id', $courseId)
-                ->where('academic_year', $validated['academic_year'])
-                ->where('month', $currentMonth)
-                ->where('year', $currentYear)
-                ->first();
-
-            if ($existing) {
-                $course = Course::find($courseId);
-                $errors[] = "Student is already registered for {$course->name} in {$currentMonth} {$currentYear}";
-                continue;
-            }
-
             $registrations[] = CourseRegistration::create([
                 'student_id' => $validated['student_id'],
                 'course_id' => $courseId,
@@ -90,14 +95,7 @@ class CourseRegistrationController extends Controller
             ]);
         }
 
-        if (!empty($errors) && empty($registrations)) {
-            return back()->withErrors(['course_ids' => implode(', ', $errors)])->withInput();
-        }
-
         $message = count($registrations) . ' course(s) registered successfully.';
-        if (!empty($errors)) {
-            $message .= ' Some courses were skipped: ' . implode(', ', $errors);
-        }
 
         return redirect()->route('course-registrations.index')
             ->with('success', $message);
@@ -108,6 +106,29 @@ class CourseRegistrationController extends Controller
         $courseRegistration->delete();
         return redirect()->route('course-registrations.index')
             ->with('success', 'Course registration removed successfully!');
+    }
+
+    /**
+     * Get registered courses for a specific student.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $studentId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getRegisteredCoursesForStudent(Request $request, $studentId)
+    {
+        $currentMonth = now()->format('F Y');
+        $currentYear = now()->year;
+        $currentAcademicYear = $this->getCurrentAcademicYear();
+
+        $registeredCourseIds = CourseRegistration::where('student_id', $studentId)
+            ->where('academic_year', $currentAcademicYear)
+            ->where('month', $currentMonth)
+            ->where('year', $currentYear)
+            ->pluck('course_id')
+            ->toArray();
+
+        return response()->json(['registered_course_ids' => $registeredCourseIds]);
     }
 
     private function getCurrentAcademicYear(): string
