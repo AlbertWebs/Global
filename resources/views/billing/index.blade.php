@@ -11,80 +11,83 @@
         <form @submit.prevent="submitForm" method="POST" action="{{ route('billing.store') }}" id="billingForm">
             @csrf
 
-            <!-- Student Selection -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Select Student *</label>
-                <div class="relative" x-data="{ studentSearch: '', showStudentDropdown: false }">
-                    <input 
-                        type="text" 
-                        x-model="studentSearch" 
-                        @focus="showStudentDropdown = true"
-                        @click.away="showStudentDropdown = false"
-                        @input="showStudentDropdown = true"
-                        placeholder="Search student by name or number..."
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        :value="selectedStudentName"
-                        readonly
-                    >
-                    <input type="hidden" name="student_id" x-model="studentId" required>
-                    <div x-show="showStudentDropdown" x-cloak class="absolute z-10 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        <div class="p-2">
-                            @foreach($students as $student)
-                                <div 
-                                    class="px-3 py-2 hover:bg-blue-50 cursor-pointer rounded"
-                                    x-show="!studentSearch || ('{{ strtolower($student->full_name . ' ' . $student->student_number) }}').includes(studentSearch.toLowerCase())"
-                                    @click="studentId = '{{ $student->id }}'; selectedStudentName = '{{ $student->full_name }} ({{ $student->student_number }})'; studentSearch = ''; showStudentDropdown = false; loadStudentInfo();"
-                                >
-                                    <div class="font-medium text-gray-900">{{ $student->full_name }}</div>
-                                    <div class="text-sm text-gray-500">{{ $student->student_number }}</div>
-                                </div>
-                            @endforeach
+            <!-- Student & Course Selection (Side-by-side) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Student Selection -->
+                <div class="mb-0">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Select Student *</label>
+                    <div class="relative" x-data="{ studentSearch: '', showStudentDropdown: false }">
+                        <input 
+                            type="text" 
+                            x-model="studentSearch" 
+                            @focus="showStudentDropdown = true"
+                            @click.away="showStudentDropdown = false"
+                            @input="showStudentDropdown = true"
+                            placeholder="Search student by name or number..."
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            :value="selectedStudentName"
+                            readonly
+                        >
+                        <input type="hidden" name="student_id" x-model="studentId" required>
+                        <div x-show="showStudentDropdown" x-cloak class="absolute z-10 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                            <div class="p-2">
+                                @foreach($students as $student)
+                                    <div 
+                                        class="px-3 py-2 hover:bg-blue-50 cursor-pointer rounded"
+                                        x-show="!studentSearch || ('{{ strtolower($student->full_name . ' ' . $student->student_number) }}').includes(studentSearch.toLowerCase())"
+                                        @click="studentId = '{{ $student->id }}'; selectedStudentName = '{{ $student->full_name }} ({{ $student->student_number }})'; studentSearch = ''; showStudentDropdown = false; loadStudentInfo();"
+                                    >
+                                        <div class="font-medium text-gray-900">{{ $student->full_name }}</div>
+                                        <div class="text-sm text-gray-500">{{ $student->student_number }}</div>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
+                    <div x-show="studentId" class="mt-2">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
+                            <span x-text="selectedStudentName"></span>
+                            <button type="button" @click="studentId = ''; selectedStudentName = ''; loadStudentInfo();" class="ml-2 text-blue-600 hover:text-blue-800">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </span>
+                    </div>
                 </div>
-                <div x-show="studentId" class="mt-2">
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                        <span x-text="selectedStudentName"></span>
-                        <button type="button" @click="studentId = ''; selectedStudentName = ''; loadStudentInfo();" class="ml-2 text-blue-600 hover:text-blue-800">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </span>
-                </div>
-            </div>
 
-            <!-- Course Selection -->
-            <div class="mb-6">
-                <label for="course_id" class="block text-sm font-medium text-gray-700 mb-2">Select Course *</label>
-                <select 
-                    id="course_id" 
-                    name="course_id" 
-                    x-model="courseId"
-                    @change="loadCourseInfo"
-                    x-ref="courseSelect"
-                    required
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="">Choose a course...</option>
-                    @foreach($courses as $course)
-                        <option value="{{ $course->id }}">
-                            {{ $course->name }} ({{ $course->code }})
-                        </option>
-                    @endforeach
-                </select>
-                <p x-show="studentCourses.length === 0 && studentId" class="mt-2 text-sm text-yellow-600">
-                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
-                    This student has no registered courses for the current academic year. Showing all available courses.
-                </p>
-                <p x-show="studentCourses.length > 0 && studentId" class="mt-2 text-sm text-green-600">
-                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    Showing registered courses for this student.
-                </p>
+                <!-- Course Selection -->
+                <div class="mb-0">
+                    <label for="course_id" class="block text-sm font-medium text-gray-700 mb-2">Select Course *</label>
+                    <select 
+                        id="course_id" 
+                        name="course_id" 
+                        x-model="courseId"
+                        @change="loadCourseInfo"
+                        x-ref="courseSelect"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="">Choose a course...</option>
+                        @foreach($courses as $course)
+                            <option value="{{ $course->id }}">
+                                {{ $course->name }} ({{ $course->code }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <p x-show="studentCourses.length === 0 && studentId" class="mt-2 text-sm text-yellow-600">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                        </svg>
+                        This student has no registered courses for the current academic year. Showing all available courses.
+                    </p>
+                    <p x-show="studentCourses.length > 0 && studentId" class="mt-2 text-sm text-green-600">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        Showing registered courses for this student.
+                    </p>
+                </div>
             </div>
 
             <!-- Academic Year (Hidden - Auto-set) -->
@@ -96,13 +99,14 @@
             >
 
             <!-- Month Selection -->
-            <div class="mb-6">
+            <div class="mb-6" hidden>
                 <label for="month" class="block text-sm font-medium text-gray-700 mb-2">Billing Month *</label>
                 <select 
                     id="month" 
                     name="month" 
                     x-model="selectedMonth"
                     @change="loadMonthCourses"
+                    x-init="if (studentId) loadMonthCourses()" {{-- Ensure month is loaded for pre-selected student --}}
                     required
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
@@ -112,7 +116,7 @@
                             'July', 'August', 'September', 'October', 'November', 'December'
                         ];
                         $currentMonthName = now()->format('F');
-                        $currentMonthValue = $currentMonthName . ' ' . $currentYear;
+                        $currentMonthValue = $currentMonthName . ' ' . now()->year;
                         // Generate months for current year and next year
                         $years = [now()->year, now()->year + 1];
                     @endphp
@@ -120,7 +124,7 @@
                         @foreach($months as $month)
                             @php
                                 $monthValue = $month . ' ' . $year;
-                                $isSelected = ($month === $currentMonthName && $year === $currentYear);
+                                $isSelected = ($month === $currentMonthName && $year === now()->year);
                             @endphp
                             <option value="{{ $monthValue }}" {{ $isSelected ? 'selected' : '' }}>
                                 {{ $month }} {{ $year }}
@@ -152,78 +156,62 @@
                 </div>
             </div>
 
-            <!-- Agreed Amount -->
-            <div class="mb-6">
-                <label for="agreed_amount" class="block text-sm font-medium text-gray-700 mb-2">
-                    Agreed Amount (KES) *
-                </label>
-                <input 
-                    type="number" 
-                    id="agreed_amount" 
-                    name="agreed_amount" 
-                    x-model="agreedAmount"
-                    @input="calculateBalance"
-                    step="0.01"
-                    min="0"
-                    required
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold"
-                    placeholder="0.00"
-                >
-                <p class="mt-2 text-sm text-gray-500">Enter the full amount agreed to be paid</p>
-            </div>
+            <!-- Payment Details: Agreed Amount, Amount Paid, and Payment Method (Side-by-side) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Agreed Amount -->
+                <div class="mb-0">
+                    <label for="agreed_amount" class="block text-sm font-medium text-gray-700 mb-2">
+                        Agreed Amount (KES) *
+                    </label>
+                    <input 
+                        type="number" 
+                        id="agreed_amount" 
+                        name="agreed_amount" 
+                        x-model="agreedAmount"
+                        @input="calculateBalance"
+                        step="0.01"
+                        min="0"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold"
+                        placeholder="0.00"
+                    >
+                    <p class="mt-2 text-sm text-gray-500">Enter the full amount agreed to be paid</p>
+                </div>
 
-            <!-- Discount Amount -->
-            <div class="mb-6" hidden>
-                <label for="discount_amount" class="block text-sm font-medium text-gray-700 mb-2">
-                    Discount Amount (KES) (Optional)
-                </label>
-                <input 
-                    type="number" 
-                    id="discount_amount" 
-                    name="discount_amount" 
-                    x-model="discountAmount"
-                    @input="calculateBalance"
-                    step="0.01"
-                    min="0"
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold"
-                    placeholder="0.00"
-                >
-                <p class="mt-2 text-sm text-gray-500">Enter any discount applied to the agreed amount</p>
-            </div>
+                <!-- Amount Paid -->
+                <div class="mb-0">
+                    <label for="amount_paid" class="block text-sm font-medium text-gray-700 mb-2">
+                        Amount Paid (KES) *
+                    </label>
+                    <input 
+                        type="number" 
+                        id="amount_paid" 
+                        name="amount_paid" 
+                        x-model="amountPaid"
+                        @input="calculateBalance"
+                        step="0.01"
+                        min="0"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold"
+                        placeholder="0.00"
+                    >
+                    <p class="mt-2 text-sm text-gray-500">Enter the amount being paid now</p>
+                </div>
 
-            <!-- Amount Paid -->
-            <div class="mb-6">
-                <label for="amount_paid" class="block text-sm font-medium text-gray-700 mb-2">
-                    Amount Paid (KES) *
-                </label>
-                <input 
-                    type="number" 
-                    id="amount_paid" 
-                    name="amount_paid" 
-                    x-model="amountPaid"
-                    @input="calculateBalance"
-                    step="0.01"
-                    min="0"
-                    required
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold"
-                    placeholder="0.00"
-                >
-                <p class="mt-2 text-sm text-gray-500">Enter the amount being paid now</p>
-            </div>
-
-            <!-- Payment Method -->
-            <div class="mb-6">
-                <label for="payment_method" class="block text-sm font-medium text-gray-700 mb-2">Payment Method *</label>
-                <select 
-                    id="payment_method" 
-                    name="payment_method" 
-                    required
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="mpesa">M-Pesa</option>
-                    <option value="cash">Cash</option>
-                    <option value="bank_transfer">Bank Transfer</option>
-                </select>
+                <!-- Payment Method -->
+                <div class="mb-0">
+                    <label for="payment_method" class="block text-sm font-medium text-gray-700 mb-2">Payment Method *</label>
+                    <select 
+                        id="payment_method" 
+                        name="payment_method" 
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                        <option value="mpesa">M-Pesa</option>
+                        <option value="cash">Cash</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Notes -->
@@ -234,7 +222,7 @@
                     name="notes" 
                     rows="3"
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Additional notes..."
+                    placeholder="transaction id"
                 ></textarea>
             </div>
 
