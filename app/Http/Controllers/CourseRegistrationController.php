@@ -19,12 +19,18 @@ class CourseRegistrationController extends Controller
         // Group by course
         $coursesGrouped = $registrations->groupBy('course_id')->map(function ($courseRegistrations) {
             $course = $courseRegistrations->first()->course;
+            
+            // Skip if course is null (e.g., if the associated course was deleted)
+            if (!$course) {
+                return null;
+            }
+
             return [
                 'course' => $course,
                 'registrations' => $courseRegistrations,
                 'student_count' => $courseRegistrations->unique('student_id')->count(),
             ];
-        })->sortBy(function ($group) {
+        })->filter()->sortBy(function ($group) {
             return $group['course']->name;
         });
         
