@@ -70,8 +70,7 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         @if($receipt->payment)
-                            <a href="{{ route('receipts.show', $receipt->id) }}" class="text-blue-600 hover:text-blue-900 mr-4">View</a>
-                            <a href="{{ route('receipts.print', $receipt->id) }}" target="_blank" class="text-green-600 hover:text-green-900">Print</a>
+                            <a href="{{ route('receipts.print-bw', $receipt->id) }}" target="_blank" class="text-blue-600 hover:text-blue-900">View & Print</a>
                         @else
                             <span class="text-gray-400 text-xs">No Payment Data</span>
                         @endif
@@ -86,9 +85,9 @@
         {{ $receipts->links() }}
     </div>
     @else
-    <div class="px-6 py-12 text-center">
-        <p class="text-gray-500">No receipts found.</p>
-    </div>
+        <div class="px-6 py-12 text-center">
+            <p class="text-gray-500">No receipts found.</p>
+        </div>
     @endif
 </div>
 @endsection
