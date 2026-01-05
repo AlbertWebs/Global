@@ -289,9 +289,9 @@
             <button onclick="window.print()" class="px-8 py-4 bg-gray-800 text-white rounded-lg font-bold hover:bg-gray-900 transition-colors text-lg shadow-lg">
                 Print (Black & White)
             </button>
-            <a href="{{ route('receipts.print', $receipt->id) }}" target="_blank" class="inline-block px-8 py-4 bg-gray-600 text-white rounded-lg font-bold hover:bg-gray-700 transition-colors text-lg shadow-lg">
+            <!-- <a href="{{ route('receipts.print', $receipt->id) }}" target="_blank" class="inline-block px-8 py-4 bg-gray-600 text-white rounded-lg font-bold hover:bg-gray-700 transition-colors text-lg shadow-lg">
                 View Color Version
-            </a>
+            </a> -->
             <a href="{{ route('receipts.thermal', $receipt->id) }}" target="_blank" class="inline-block px-8 py-4 bg-gray-500 text-white rounded-lg font-bold hover:bg-gray-600 transition-colors text-lg shadow-lg">
                 Print (Thermal)
             </a>
