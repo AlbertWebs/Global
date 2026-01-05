@@ -22,8 +22,7 @@
             font-size: 0.75rem; /* Base font size for A5 */
         }
         .max-w-3xl {
-            max-width: none !important; /* Override Tailwind's max-width */
-            width: 100%;
+            max-width: 130mm !important; /* Adjusted max-width for A5 centering */
         }
         @media print {
             body { margin: 0; padding: 5mm; }
