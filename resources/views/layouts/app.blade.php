@@ -198,6 +198,15 @@
                         <span class="{{ request()->routeIs('money-trace.*') ? 'text-gray-900 font-semibold' : 'text-blue-100 font-medium group-hover:text-gray-900' }}">Money Trace</span>
                     </a>
 
+                    <a href="{{ route('balances.index') }}" class="flex items-center px-4 py-3 rounded-xl hover:bg-white hover:bg-opacity-20 hover:shadow-lg transition-all duration-200 group {{ request()->routeIs('balances.*') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
+                        <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-3 {{ request()->routeIs('balances.*') ? 'bg-opacity-30' : '' }} group-hover:bg-opacity-30">
+                            <svg class="w-5 h-5 {{ request()->routeIs('balances.*') ? 'text-blue-900' : 'text-blue-200 group-hover:text-blue-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 12v-1m-3-6H9m1.45-3.047l-.744.156m1.562 3.856l-.156.744m-3.08-1.562l.744-.156"></path>
+                            </svg>
+                        </div>
+                        <span class="{{ request()->routeIs('balances.*') ? 'text-gray-900 font-semibold' : 'text-blue-100 font-medium group-hover:text-gray-900' }}">Balances</span>
+                    </a>
+
                     <a href="{{ route('users.index') }}" class="flex items-center px-4 py-3 rounded-xl hover:bg-white hover:bg-opacity-20 hover:shadow-lg transition-all duration-200 group {{ request()->routeIs('users.*') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
                         <div class="w-10 h-10 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-3 {{ request()->routeIs('users.*') ? 'bg-opacity-30' : '' }} group-hover:bg-opacity-30">
                             <svg class="w-5 h-5 {{ request()->routeIs('users.*') ? 'text-blue-900' : 'text-blue-200 group-hover:text-blue-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">

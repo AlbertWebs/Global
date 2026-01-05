@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'student.auth' => \App\Http\Middleware\StudentAuth::class,
             'teacher.auth' => \App\Http\Middleware\TeacherAuth::class,
+            'super_admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

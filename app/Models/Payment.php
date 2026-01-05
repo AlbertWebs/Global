@@ -58,21 +58,16 @@ class Payment extends Model
         parent::boot();
 
         static::creating(function ($payment) {
-            // Calculate balance if agreed_amount is set
-            if ($payment->agreed_amount && $payment->amount_paid) {
-                $payment->discount_amount = max(0, $payment->agreed_amount - $payment->amount_paid);
-            } elseif ($payment->base_price && $payment->amount_paid) {
-                // Fallback to old discount calculation for backward compatibility
-                $payment->discount_amount = max(0, $payment->base_price - $payment->amount_paid);
+            // Initialize discount_amount to 0 if not explicitly set
+            if (is_null($payment->discount_amount)) {
+                $payment->discount_amount = 0;
             }
         });
 
         static::updating(function ($payment) {
-            // Recompute balance if agreed_amount or amount_paid changes
-            if ($payment->isDirty(['agreed_amount', 'amount_paid'])) {
-                if ($payment->agreed_amount && $payment->amount_paid) {
-                    $payment->discount_amount = max(0, $payment->agreed_amount - $payment->amount_paid);
-                }
+            // Recompute discount_amount to 0 if not explicitly set and related fields change
+            if ($payment->isDirty(['agreed_amount', 'amount_paid']) && is_null($payment->discount_amount)) {
+                $payment->discount_amount = 0;
             }
         });
     }

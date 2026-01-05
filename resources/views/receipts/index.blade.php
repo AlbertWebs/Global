@@ -19,7 +19,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Paid</th>
                     @if(auth()->user()->isSuperAdmin())
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding Balance</th>
                     @endif
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
@@ -59,7 +59,10 @@
                     @if(auth()->user()->isSuperAdmin())
                     <td class="px-6 py-4 whitespace-nowrap">
                         @if($receipt->payment)
-                            <span class="text-sm text-green-600 font-semibold">KES {{ number_format($receipt->payment->discount_amount ?? 0, 2) }}</span>
+                            @php
+                                $balance = max(0, $receipt->payment->agreed_amount - $receipt->payment->total_paid - $receipt->payment->discount_amount);
+                            @endphp
+                            <span class="text-sm {{ $balance > 0 ? 'text-orange-600' : 'text-green-600' }} font-semibold">KES {{ number_format($balance, 2) }}</span>
                         @else
                             <span class="text-sm text-red-600 italic">N/A</span>
                         @endif

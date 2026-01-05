@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Balance;
 use App\Models\BankDeposit;
 use App\Models\CourseRegistration;
 use App\Models\Expense;
@@ -32,6 +33,7 @@ class DataPurgeController extends Controller
             'bank_deposits' => BankDeposit::count(),
             'ledger_entries' => LedgerEntry::count(),
             'activity_logs' => ActivityLog::count(),
+            'balances' => Balance::count(),
         ];
 
         return view('data-purge.index', compact('counts'));
@@ -54,11 +56,12 @@ class DataPurgeController extends Controller
             'purge_bank_deposits' => ['nullable', 'boolean'],
             'purge_ledger_entries' => ['nullable', 'boolean'],
             'purge_activity_logs' => ['nullable', 'boolean'],
+            'purge_balances' => ['nullable', 'boolean'],
             'confirm_text' => ['required', 'string'],
         ]);
 
         // Verify confirmation text
-        if ($validated['confirm_text'] !== 'DELETE ALL DATA') {
+        if (strtoupper($validated['confirm_text']) !== 'DELETE ALL DATA') {
             return redirect()->route('data-purge.index')
                 ->with('error', 'Confirmation text does not match. Data purge cancelled.');
         }
@@ -76,6 +79,7 @@ class DataPurgeController extends Controller
                 Expense::truncate();
                 CourseRegistration::truncate();
                 ActivityLog::truncate();
+                Balance::truncate();
                 Student::truncate();
                 
                 $purged[] = 'All data (except users)';
@@ -120,6 +124,11 @@ class DataPurgeController extends Controller
                 if ($validated['purge_activity_logs'] ?? false) {
                     ActivityLog::truncate();
                     $purged[] = 'Activity Logs';
+                }
+
+                if ($validated['purge_balances'] ?? false) {
+                    Balance::truncate();
+                    $purged[] = 'Balances';
                 }
             }
 

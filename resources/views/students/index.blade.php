@@ -92,9 +92,9 @@
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Admission #</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student #</th>
+                    <!-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student #</th> -->
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                    <!-- <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th> -->
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -106,13 +106,13 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {{ $student->admission_number ?? 'N/A' }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {{ $student->student_number }}
-                    </td>
+                    </td> -->
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-medium text-gray-900">{{ $student->full_name }}</div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $student->email ?? 'N/A' }}</td>
+                    <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $student->email ?? 'N/A' }}</td> -->
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $student->phone ?? 'N/A' }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="px-2 py-1 text-xs font-semibold rounded-full {{ $student->status === 'active' ? 'bg-green-100 text-green-800' : ($student->status === 'graduated' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800') }}">

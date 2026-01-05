@@ -67,6 +67,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/billing', [BillingController::class, 'store'])->name('billing.store');
     Route::get('/billing/course/{courseId}', [BillingController::class, 'getCourseInfo'])->name('billing.course-info');
     Route::get('/billing/student/{studentId}/courses', [BillingController::class, 'getStudentCourses'])->name('billing.student-courses');
+    Route::get('/billing/student/{studentId}/balance/{courseId}', [BillingController::class, 'getStudentBalance'])->name('billing.student-balance');
+    Route::get('/billing/student/{studentId}/overall-balance', [BillingController::class, 'getStudentOverallBalance'])->name('billing.student-overall-balance');
 
     // Receipts
     Route::get('/receipts', [ReceiptController::class, 'index'])->name('receipts.index');
@@ -103,6 +105,9 @@ Route::middleware('auth')->group(function () {
 
     // Money Trace (Super Admin only - checked in controller)
     Route::get('/money-trace', [MoneyTraceController::class, 'index'])->name('money-trace.index');
+
+    // Balances (Super Admin only - checked in controller)
+    Route::resource('balances', \App\Http\Controllers\BalanceController::class)->except(['create', 'store', 'destroy']);
 
     // Users & Roles (Super Admin only - checked in controller)
     Route::resource('users', UserController::class);

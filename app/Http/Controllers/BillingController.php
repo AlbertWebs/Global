@@ -26,8 +26,51 @@ class BillingController extends Controller
         
         // Pre-select student if provided in query string
         $selectedStudentId = $request->get('student_id');
+        $selectedStudent = null;
+        if ($selectedStudentId) {
+            $selectedStudent = Student::find($selectedStudentId);
+        }
         
-        return view('billing.index', compact('students', 'courses', 'currentAcademicYear', 'currentMonth', 'currentYear', 'selectedStudentId'));
+        return view('billing.index', compact('students', 'courses', 'currentAcademicYear', 'currentMonth', 'currentYear', 'selectedStudentId', 'selectedStudent'));
+    }
+
+    public function getStudentBalance($studentId, $courseId)
+    {
+        $balance = \App\Models\Balance::where('student_id', $studentId)
+                                      ->where('course_id', $courseId)
+                                      ->first();
+
+        return response()->json([
+            'outstanding_balance' => $balance ? $balance->outstanding_balance : 0,
+            'total_paid' => $balance ? $balance->total_paid : 0,
+            'agreed_amount' => $balance ? $balance->agreed_amount : 0,
+        ]);
+    }
+
+    public function getStudentOverallBalance($studentId)
+    {
+        $balances = \App\Models\Balance::where('student_id', $studentId)
+                                       ->where('outstanding_balance', '>', 0)
+                                       ->with('course') // Eager load course relationship
+                                       ->get();
+
+        $totalOutstandingBalance = $balances->sum('outstanding_balance');
+
+        $formattedBalances = $balances->map(function ($balance) {
+            return [
+                'course_id' => $balance->course_id,
+                'course_name' => $balance->course->name,
+                'agreed_amount' => $balance->agreed_amount,
+                'total_paid' => $balance->total_paid,
+                'discount_amount' => $balance->discount_amount,
+                'outstanding_balance' => $balance->outstanding_balance,
+            ];
+        });
+
+        return response()->json([
+            'total_outstanding_balance' => $totalOutstandingBalance,
+            'course_balances' => $formattedBalances,
+        ]);
     }
 
     private function getCurrentAcademicYear(): string
@@ -52,13 +95,14 @@ class BillingController extends Controller
             'year' => ['required', 'integer'],
             'agreed_amount' => ['required', 'numeric', 'min:0'],
             'amount_paid' => ['required', 'numeric', 'min:0'],
+            'discount_amount' => ['nullable', 'numeric', 'min:0'],
             'payment_method' => ['required', 'string'],
             'notes' => ['nullable', 'string'],
         ]);
 
-        $course = Course::findOrFail($validated['course_id']);
-        
-        $payment = Payment::create([
+        $balance = $validated['agreed_amount'] - $validated['amount_paid'];
+
+        \App\Models\Billing::create([
             'student_id' => $validated['student_id'],
             'course_id' => $validated['course_id'],
             'academic_year' => $validated['academic_year'],
@@ -66,90 +110,11 @@ class BillingController extends Controller
             'year' => $validated['year'],
             'agreed_amount' => $validated['agreed_amount'],
             'amount_paid' => $validated['amount_paid'],
-            'base_price' => $course->base_price, // Keep for backward compatibility/reports
-            'cashier_id' => auth()->id(),
-            'payment_method' => $validated['payment_method'],
-            'notes' => $validated['notes'],
+            'discount_amount' => $validated['discount_amount'] ?? 0,
+            'balance' => $balance,
         ]);
 
-        // Generate receipt with serialized receipt number
-        $receipt = Receipt::create([
-            'payment_id' => $payment->id,
-            'receipt_number' => Receipt::generateReceiptNumber(),
-            'receipt_date' => now(),
-        ]);
-
-        // Refresh payment to load receipt relationship
-        $payment->refresh();
-
-        // Automatically register student for the course if not already registered
-        // Check if registration already exists for this student, course, academic year, month, and year
-        $existingRegistration = CourseRegistration::where('student_id', $validated['student_id'])
-            ->where('course_id', $validated['course_id'])
-            ->where('academic_year', $validated['academic_year'])
-            ->where('month', $validated['month'])
-            ->where('year', $validated['year'])
-            ->first();
-
-        if (!$existingRegistration) {
-            CourseRegistration::create([
-                'student_id' => $validated['student_id'],
-                'course_id' => $validated['course_id'],
-                'academic_year' => $validated['academic_year'],
-                'month' => $validated['month'],
-                'year' => $validated['year'],
-                'registration_date' => now(),
-                'status' => 'registered',
-                'notes' => 'Auto-registered upon payment',
-            ]);
-        }
-
-        // Create ledger entry for money trace
-        LedgerEntry::createFromPayment($payment);
-
-        // Send payment confirmation SMS
-        try {
-            $smsService = app(\App\Services\SmsService::class);
-            $smsService->sendPaymentSMS(
-                $payment->student,
-                $payment->amount_paid,
-                $payment->course->name,
-                $receipt->receipt_number
-            );
-        } catch (\Exception $e) {
-            // Log error but don't fail the payment
-            \Log::error("Failed to send payment SMS", [
-                'payment_id' => $payment->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        // Send payment confirmation email
-        try {
-            $emailService = app(\App\Services\EmailService::class);
-            $emailService->sendPaymentEmail(
-                $payment->student,
-                $payment->amount_paid,
-                $payment->course->name,
-                $receipt->receipt_number
-            );
-        } catch (\Exception $e) {
-            // Log error but don't fail the payment
-            \Log::error("Failed to send payment email", [
-                'payment_id' => $payment->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        // Log the activity
-        ActivityLog::log(
-            'payment.created',
-            "Processed payment of KES " . number_format($payment->amount_paid, 2) . " from {$payment->student->full_name} for {$payment->course->name} (Receipt: {$receipt->receipt_number})",
-            $payment
-        );
-
-        return redirect()->route('receipts.show', $receipt->id)
-            ->with('success', 'Payment processed successfully!');
+        return back()->with('success', 'Payment processed successfully!');
     }
 
     public function getCourseInfo($courseId)

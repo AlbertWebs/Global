@@ -20,7 +20,7 @@
     
     <div class="bg-white rounded-lg shadow-md p-6">
 
-        <form method="POST" action="{{ route('course-registrations.store') }}" @submit.prevent="validateForm">
+        <form method="POST" action="{{ route('course-registrations.store') }}" id="courseRegistrationForm">
             @csrf
 
             <!-- Student Selection -->
@@ -115,7 +115,6 @@
                 </a>
                 <button 
                     type="submit" 
-                    x-bind:disabled="!studentId || loadingCourses"
                     class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl"
                 >
                     Register Courses
@@ -215,30 +214,6 @@
 
                 isCourseRegistered(courseId) {
                     return this.registeredCourses.includes(courseId);
-                },
-
-                validateForm(event) {
-                    console.log('validateForm called.');
-                    this.formErrors = {};
-
-                    if (!this.studentId) {
-                        this.formErrors.student_id = 'Please select a student.';
-                        console.log('Validation Error: No student selected.');
-                    }
-
-                    if (this.selectedCourseCount === 0) {
-                        this.formErrors.course_selection = 'Please select at least one course.';
-                        console.log('Validation Error: No course selected.');
-                    }
-                    console.log('Current formErrors:', this.formErrors);
-
-                    if (Object.keys(this.formErrors).length > 0) {
-                        console.log('Preventing form submission due0 to errors.');
-                        event.preventDefault();
-                    } else {
-                        console.log('Validation successful. Explicitly submitting form.');
-                        event.target.submit(); // Explicitly submit the form
-                    }
                 },
 
                 get hasSelectedCourses() {

@@ -55,6 +55,10 @@
                 <p class="text-sm text-gray-600 font-medium">Activity Logs</p>
                 <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['activity_logs']) }}</p>
             </div>
+            <div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
+                <p class="text-sm text-gray-600 font-medium">Balances</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['balances'] ?? 0) }}</p>
+            </div>
             <div class="bg-teal-50 p-4 rounded-lg border-l-4 border-teal-500">
                 <p class="text-sm text-gray-600 font-medium">Courses</p>
                 <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['courses'] ?? 0) }}</p>
@@ -90,14 +94,15 @@
                             $refs.course_registrations.checked = false; 
                             $refs.bank_deposits.checked = false; 
                             $refs.ledger_entries.checked = false; 
-                            $refs.activity_logs.checked = false; 
+                            $refs.activity_logs.checked = false;
+                            $refs.balances.checked = false; 
                             $refs.courses.checked = false; 
                             $refs.teachers.checked = false; 
                         }"
                     >
                     <div class="ml-3">
                         <p class="text-lg font-bold text-red-900">Purge All Data (Except Users)</p>
-                        <p class="text-sm text-red-700 mt-1">This will delete ALL data including students, payments, expenses, course registrations, bank deposits, receipts, ledger entries, activity logs, courses, and teachers. Only users will remain.</p>
+                        <p class="text-sm text-red-700 mt-1">This will delete ALL data including students, payments, expenses, course registrations, bank deposits, receipts, ledger entries, activity logs, balances, courses, and teachers. Only users will remain.</p>
                     </div>
                 </label>
             </div>
@@ -165,6 +170,13 @@
                     </label>
 
                     <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" name="purge_balances" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="balances" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">Balances ({{ number_format($counts['balances'] ?? 0) }})</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
                         <input type="checkbox" name="purge_courses" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="courses" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
                         <div class="ml-3">
                             <p class="font-medium text-gray-900">Courses ({{ number_format($counts['courses'] ?? 0) }})</p>
@@ -189,10 +201,21 @@
                 <button 
                     type="submit" 
                     class="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg font-bold hover:from-red-700 hover:to-red-800 transition-all shadow-lg hover:shadow-xl"
-                    onclick="return confirm('Are you absolutely sure you want to purge the selected data? This action cannot be undone!');"
                 >
                     ⚠️ PURGE SELECTED DATA
                 </button>
+            </div>
+
+            <!-- Confirmation Text Input -->
+            <div class="mt-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+                <p class="text-red-800 mb-2">To confirm deletion, type "DELETE ALL DATA" in the box below:</p>
+                <input 
+                    type="text" 
+                    name="confirm_text" 
+                    placeholder="DELETE ALL DATA" 
+                    class="w-full p-2 border border-red-400 rounded-md focus:ring-red-500 focus:border-red-500"
+                    required
+                >
             </div>
         </form>
     </div>

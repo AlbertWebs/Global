@@ -109,12 +109,12 @@
                             $balance = max(0, $receipt->payment->agreed_amount - $receipt->payment->amount_paid);
                         @endphp
                         @if($balance > 0)
-                        <tr class="bg-orange-50 border-b border-gray-200">
+                        <tr class="bg-green-50 border-b border-gray-200">
                             <td class="px-6 py-3">
                                 <p class="text-sm text-gray-700 font-medium">Outstanding Balance</p>
                             </td>
                             <td class="px-6 py-3 text-right">
-                                <p class="text-sm font-bold text-orange-700">KES {{ number_format($balance, 2) }}</p>
+                                <p class="text-sm font-bold text-green-700">KES {{ number_format($balance, 2) }}</p>
                             </td>
                         </tr>
                         @endif

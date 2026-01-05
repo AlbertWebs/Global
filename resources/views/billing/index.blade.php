@@ -172,6 +172,25 @@
                 <p class="mt-2 text-sm text-gray-500">Enter the full amount agreed to be paid</p>
             </div>
 
+            <!-- Discount Amount -->
+            <div class="mb-6" hidden>
+                <label for="discount_amount" class="block text-sm font-medium text-gray-700 mb-2">
+                    Discount Amount (KES) (Optional)
+                </label>
+                <input 
+                    type="number" 
+                    id="discount_amount" 
+                    name="discount_amount" 
+                    x-model="discountAmount"
+                    @input="calculateBalance"
+                    step="0.01"
+                    min="0"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold"
+                    placeholder="0.00"
+                >
+                <p class="mt-2 text-sm text-gray-500">Enter any discount applied to the agreed amount</p>
+            </div>
+
             <!-- Amount Paid -->
             <div class="mb-6">
                 <label for="amount_paid" class="block text-sm font-medium text-gray-700 mb-2">
@@ -219,20 +238,38 @@
                 ></textarea>
             </div>
 
+            <!-- Total Amount Due Display -->
+            <div x-show="studentId && (studentOverallBalance > 0 || parseFloat(agreedAmount) > 0)" class="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">Summary for this Payment</h3>
+                <div x-show="studentOverallBalance > 0" class="flex justify-between items-center mb-2">
+                    <span class="text-gray-600">Overall Outstanding Balance:</span>
+                    <span class="font-bold text-orange-700" x-text="'KES ' + studentOverallBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                </div>
+                <div x-show="parseFloat(agreedAmount) > 0" class="flex justify-between items-center mb-2" :class="{'mt-2 border-t pt-2': studentOverallBalance > 0}">
+                    <span class="text-gray-600">Agreed Amount for Selected Course:</span>
+                    <span class="font-bold text-blue-700" x-text="'KES ' + parseFloat(agreedAmount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                </div>
+                <div class="flex justify-between items-center pt-2 border-t-2 border-gray-300 mt-3">
+                    <span class="text-xl font-bold text-gray-900">Total Amount Due:</span>
+                    <span class="text-3xl font-bold text-purple-700" x-text="'KES ' + totalAmountDueForPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                </div>
+                <p class="mt-2 text-sm text-gray-500">This is the total amount expected for this transaction, including any outstanding balances and the agreed amount for the selected course.</p>
+            </div>
+
             <!-- Payment Summary -->
             <div x-show="agreedAmount && amountPaid" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Payment Summary</h3>
                 <div class="space-y-2">
                     <div class="flex justify-between">
-                        <span class="text-gray-600">Agreed Amount:</span>
-                        <span class="font-semibold" x-text="'KES ' + (agreedAmount ? parseFloat(agreedAmount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00')"></span>
+                        <span class="text-gray-600">Total Due for Transaction:</span>
+                        <span class="font-semibold" x-text="'KES ' + totalAmountDueForPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600">Amount Paid:</span>
                         <span class="font-semibold" x-text="'KES ' + (amountPaid ? parseFloat(amountPaid).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00')"></span>
                     </div>
                     <div x-show="balance > 0" class="flex justify-between pt-2 border-t border-gray-300">
-                        <span class="text-gray-600">Balance:</span>
+                        <span class="text-gray-600">Outstanding Balance:</span>
                         <span class="font-bold text-orange-600" x-text="'KES ' + balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                     </div>
                     <div x-show="balance === 0 && agreedAmount && amountPaid" class="flex justify-between pt-2 border-t border-gray-300">
@@ -248,7 +285,9 @@
                     Cancel
                 </a>
                 <button 
-                    type="submit" 
+                    type="submit"
+                    x-init="$watch('studentId', () => {}); $watch('courseId', () => {}); $watch('agreedAmount', () => {}); $watch('amountPaid', () => {});"
+                    x-bind:disabled="!studentId || !courseId || isNaN(parseFloat(agreedAmount)) || parseFloat(agreedAmount) <= 0 || isNaN(parseFloat(amountPaid)) || parseFloat(amountPaid) <= 0 || parseFloat(agreedAmount) < parseFloat(amountPaid)"
                     class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl"
                 >
                     Process Payment & Generate Receipt
@@ -262,11 +301,17 @@
 function billingForm() {
     return {
         studentId: '{{ $selectedStudentId ?? '' }}',
-        selectedStudentName: '{{ isset($selectedStudentId) && $students->firstWhere("id", $selectedStudentId) ? $students->firstWhere("id", $selectedStudentId)->full_name . " (" . $students->firstWhere("id", $selectedStudentId)->student_number . ")" : "" }}',
+        selectedStudentName: '{{ $selectedStudent ? $selectedStudent->full_name . " (" . $selectedStudent->student_number . ")" : "" }}',
         courseId: '',
         agreedAmount: '',
         amountPaid: '',
+        discountAmount: '', // New property for discount amount
         balance: 0,
+        basePrice: 0, // New property for course base price
+        studentOverallBalance: 0, // New property for student's overall outstanding balance
+        studentCourseBalances: [], // New property for detailed course balances
+        totalAmountDueForPayment: 0, // Total amount due: overall balance + agreedAmount for selected course
+        
         courseInfo: null,
         studentCourses: [],
         selectedMonth: '{{ $currentMonthName }} {{ $currentYear }}',
@@ -293,6 +338,9 @@ function billingForm() {
                 this.courseId = '';
                 this.courseInfo = null;
                 this.selectedStudentName = '';
+                this.studentOverallBalance = 0; // Reset total balance
+                this.studentCourseBalances = []; // Reset detailed balances
+                this.totalAmountDueForPayment = 0; // Reset total amount due
                 // Show all courses when no student is selected
                 this.$nextTick(() => {
                     const select = this.$refs.courseSelect;
@@ -312,17 +360,33 @@ function billingForm() {
             const selectedMonth = monthSelect ? monthSelect.value : null;
             
             try {
-                const url = `/billing/student/${this.studentId}/courses${selectedMonth ? '?month=' + encodeURIComponent(selectedMonth) : ''}`;
-                const response = await fetch(url);
-                const courses = await response.json();
-                this.studentCourses = courses;
+                // Fetch all courses (registered and non-registered) for the student
+                const coursesUrl = `/billing/student/${this.studentId}/courses${selectedMonth ? '?month=' + encodeURIComponent(selectedMonth) : ''}`;
+                const coursesResponse = await fetch(coursesUrl);
+                const coursesData = await coursesResponse.json();
+                this.studentCourses = coursesData;
                 
+                // Fetch overall balance for the student
+                const overallBalanceUrl = `/billing/student/${this.studentId}/overall-balance`;
+                const overallBalanceResponse = await fetch(overallBalanceUrl);
+                const overallBalanceData = await overallBalanceResponse.json();
+
+                this.studentOverallBalance = parseFloat(overallBalanceData.total_outstanding_balance || 0);
+                this.studentCourseBalances = overallBalanceData.course_balances || [];
+                
+                // Reset agreedAmount when student changes to prevent carry-over from previous selections.
+                // It will be populated when a course is selected.
+                this.agreedAmount = '';
+
                 // Reset course selection when student changes
                 this.courseId = '';
                 this.courseInfo = null;
-                this.agreedAmount = '';
+                this.basePrice = 0;
                 this.amountPaid = '';
                 this.balance = 0;
+                this.discountAmount = 0;
+                
+                this.calculateBalance(); // Recalculate balance after loading student info
                 
                 // Show all courses (students can pay for any course in any month)
                 // But we'll keep the studentCourses array for reference
@@ -351,8 +415,16 @@ function billingForm() {
         },
         
         async loadCourseInfo() {
+            // Reset relevant fields when course changes
+            this.agreedAmount = '';
+            this.amountPaid = '';
+            this.discountAmount = '';
+            this.balance = 0;
+            this.totalAmountDueForPayment = this.studentOverallBalance; // Initially, total due is overall balance
+
             if (!this.courseId) {
                 this.courseInfo = null;
+                this.calculateBalance(); // Recalculate if no course is selected
                 return;
             }
             
@@ -360,29 +432,55 @@ function billingForm() {
                 const response = await fetch(`/billing/course/${this.courseId}`);
                 const data = await response.json();
                 this.courseInfo = data;
+                this.basePrice = parseFloat(data.base_price || 0); // Set basePrice here
                 
-                // Auto-fill agreed amount with course base price if available (for Super Admin)
+                let defaultAgreedAmount = 0;
                 @if(auth()->user()->isSuperAdmin())
-                if (data.base_price && !this.agreedAmount) {
-                    this.agreedAmount = parseFloat(data.base_price);
-                    this.calculateBalance();
+                if (data.base_price) {
+                    defaultAgreedAmount = parseFloat(data.base_price);
                 }
                 @endif
+
+                // Find if there's an outstanding balance for this specific course
+                const specificCourseBalance = this.studentCourseBalances.find(cb => cb.course_id == this.courseId);
+                
+                if (specificCourseBalance && specificCourseBalance.outstanding_balance > 0) {
+                    // If there's an existing balance for this specific course, pre-fill agreed amount with it
+                    this.agreedAmount = specificCourseBalance.outstanding_balance;
+                } else if (defaultAgreedAmount > 0) {
+                    // If no specific course balance, but the selected course has a default price, pre-fill agreed amount with it
+                    this.agreedAmount = defaultAgreedAmount;
+                }
+                
+                // Update total amount due based on current agreedAmount input
+                this.totalAmountDueForPayment = this.studentOverallBalance + parseFloat(this.agreedAmount || 0);
+                this.calculateBalance(); // Always recalculate balance after loading course info
+
             } catch (error) {
                 console.error('Error loading course info:', error);
+                this.totalAmountDueForPayment = this.studentOverallBalance; // Reset to overall balance on error
+                this.calculateBalance();
             }
         },
         
         calculateBalance() {
+            const base = parseFloat(this.basePrice) || 0;
             const agreed = parseFloat(this.agreedAmount) || 0;
             const paid = parseFloat(this.amountPaid) || 0;
-            this.balance = Math.max(0, agreed - paid);
-        },
-        
-        getYearFromMonth(monthString) {
-            if (!monthString) return {{ $currentYear }};
-            const parts = monthString.split(' ');
-            return parts.length > 1 ? parseInt(parts[1]) : {{ $currentYear }};
+
+            // Automatically calculate discount if agreed amount is less than base price
+            if (agreed < base) {
+                this.discountAmount = base - agreed;
+            } else {
+                this.discountAmount = 0;
+            }
+
+            // Update total amount due based on current agreedAmount input
+            this.totalAmountDueForPayment = this.studentOverallBalance + parseFloat(this.agreedAmount || 0);
+
+            // Calculate balance after applying discount and considering the total amount due
+            const totalPayable = this.totalAmountDueForPayment;
+            this.balance = Math.max(0, totalPayable - paid);
         },
         
         submitForm() {

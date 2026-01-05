@@ -31,12 +31,12 @@
                                 </svg>
                                 <span class="font-medium">{{ $student->admission_number }}</span>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <!-- <div class="flex items-center gap-2">
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path>
                                 </svg>
                                 <span>{{ $student->student_number }}</span>
-                            </div>
+                            </div> -->
                             <span class="px-3 py-1 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full text-sm font-semibold text-white border-2 border-emerald-300 border-opacity-60 shadow-md">
                                 {{ ucfirst($student->status) }}
                             </span>
@@ -636,7 +636,8 @@
                         </button>
                         <button 
                             type="submit" 
-                            class="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-bold hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl"
+                            x-bind:disabled="!courseId || isNaN(parseFloat(agreedAmount)) || parseFloat(agreedAmount) <= 0 || isNaN(parseFloat(amountPaid)) || parseFloat(amountPaid) <= 0 || parseFloat(agreedAmount) < parseFloat(amountPaid)"
+                            class="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-bold hover:from-green-700 hover:to-green-800 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Process Payment
                         </button>
@@ -663,8 +664,11 @@ function quickPaymentForm() {
         courseInfo: null,
         
         async loadCourseInfo() {
+            console.log('loadCourseInfo triggered');
+            console.log('Current courseId:', this.courseId);
             if (!this.courseId) {
                 this.courseInfo = null;
+                console.log('Course ID is empty, resetting courseInfo');
                 return;
             }
             
@@ -672,10 +676,12 @@ function quickPaymentForm() {
                 const response = await fetch(`/billing/course/${this.courseId}`);
                 const data = await response.json();
                 this.courseInfo = data;
+                console.log('Course info loaded:', this.courseInfo);
                 
                 @if(auth()->user()->isSuperAdmin())
                 if (data.base_price && !this.agreedAmount) {
                     this.agreedAmount = parseFloat(data.base_price);
+                    console.log('Setting agreedAmount from base_price:', this.agreedAmount);
                     this.calculateBalance();
                 }
                 @endif
@@ -688,6 +694,7 @@ function quickPaymentForm() {
             const agreed = parseFloat(this.agreedAmount) || 0;
             const paid = parseFloat(this.amountPaid) || 0;
             this.balance = Math.max(0, agreed - paid);
+            console.log('calculateBalance triggered - Agreed:', agreed, 'Paid:', paid, 'Balance:', this.balance);
         }
     }
 }
