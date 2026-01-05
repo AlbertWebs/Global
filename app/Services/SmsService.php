@@ -509,4 +509,24 @@ class SmsService
 
         return $results;
     }
+
+    /**
+     * Send wallet top-up SMS
+     * 
+     * @param Student $student
+     * @param float $amount
+     * @param float $newWalletBalance
+     * @return bool
+     */
+    public function sendWalletTopUpSMS(Student $student, float $amount, float $newWalletBalance): bool
+    {
+        $message = config('sms.templates.wallet_topup',
+            "Dear {student_name}, your wallet has been topped up with KES {amount}. Your new wallet balance is KES {wallet_balance}."
+        );
+
+        $message = str_replace('{amount}', number_format($amount, 2), $message);
+        $message = str_replace('{wallet_balance}', number_format($newWalletBalance, 2), $message);
+
+        return $this->sendSMSs($message, $student);
+    }
 }

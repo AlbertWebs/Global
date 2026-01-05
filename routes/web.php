@@ -112,6 +112,9 @@ Route::middleware('auth')->group(function () {
     // Users & Roles (Super Admin only - checked in controller)
     Route::resource('users', UserController::class);
 
+    // Payment Logs (Super Admin only - checked in controller)
+    Route::resource('payment-logs', \App\Http\Controllers\PaymentLogController::class)->only(['index', 'show']);
+
     // Teachers Management (Super Admin only - checked in controller)
     Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('teachers', TeacherController::class);

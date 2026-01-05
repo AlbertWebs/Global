@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\Student;
+use App\Models\Wallet;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -145,6 +146,20 @@ class StudentController extends Controller
     public function show(Student $student)
     {
         $student->load('payments.course', 'payments.receipt', 'payments.cashier', 'courseRegistrations.course');
+
+        // Manually attach balance information to payments
+        $studentPayments = $student->payments;
+        $studentBalances = \App\Models\Balance::where('student_id', $student->id)->get()->keyBy(function ($item) {
+            return $item->student_id . '-' . $item->course_id;
+        });
+
+        foreach ($studentPayments as $payment) {
+            $key = $payment->student_id . '-' . $payment->course_id;
+            $payment->setRelation('balance', $studentBalances->get($key));
+        }
+
+        $studentWallet = Wallet::where('student_id', $student->id)->first();
+        $walletBalance = $studentWallet ? $studentWallet->balance : 0;
         $courses = \App\Models\Course::where('status', 'active')->orderBy('name')->get();
         
         // Get current academic year and month for monthly billing
@@ -175,22 +190,19 @@ class StudentController extends Controller
         });
         
         // Outstanding balances per course
-        $courseBalances = $student->payments->groupBy('course_id')->map(function($payments, $courseId) {
-            $course = $payments->first()->course;
-            $agreed = $payments->sum('agreed_amount');
-            $paid = $payments->sum('amount_paid');
-            $balance = max(0, $agreed - $paid);
-            
-            return [
-                'course' => $course,
-                'agreed' => $agreed,
-                'paid' => $paid,
-                'balance' => $balance,
-                'payments_count' => $payments->count()
-            ];
-        })->filter(function($item) {
-            return $item['balance'] > 0;
-        });
+        $courseBalances = \App\Models\Balance::where('student_id', $student->id)
+            ->with('course')
+            ->get()
+            ->map(function($balance) {
+                return [
+                    'course' => $balance->course,
+                    'agreed' => $balance->agreed_amount,
+                    'paid' => $balance->total_paid,
+                    'balance' => $balance->outstanding_balance,
+                    // 'payments_count' is not directly available from the Balance model easily without further joins/queries
+                    'payments_count' => \App\Models\Payment::where('student_id', $balance->student_id)->where('course_id', $balance->course_id)->count()
+                ];
+            });
         
         // Recent payments (last 5)
         $recentPayments = $student->payments()->with('course', 'receipt', 'cashier')->latest()->take(5)->get();
@@ -229,7 +241,8 @@ class StudentController extends Controller
             'paymentMethods',
             'courseBalances',
             'recentPayments',
-            'monthlyTrend'
+            'monthlyTrend',
+            'walletBalance'
         ));
     }
 

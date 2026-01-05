@@ -53,6 +53,7 @@ class Payment extends Model
         return $this->hasOne(Receipt::class);
     }
 
+
     protected static function boot()
     {
         parent::boot();
@@ -70,16 +71,5 @@ class Payment extends Model
                 $payment->discount_amount = 0;
             }
         });
-    }
-
-    /**
-     * Get the balance (outstanding amount)
-     */
-    public function getBalanceAttribute(): float
-    {
-        if ($this->agreed_amount) {
-            return max(0, $this->agreed_amount - $this->amount_paid);
-        }
-        return 0;
     }
 }

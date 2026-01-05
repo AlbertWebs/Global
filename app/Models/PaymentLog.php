@@ -4,18 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Balance extends Model
+class PaymentLog extends Model
 {
     protected $fillable = [
         'student_id',
         'course_id',
+        'payment_id',
+        'description',
         'base_price',
         'agreed_amount',
-        'total_paid',
-        'discount_amount',
-        'outstanding_balance',
-        'status',
-        'last_payment_date',
+        'amount_paid',
+        'balance_before',
+        'balance_after',
+        'wallet_balance_after',
+        'payment_date',
     ];
 
     protected function casts(): array
@@ -23,10 +25,11 @@ class Balance extends Model
         return [
             'base_price' => 'decimal:2',
             'agreed_amount' => 'decimal:2',
-            'total_paid' => 'decimal:2',
-            'discount_amount' => 'decimal:2',
-            'outstanding_balance' => 'decimal:2',
-            'last_payment_date' => 'datetime',
+            'amount_paid' => 'decimal:2',
+            'balance_before' => 'decimal:2',
+            'balance_after' => 'decimal:2',
+            'wallet_balance_after' => 'decimal:2',
+            'payment_date' => 'datetime',
         ];
     }
 
@@ -40,8 +43,8 @@ class Balance extends Model
         return $this->belongsTo(Course::class);
     }
 
-    public function payments()
+    public function payment()
     {
-        return $this->hasMany(Payment::class, 'student_id', 'student_id')->whereColumn('payments.course_id', 'balances.course_id');
+        return $this->belongsTo(Payment::class);
     }
 }

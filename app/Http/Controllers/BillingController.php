@@ -9,6 +9,8 @@ use App\Models\LedgerEntry;
 use App\Models\Payment;
 use App\Models\Receipt;
 use App\Models\Student;
+use App\Models\PaymentLog;
+use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -100,9 +102,11 @@ class BillingController extends Controller
             'notes' => ['nullable', 'string'],
         ]);
 
-        $balance = $validated['agreed_amount'] - $validated['amount_paid'];
+        $course = Course::findOrFail($validated['course_id']);
 
-        \App\Models\Billing::create([
+        $totalDiscount = $validated['discount_amount'] ?? 0;
+        
+        $payment = Payment::create([
             'student_id' => $validated['student_id'],
             'course_id' => $validated['course_id'],
             'academic_year' => $validated['academic_year'],
@@ -110,11 +114,198 @@ class BillingController extends Controller
             'year' => $validated['year'],
             'agreed_amount' => $validated['agreed_amount'],
             'amount_paid' => $validated['amount_paid'],
-            'discount_amount' => $validated['discount_amount'] ?? 0,
-            'balance' => $balance,
+            'base_price' => $course->base_price,
+            'discount_amount' => $totalDiscount,
+            'cashier_id' => auth()->id(),
+            'payment_method' => $validated['payment_method'],
+            'notes' => $validated['notes'],
         ]);
 
-        return back()->with('success', 'Payment processed successfully!');
+        // Generate receipt with serialized receipt number
+        $receipt = Receipt::create([
+            'payment_id' => $payment->id,
+            'receipt_number' => Receipt::generateReceiptNumber(),
+            'receipt_date' => now(),
+        ]);
+
+        // Refresh payment to load receipt relationship
+        $payment->refresh();
+
+        // Update or create Balance record
+        // Update or create Balance record for the current course
+        $currentCourseBalance = \App\Models\Balance::firstOrNew(
+            ['student_id' => $validated['student_id'], 'course_id' => $validated['course_id']]
+        );
+
+        if (!$currentCourseBalance->exists) {
+            $currentCourseBalance->base_price = $course->base_price;
+            $currentCourseBalance->agreed_amount = $validated['agreed_amount'];
+            $currentCourseBalance->discount_amount = $totalDiscount;
+            $currentCourseBalance->total_paid = 0;
+        }
+
+        // Apply payment to the current course balance first
+        $amountToApplyToCurrentCourse = min($currentCourseBalance->agreed_amount - $currentCourseBalance->total_paid, $validated['amount_paid']);
+        $currentCourseBalance->total_paid += $amountToApplyToCurrentCourse;
+        $remainingPayment = $validated['amount_paid'] - $amountToApplyToCurrentCourse;
+
+        $currentCourseBalance->outstanding_balance = max(0, $currentCourseBalance->agreed_amount - $currentCourseBalance->total_paid);
+        $currentCourseBalance->status = ($currentCourseBalance->outstanding_balance <= 0) ? 'cleared' : 'partially_paid';
+        $currentCourseBalance->last_payment_date = now();
+        $currentCourseBalance->save();
+
+        // Log payment for the current course
+        PaymentLog::create([
+            'student_id' => $validated['student_id'],
+            'course_id' => $validated['course_id'],
+            'payment_id' => $payment->id,
+            'description' => 'Payment for ' . $course->name,
+            'base_price' => $currentCourseBalance->base_price,
+            'agreed_amount' => $currentCourseBalance->agreed_amount,
+            'amount_paid' => $amountToApplyToCurrentCourse,
+            'balance_before' => $currentCourseBalance->getOriginal('outstanding_balance') + $amountToApplyToCurrentCourse, // Calculate balance before
+            'balance_after' => $currentCourseBalance->outstanding_balance,
+            'payment_date' => now(),
+        ]);
+
+        // Distribute any remaining payment to other outstanding balances
+        if ($remainingPayment > 0) {
+            $otherOutstandingBalances = \App\Models\Balance::where('student_id', $validated['student_id'])
+                ->where('course_id', '!=', $validated['course_id'])
+                ->where('outstanding_balance', '>', 0)
+                ->orderBy('last_payment_date', 'asc') // Prioritize older balances
+                ->get();
+
+            foreach ($otherOutstandingBalances as $otherBalance) {
+                if ($remainingPayment <= 0) break;
+
+                $amountToApply = min($otherBalance->outstanding_balance, $remainingPayment);
+                $otherBalance->total_paid += $amountToApply;
+                $otherBalance->outstanding_balance -= $amountToApply;
+                $otherBalance->status = ($otherBalance->outstanding_balance <= 0) ? 'cleared' : 'partially_paid';
+                $otherBalance->last_payment_date = now();
+                $otherBalance->save();
+                
+                $remainingPayment -= $amountToApply;
+
+                // Log payment for other outstanding balances
+                PaymentLog::create([
+                    'student_id' => $validated['student_id'],
+                    'course_id' => $otherBalance->course_id,
+                    'payment_id' => $payment->id,
+                    'description' => 'Payment for ' . $otherBalance->course->name . ' (clearing previous balance)',
+                    'base_price' => $otherBalance->base_price,
+                    'agreed_amount' => $otherBalance->agreed_amount,
+                    'amount_paid' => $amountToApply,
+                    'balance_before' => $otherBalance->getOriginal('outstanding_balance') + $amountToApply, // Calculate balance before
+                    'balance_after' => $otherBalance->outstanding_balance,
+                    'payment_date' => now(),
+                ]);
+            }
+        }
+
+        // Handle any remaining payment as a wallet top-up
+        if ($remainingPayment > 0) {
+            $wallet = Wallet::firstOrNew(['student_id' => $validated['student_id']]);
+            $wallet->balance += $remainingPayment;
+            $wallet->save();
+
+            // Log wallet top-up
+            PaymentLog::create([
+                'student_id' => $validated['student_id'],
+                'payment_id' => $payment->id,
+                'description' => 'Wallet Top-up',
+                'amount_paid' => $remainingPayment,
+                'balance_before' => $wallet->getOriginal('balance') ?? 0, // Assuming it's 0 if new
+                'balance_after' => $wallet->balance,
+                'wallet_balance_after' => $wallet->balance,
+                'payment_date' => now(),
+            ]);
+
+            // Send SMS notification for wallet top-up
+            try {
+                $smsService = app(\App\Services\SmsService::class);
+                $smsService->sendWalletTopUpSMS(
+                    $payment->student,
+                    $remainingPayment,
+                    $wallet->balance
+                );
+            } catch (\Exception $e) {
+                \Log::error("Failed to send wallet top-up SMS", [
+                    'student_id' => $payment->student_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Automatically register student for the course if not already registered
+        // Check if registration already exists for this student, course, academic year, month, and year
+        $existingRegistration = CourseRegistration::where('student_id', $validated['student_id'])
+            ->where('course_id', $validated['course_id'])
+            ->where('academic_year', $validated['academic_year'])
+            ->where('month', $validated['month'])
+            ->where('year', $validated['year'])
+            ->first();
+
+        if (!$existingRegistration) {
+            CourseRegistration::create([
+                'student_id' => $validated['student_id'],
+                'course_id' => $validated['course_id'],
+                'academic_year' => $validated['academic_year'],
+                'month' => $validated['month'],
+                'year' => $validated['year'],
+                'registration_date' => now(),
+                'status' => 'registered',
+                'notes' => 'Auto-registered upon payment',
+            ]);
+        }
+
+        // Create ledger entry for money trace
+        LedgerEntry::createFromPayment($payment);
+
+        // Send payment confirmation SMS
+        try {
+            $smsService = app(\App\Services\SmsService::class);
+            $smsService->sendPaymentSMS(
+                $payment->student,
+                $payment->amount_paid,
+                $payment->course->name,
+                $receipt->receipt_number
+            );
+        } catch (\Exception $e) {
+            // Log error but don't fail the payment
+            \Log::error("Failed to send payment SMS", [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Send payment confirmation email
+        try {
+            $emailService = app(\App\Services\EmailService::class);
+            $emailService->sendPaymentEmail(
+                $payment->student,
+                $payment->amount_paid,
+                $payment->course->name,
+                $receipt->receipt_number
+            );
+        } catch (\Exception $e) {
+            // Log error but don't fail the payment
+            \Log::error("Failed to send payment email", [
+                'payment_id' => $payment->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        // Log the activity
+        ActivityLog::log(
+            'payment.created',
+            "Processed payment of KES " . number_format($payment->amount_paid, 2) . " from {$payment->student->full_name} for {$payment->course->name} (Receipt: {$receipt->receipt_number})",
+            $payment
+        );
+
+        return redirect()->route('receipts.show', $receipt->id)
+            ->with('success', 'Payment processed successfully!');
     }
 
     public function getCourseInfo($courseId)

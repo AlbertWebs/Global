@@ -196,6 +196,16 @@
             <p class="text-orange-100 text-sm font-medium">Outstanding Balance</p>
         </div>
 
+        <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-yellow-700 bg-opacity-80 rounded-xl flex items-center justify-center shadow-md">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+                </div>
+                <span class="text-2xl font-bold">KES {{ number_format($walletBalance, 0) }}</span>
+            </div>
+            <p class="text-yellow-100 text-sm font-medium">Wallet Balance</p>
+        </div>
+
         <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white transform hover:scale-105 transition-transform">
             <div class="flex items-center justify-between mb-4">
                 <div class="w-12 h-12 bg-purple-700 bg-opacity-80 rounded-xl flex items-center justify-center shadow-md">
@@ -420,8 +430,8 @@
                                     <div class="text-sm font-bold text-gray-900">KES {{ number_format($payment->amount_paid, 2) }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right">
-                                    @if($payment->balance > 0)
-                                    <span class="text-sm font-semibold text-orange-600">KES {{ number_format($payment->balance, 2) }}</span>
+                                    @if($payment->balance && $payment->balance->outstanding_balance > 0)
+                                    <span class="text-sm font-semibold text-orange-600">KES {{ number_format($payment->balance->outstanding_balance, 2) }}</span>
                                     @else
                                     <span class="text-sm font-semibold text-green-600">Paid</span>
                                     @endif

@@ -8,7 +8,7 @@
     <div class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-2xl font-bold text-gray-900 mb-6">New Payment</h2>
 
-        <form @submit.prevent="submitForm" method="POST" action="{{ route('billing.store') }}">
+        <form @submit.prevent="submitForm" method="POST" action="{{ route('billing.store') }}" id="billingForm">
             @csrf
 
             <!-- Student Selection -->
@@ -287,7 +287,7 @@
                 <button 
                     type="submit"
                     x-init="$watch('studentId', () => {}); $watch('courseId', () => {}); $watch('agreedAmount', () => {}); $watch('amountPaid', () => {});"
-                    x-bind:disabled="!studentId || !courseId || isNaN(parseFloat(agreedAmount)) || parseFloat(agreedAmount) <= 0 || isNaN(parseFloat(amountPaid)) || parseFloat(amountPaid) <= 0 || parseFloat(agreedAmount) < parseFloat(amountPaid)"
+                    x-bind:disabled="!studentId || !courseId || isNaN(parseFloat(agreedAmount)) || parseFloat(agreedAmount) <= 0 || isNaN(parseFloat(amountPaid)) || parseFloat(amountPaid) <= 0"
                     class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl"
                 >
                     Process Payment & Generate Receipt
@@ -483,6 +483,12 @@ function billingForm() {
             this.balance = Math.max(0, totalPayable - paid);
         },
         
+        getYearFromMonth(monthString) {
+            if (!monthString) return '';
+            const parts = monthString.split(' ');
+            return parts[1] || '';
+        },
+        
         submitForm() {
             // Ensure year is set correctly from month selection
             const yearInput = this.$el.querySelector('input[name="year"]');
@@ -496,4 +502,14 @@ function billingForm() {
 }
 </script>
 @endsection
+
+@if ($errors->any())
+<script>
+let errorMessages = '';
+@foreach ($errors->all() as $error)
+errorMessages += '{{ addslashes($error) }}\n';
+@endforeach
+alert('Validation Errors:\n' + errorMessages);
+</script>
+@endif
 

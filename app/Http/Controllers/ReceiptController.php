@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Receipt;
+use App\Models\Balance;
 use Illuminate\Http\Request;
 
 class ReceiptController extends Controller
@@ -17,7 +18,11 @@ class ReceiptController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        return view('receipts.show', compact('receipt'));
+        $balance = Balance::where('student_id', $receipt->payment->student_id)
+                            ->where('course_id', $receipt->payment->course_id)
+                            ->first();
+
+        return view('receipts.show', compact('receipt', 'balance'));
     }
 
     public function print($id)
@@ -60,22 +65,39 @@ class ReceiptController extends Controller
     {
         $user = auth()->user();
         
+        $receiptsQuery = Receipt::with(['payment.student', 'payment.course']);
+
         if ($user->isSuperAdmin()) {
-            $receipts = Receipt::with(['payment.student', 'payment.course'])
-                ->whereHas('payment', function($query) {
-                    $query->whereHas('student')->whereHas('course');
-                })
-                ->latest()
-                ->paginate(20);
+            $receiptsQuery->whereHas('payment', function($query) {
+                $query->whereHas('student')->whereHas('course');
+            });
         } else {
-            $receipts = Receipt::whereHas('payment', function($query) use ($user) {
+            $receiptsQuery->whereHas('payment', function($query) use ($user) {
                 $query->where('cashier_id', $user->id)
                     ->whereHas('student')
                     ->whereHas('course');
-            })
-            ->with(['payment.student', 'payment.course'])
-            ->latest()
-            ->paginate(20);
+            });
+        }
+
+        $receipts = $receiptsQuery->latest()->paginate(20);
+
+        // Manually eager load and attach balance information
+        $paymentStudentCoursePairs = $receipts->map(function ($receipt) {
+            return ['student_id' => $receipt->payment->student_id, 'course_id' => $receipt->payment->course_id];
+        })->unique()->toArray();
+
+        $balances = Balance::whereIn('student_id', array_column($paymentStudentCoursePairs, 'student_id'))
+                            ->whereIn('course_id', array_column($paymentStudentCoursePairs, 'course_id'))
+                            ->get()
+                            ->keyBy(function ($item) {
+                                return $item->student_id . '-' . $item->course_id;
+                            });
+
+        foreach ($receipts as $receipt) {
+            if ($receipt->payment) {
+                $key = $receipt->payment->student_id . '-' . $receipt->payment->course_id;
+                $receipt->payment->setRelation('balance', $balances->get($key));
+            }
         }
 
         return view('receipts.index', compact('receipts'));
