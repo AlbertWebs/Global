@@ -84,6 +84,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        <tr>
                             <td class="px-6 py-4">
                                 <p class="font-bold text-gray-900 text-lg">{{ $receipt->payment->course->name }}</p>
                                 <p class="text-sm text-gray-600 mt-1">Course Code: {{ $receipt->payment->course->code }}</p>
@@ -93,28 +94,25 @@
                             </td>
                             <td class="px-6 py-4 text-right">
                                 <p class="font-bold text-gray-900 text-lg">KES {{ number_format($receipt->payment->agreed_amount, 2) }}</p>
+                                <p class="text-xs text-gray-500 mt-1">Agreed Amount</p>
                             </td>
                         </tr>
-                        @if($receipt->payment->discount_amount > 0)
-                        <tr class="bg-blue-50 border-b border-gray-200" style="display: none;">
-                            <td class="px-6 py-3">
-                                <p class="text-sm text-gray-700 font-medium">Discount</p>
-                            </td>
-                            <td class="px-6 py-3 text-right">
-                                <p class="text-sm text-red-600 font-semibold">- KES {{ number_format($receipt->payment->discount_amount, 2) }}</p>
-                            </td>
-                        </tr>
-                        @endif
                         <tr class="bg-blue-50 border-b border-gray-200">
                             <td class="px-6 py-3">
-                                <p class="text-sm text-gray-700 font-medium">Cash/Bank Payment</p>
+                                <p class="text-sm text-gray-700 font-medium">Cash/M-Pesa Payment</p>
                             </td>
                             <td class="px-6 py-3 text-right">
                                 <p class="text-sm text-gray-700 font-semibold">KES {{ number_format($receipt->payment->amount_paid, 2) }}</p>
                             </td>
                         </tr>
+                        @php
+                            $walletAmountUsed = $receipt->payment->wallet_amount_used ?? 0;
+                            $totalPayment = $receipt->payment->amount_paid + $walletAmountUsed;
+                            $overpayment = $receipt->payment->overpayment_amount ?? 0;
+                            $balance = max(0, $receipt->payment->agreed_amount - $totalPayment);
+                        @endphp
                         @if($walletAmountUsed > 0)
-                        <tr class="bg-blue-50 border-b border-gray-200">
+                        <tr class="bg-green-50 border-b border-gray-200">
                             <td class="px-6 py-3">
                                 <p class="text-sm text-gray-700 font-medium">Amount from Wallet</p>
                             </td>
@@ -123,27 +121,42 @@
                             </td>
                         </tr>
                         @endif
-                        @php
-                            $totalEffectivePayment = $receipt->payment->amount_paid + $walletAmountUsed;
-                        @endphp
-                        @if($balance && $balance->outstanding_balance > 0)
-                        <tr class="bg-red-50 border-b border-gray-200">
+                        <tr class="bg-gradient-to-r from-blue-100 to-blue-200 border-t-2 border-blue-400">
                             <td class="px-6 py-3">
-                                <p class="text-sm text-gray-700 font-medium">Outstanding Balance</p>
+                                <p class="text-sm font-bold text-gray-900">Total Payment</p>
                             </td>
                             <td class="px-6 py-3 text-right">
-                                <p class="text-sm font-bold text-red-700">KES {{ number_format($balance->outstanding_balance, 2) }}</p>
+                                <p class="text-lg font-bold text-gray-900">KES {{ number_format($totalPayment, 2) }}</p>
+                            </td>
+                        </tr>
+                        @if($balance > 0)
+                        <tr class="bg-red-50 border-b border-gray-200">
+                            <td class="px-6 py-3">
+                                <p class="text-sm text-gray-700 font-medium">Balance Due</p>
+                            </td>
+                            <td class="px-6 py-3 text-right">
+                                <p class="text-sm font-bold text-red-700">KES {{ number_format($balance, 2) }}</p>
+                            </td>
+                        </tr>
+                        @elseif($overpayment > 0)
+                        <tr class="bg-green-50 border-b border-gray-200">
+                            <td class="px-6 py-3">
+                                <p class="text-sm text-gray-700 font-medium">Credit Added to Wallet</p>
+                            </td>
+                            <td class="px-6 py-3 text-right">
+                                <p class="text-sm font-bold text-green-700">KES {{ number_format($overpayment, 2) }}</p>
+                            </td>
+                        </tr>
+                        @else
+                        <tr class="bg-gray-50 border-b border-gray-200">
+                            <td class="px-6 py-3">
+                                <p class="text-sm text-gray-700 font-medium">Balance</p>
+                            </td>
+                            <td class="px-6 py-3 text-right">
+                                <p class="text-sm font-bold text-gray-700">KES 0.00</p>
                             </td>
                         </tr>
                         @endif
-                        <tr class="bg-gradient-to-r from-gray-100 to-gray-200 border-t-4 border-gray-400">
-                            <td class="px-6 py-4">
-                                <p class="font-bold text-gray-900 text-xl">Total Amount Paid</p>
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <p class="text-3xl font-bold text-gray-900">KES {{ number_format($totalEffectivePayment, 2) }}</p>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
             </div>

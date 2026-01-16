@@ -184,21 +184,43 @@
         </div>
         @if($receipt->payment->agreed_amount)
         <div class="row">
-            <span class="label">Amount:</span>
+            <span class="label">Agreed Amount:</span>
             <span class="value">KES {{ number_format($receipt->payment->agreed_amount, 2) }}</span>
         </div>
         @endif
         <div class="row">
-            <span class="label">Paid:</span>
+            <span class="label">Cash/M-Pesa Payment:</span>
             <span class="value">KES {{ number_format($receipt->payment->amount_paid, 2) }}</span>
         </div>
+        @if($receipt->payment->wallet_amount_used > 0)
+        <div class="row">
+            <span class="label">From Wallet:</span>
+            <span class="value">KES {{ number_format($receipt->payment->wallet_amount_used, 2) }}</span>
+        </div>
+        @endif
         @php
-            $balance = max(0, ($receipt->payment->agreed_amount ?? 0) - $receipt->payment->amount_paid);
+            $totalPayment = $receipt->payment->amount_paid + ($receipt->payment->wallet_amount_used ?? 0);
+            $balance = max(0, ($receipt->payment->agreed_amount ?? 0) - $totalPayment);
+            $overpayment = $receipt->payment->overpayment_amount ?? 0;
         @endphp
+        <div class="row">
+            <span class="label">Total Payment:</span>
+            <span class="value">KES {{ number_format($totalPayment, 2) }}</span>
+        </div>
         @if($balance > 0)
         <div class="row">
-            <span class="label">Balance:</span>
+            <span class="label">Balance Due:</span>
             <span class="value">KES {{ number_format($balance, 2) }}</span>
+        </div>
+        @elseif($overpayment > 0)
+        <div class="row">
+            <span class="label">Credit (Wallet):</span>
+            <span class="value">KES {{ number_format($overpayment, 2) }}</span>
+        </div>
+        @else
+        <div class="row">
+            <span class="label">Balance:</span>
+            <span class="value">KES 0.00</span>
         </div>
         @endif
         <div class="row">
@@ -218,7 +240,7 @@
     <div class="divider"></div>
 
     <div class="total">
-        TOTAL PAID: KES {{ number_format($receipt->payment->amount_paid, 2) }}
+        TOTAL PAID: KES {{ number_format($totalPayment, 2) }}
     </div>
 
     <div class="section">

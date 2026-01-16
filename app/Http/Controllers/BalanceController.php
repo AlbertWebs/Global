@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class BalanceController extends Controller
 {
@@ -19,7 +20,8 @@ class BalanceController extends Controller
 
     public function index(Request $request)
     {
-        $query = Balance::with(['student', 'course']);
+        $query = Balance::with(['student', 'course'])
+            ->where('outstanding_balance', '>', 0); // Only show balances with outstanding amount
 
         if ($request->has('student_id') && $request->input('student_id') != '') {
             $query->where('student_id', $request->input('student_id'));
@@ -36,6 +38,14 @@ class BalanceController extends Controller
         $balances = $query->orderBy('last_payment_date', 'desc')->paginate(10);
         $students = Student::orderBy('first_name')->get();
         $courses = Course::orderBy('name')->get();
+
+        // Calculate real total paid (cash + wallet) for each balance
+        foreach ($balances as $balance) {
+            $realTotalPaid = \App\Models\Payment::where('student_id', $balance->student_id)
+                ->where('course_id', $balance->course_id)
+                ->sum(DB::raw('amount_paid + COALESCE(wallet_amount_used, 0)'));
+            $balance->real_total_paid = (float) $realTotalPaid;
+        }
 
         return view('balances.index', compact('balances', 'students', 'courses'));
     }

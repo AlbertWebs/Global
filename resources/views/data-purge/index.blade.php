@@ -59,6 +59,10 @@
                 <p class="text-sm text-gray-600 font-medium">Balances</p>
                 <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['balances'] ?? 0) }}</p>
             </div>
+            <div class="bg-cyan-50 p-4 rounded-lg border-l-4 border-cyan-500">
+                <p class="text-sm text-gray-600 font-medium">Wallet Balances</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['wallets'] ?? 0) }}</p>
+            </div>
             <div class="bg-teal-50 p-4 rounded-lg border-l-4 border-teal-500">
                 <p class="text-sm text-gray-600 font-medium">Courses</p>
                 <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['courses'] ?? 0) }}</p>
@@ -96,13 +100,14 @@
                             $refs.ledger_entries.checked = false; 
                             $refs.activity_logs.checked = false;
                             $refs.balances.checked = false; 
+                            $refs.wallets.checked = false; 
                             $refs.courses.checked = false; 
                             $refs.teachers.checked = false; 
                         }"
                     >
                     <div class="ml-3">
                         <p class="text-lg font-bold text-red-900">Purge All Data (Except Users)</p>
-                        <p class="text-sm text-red-700 mt-1">This will delete ALL data including students, payments, expenses, course registrations, bank deposits, receipts, ledger entries, activity logs, balances, courses, and teachers. Only users will remain.</p>
+                        <p class="text-sm text-red-700 mt-1">This will delete ALL data including students, payments, expenses, course registrations, bank deposits, receipts, ledger entries, activity logs, balances, wallet balances, courses, and teachers. Only users will remain.</p>
                     </div>
                 </label>
             </div>
@@ -173,6 +178,14 @@
                         <input type="checkbox" name="purge_balances" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="balances" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
                         <div class="ml-3">
                             <p class="font-medium text-gray-900">Balances ({{ number_format($counts['balances'] ?? 0) }})</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" name="purge_wallets" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="wallets" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">Wallet Balances ({{ number_format($counts['wallets'] ?? 0) }})</p>
+                            <p class="text-sm text-gray-600">This will delete all student wallet balances and credits</p>
                         </div>
                     </label>
 

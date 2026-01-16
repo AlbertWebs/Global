@@ -16,6 +16,8 @@ class Payment extends Model
         'year',
         'amount_paid',
         'agreed_amount',
+        'overpayment_amount',
+        'wallet_amount_used',
         'base_price',
         'discount_amount',
         'cashier_id',
@@ -28,6 +30,8 @@ class Payment extends Model
         return [
             'amount_paid' => 'decimal:2',
             'agreed_amount' => 'decimal:2',
+            'overpayment_amount' => 'decimal:2',
+            'wallet_amount_used' => 'decimal:2',
             'base_price' => 'decimal:2',
             'discount_amount' => 'decimal:2',
         ];
