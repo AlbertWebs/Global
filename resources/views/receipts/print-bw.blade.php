@@ -36,25 +36,28 @@
         @media print {
             @page {
                 size: A5;
-                margin-top: 20mm !important; /* Space for letterhead header */
-                margin-bottom: 15mm !important; /* Space for letterhead footer */
+                margin-top: 60mm !important; /* Larger space for letterhead header */
+                margin-bottom: 10mm !important; /* Reduced footer space */
                 margin-left: 5mm !important;
                 margin-right: 5mm !important;
             }
             body { 
                 margin: 0 !important; 
                 padding: 0 !important; 
-                height: 175mm !important; /* A5 height (210mm) minus top (20mm) and bottom (15mm) margins */
+                height: 140mm !important; /* A5 height (210mm) minus top (60mm) and bottom (10mm) margins */
                 overflow: hidden !important;
                 display: flex !important;
                 flex-direction: column !important;
-                justify-content: center !important;
+                justify-content: flex-start !important;
                 align-items: center !important;
+                padding-top: 0 !important; /* Content starts after header margin */
             }
             .receipt-container {
                 width: 100% !important;
                 max-width: 130mm !important;
                 padding: 0 2mm !important;
+                margin-top: 0 !important;
+                max-height: 143mm !important; /* Adjusted for larger header (55mm) */
             }
             .no-print { display: none !important; }
             .print-break { page-break-after: always; }
@@ -147,12 +150,12 @@
                 padding-bottom: 0.18rem !important;
             }
             .py-2 {
-                padding-top: 0.15rem !important;
-                padding-bottom: 0.15rem !important;
-            }
-            .py-1\.5 {
                 padding-top: 0.12rem !important;
                 padding-bottom: 0.12rem !important;
+            }
+            .py-1\.5 {
+                padding-top: 0.1rem !important;
+                padding-bottom: 0.1rem !important;
             }
             .gap-6 {
                 gap: 0.35rem !important;
@@ -196,11 +199,11 @@
             /* Prevent page breaks and ensure single page */
             .max-w-3xl {
                 page-break-inside: avoid !important;
-                max-height: 173mm !important; /* Increased slightly for better spacing */
+                max-height: 143mm !important; /* Adjusted for larger header (55mm) */
                 overflow: hidden !important;
             }
             .receipt-container {
-                max-height: 173mm !important; /* Increased slightly for better spacing */
+                max-height: 143mm !important; /* Adjusted for larger header (55mm) */
                 page-break-inside: avoid !important;
             }
             table {
@@ -211,7 +214,7 @@
             }
             /* Ensure all content fits */
             body > * {
-                max-height: 170mm !important;
+                max-height: 175mm !important;
             }
         }
         
@@ -371,7 +374,7 @@
         </div>
 
         <!-- Payment Method & Additional Info -->
-        <div class="grid grid-cols-2 gap-2 mb-3">
+        <div class="grid grid-cols-2 gap-2 mb-2">
             <div class="p-2 rounded-lg bw-box">
                 <p class="text-xs mb-0.5 font-bold uppercase" style="color: #666;">Payment Method</p>
                 <p class="text-sm font-bold" style="color: #000;">
@@ -391,7 +394,7 @@
         </div>
 
         @if($receipt->payment->notes)
-        <div class="mb-3 p-3 bw-bg-light rounded-lg bw-border">
+        <div class="mb-2 p-2 bw-bg-light rounded-lg bw-border">
             <p class="text-xs mb-0.5 font-bold uppercase" style="color: #666;">Additional Notes</p>
             <p class="text-xs font-medium" style="color: #000;">{{ $receipt->payment->notes }}</p>
         </div>

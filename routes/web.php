@@ -11,7 +11,9 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DataPurgeController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FeeBalanceController;
+use App\Http\Controllers\IncomeStatementController;
 use App\Http\Controllers\MoneyTraceController;
+use App\Http\Controllers\OtherIncomeController;
 use App\Http\Controllers\MobileDashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReceiptController;
@@ -80,6 +82,15 @@ Route::middleware('auth')->group(function () {
 
     // Expenses (Cashier and Super Admin)
     Route::resource('expenses', ExpenseController::class);
+
+    // Other Income (Cashier and Super Admin)
+    Route::resource('other-incomes', OtherIncomeController::class);
+    Route::post('/other-incomes/{otherIncome}/generate-receipt', [OtherIncomeController::class, 'generateReceipt'])->name('other-incomes.generate-receipt');
+    Route::get('/other-incomes/receipt/{receipt}', [OtherIncomeController::class, 'showReceipt'])->name('other-incomes.receipt');
+
+    // Income Statement (Super Admin only)
+    Route::get('/income-statement', [IncomeStatementController::class, 'index'])->name('income-statement.index');
+    Route::get('/income-statement/generate', [IncomeStatementController::class, 'generate'])->name('income-statement.generate');
 
     // Bank Deposits (Cashier and Super Admin)
     Route::get('/bank-deposits/get-balance', [BankDepositController::class, 'getBalance'])->name('bank-deposits.get-balance');

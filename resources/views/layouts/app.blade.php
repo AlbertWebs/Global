@@ -152,6 +152,14 @@
                         </div>
                         <span class="{{ request()->routeIs('expenses.*') ? 'text-gray-900 font-semibold' : 'text-blue-100 font-normal group-hover:text-gray-900' }}">Expenses</span>
                     </a>
+                    <a href="{{ route('other-incomes.index') }}" class="flex items-center px-3 py-2 rounded-xl hover:bg-white hover:bg-opacity-20 hover:shadow-lg transition-all duration-200 group {{ request()->routeIs('other-incomes.*') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
+                        <div class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-3 {{ request()->routeIs('other-incomes.*') ? 'bg-opacity-30' : '' }} group-hover:bg-opacity-30">
+                            <svg class="w-4 h-4 {{ request()->routeIs('other-incomes.*') ? 'text-blue-900' : 'text-blue-200 group-hover:text-blue-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <span class="{{ request()->routeIs('other-incomes.*') ? 'text-gray-900 font-semibold' : 'text-blue-100 font-normal group-hover:text-gray-900' }}">Other Income</span>
+                    </a>
                     <a href="{{ route('bank-deposits.index') }}" class="flex items-center px-3 py-2 rounded-xl hover:bg-white hover:bg-opacity-20 hover:shadow-lg transition-all duration-200 group {{ request()->routeIs('bank-deposits.*') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
                         <div class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-3 {{ request()->routeIs('bank-deposits.*') ? 'bg-opacity-30' : '' }} group-hover:bg-opacity-30">
                             <svg class="w-4 h-4 {{ request()->routeIs('bank-deposits.*') ? 'text-blue-900' : 'text-blue-200 group-hover:text-blue-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -180,6 +188,14 @@
                             </svg>
                         </div>
                         <span class="{{ request()->routeIs('reports.*') ? 'text-gray-900 font-semibold' : 'text-blue-100 font-normal group-hover:text-gray-900' }}">Reports</span>
+                    </a>
+                    <a href="{{ route('income-statement.index') }}" class="flex items-center px-3 py-2 rounded-xl hover:bg-white hover:bg-opacity-20 hover:shadow-lg transition-all duration-200 group {{ request()->routeIs('income-statement.*') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
+                        <div class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-3 {{ request()->routeIs('income-statement.*') ? 'bg-opacity-30' : '' }} group-hover:bg-opacity-30">
+                            <svg class="w-4 h-4 {{ request()->routeIs('income-statement.*') ? 'text-blue-900' : 'text-blue-200 group-hover:text-blue-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                            </svg>
+                        </div>
+                        <span class="{{ request()->routeIs('income-statement.*') ? 'text-gray-900 font-semibold' : 'text-blue-100 font-normal group-hover:text-gray-900' }}">Income Statement</span>
                     </a>
                     <a href="{{ route('data-purge.index') }}" class="flex items-center px-3 py-2 rounded-xl hover:bg-white hover:bg-opacity-20 hover:shadow-lg transition-all duration-200 group {{ request()->routeIs('data-purge.*') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
                         <div class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-3 {{ request()->routeIs('data-purge.*') ? 'bg-opacity-30' : '' }} group-hover:bg-opacity-30">
