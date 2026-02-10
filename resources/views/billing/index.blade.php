@@ -338,11 +338,19 @@ function billingForm() {
             }
 
             try {
-                // Fetch only registered courses for the student
-                const registeredCoursesUrl = `/api/students/${this.studentId}/registered-courses`;
-                const registeredCoursesResponse = await fetch(registeredCoursesUrl);
-                const registeredCoursesData = await registeredCoursesResponse.json();
-                this.registeredCourses = registeredCoursesData;
+                // Fetch courses for the student (all active courses, not just registered)
+                // This allows payment for any course
+                const coursesUrl = `/billing/student/${this.studentId}/courses`;
+                console.log('Fetching courses from:', coursesUrl);
+                const coursesResponse = await fetch(coursesUrl);
+                if (!coursesResponse.ok) {
+                    throw new Error(`HTTP error! status: ${coursesResponse.status}`);
+                }
+                const coursesData = await coursesResponse.json();
+                console.log('Courses received:', coursesData);
+                // The endpoint returns an array of courses directly
+                this.registeredCourses = Array.isArray(coursesData) ? coursesData : [];
+                console.log('Registered courses set to:', this.registeredCourses.length, 'courses');
 
                 // Fetch overall balance for the student
                 const overallBalanceUrl = `/billing/student/${this.studentId}/overall-balance`;
