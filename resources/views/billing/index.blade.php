@@ -494,18 +494,18 @@ function billingForm() {
 
         updateTotalAmountDue() {
             // Calculate total amount due when agreed amount changes
+            // Total = Overall Outstanding Balance + Agreed Amount for Selected Course
+            // This represents: clearing all outstanding balances + paying for the selected course
             if (!this.courseId) {
                 this.totalAmountDueForPayment = this.studentOverallBalance;
                 return;
             }
 
-            const specificCourseBalance = this.studentCourseBalances.find(cb => cb.course_id == this.courseId);
-            const courseOutstandingBalance = specificCourseBalance ? parseFloat(specificCourseBalance.outstanding_balance || 0) : 0;
-            
-            // Total due = other courses' balance + agreed amount for selected course
-            // (We subtract the selected course's outstanding balance to avoid double-counting)
-            const otherCoursesBalance = this.studentOverallBalance - courseOutstandingBalance;
-            this.totalAmountDueForPayment = otherCoursesBalance + parseFloat(this.agreedAmount || 0);
+            // Total amount due = overall outstanding balance + agreed amount for selected course
+            // The overall balance includes any outstanding balance for the selected course
+            // The agreed amount is the new payment amount for the selected course
+            // So if student has 2000 balance and selects 12000 course, total = 2000 + 12000 = 14000
+            this.totalAmountDueForPayment = this.studentOverallBalance + parseFloat(this.agreedAmount || 0);
         },
 
         getYearFromMonth(monthString) {
