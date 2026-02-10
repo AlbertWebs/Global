@@ -13,9 +13,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 12px;
             line-height: 1.7;
-            color: #000000 !important;
-            background: #ffffff;
+            color: #ffffff !important;
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
             padding: 35px 45px;
+            min-height: 100vh;
         }
         .header {
             text-align: center;
@@ -67,11 +68,11 @@
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            background: #ffffff;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
             border-radius: 12px;
             overflow: hidden;
-            border: 1px solid #e5e7eb;
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
         thead {
             background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
@@ -99,18 +100,18 @@
             transition: background-color 0.2s ease;
         }
         tbody tr:nth-child(even) {
-            background-color: #f9fafb;
+            background-color: rgba(255, 255, 255, 0.98);
         }
         tbody tr:nth-child(odd) {
-            background-color: #ffffff;
+            background-color: rgba(255, 255, 255, 0.95);
         }
         tbody tr:hover {
-            background-color: #f0f4ff;
+            background-color: rgba(255, 255, 255, 1);
         }
         td {
             padding: 14px 14px;
-            border-bottom: 1px solid #e5e7eb;
-            color: #000000;
+            border-bottom: 1px solid rgba(30, 64, 175, 0.2);
+            color: #1f2937;
             font-size: 12px;
             vertical-align: top;
         }
@@ -119,18 +120,19 @@
             font-weight: 600;
         }
         .date-cell {
-            color: #4b5563;
-            font-weight: 500;
-        }
-        .student-cell {
-            color: #1f2937;
+            color: #1e40af;
             font-weight: 600;
         }
+        .student-cell {
+            color: #1e3a8a;
+            font-weight: 700;
+        }
         .course-cell {
-            color: #374151;
+            color: #2563eb;
+            font-weight: 600;
         }
         .description-cell {
-            color: #4b5563;
+            color: #374151;
             max-width: 300px;
         }
         .amount-cell {
@@ -139,15 +141,15 @@
             font-size: 13px;
         }
         .total-row {
-            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%) !important;
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
             font-weight: 800;
         }
         .total-row td {
-            border-top: 3px solid #1e40af;
+            border-top: 3px solid #ffffff;
             border-bottom: none;
             padding: 16px 14px;
             font-size: 13px;
-            color: #1e3a8a;
+            color: #ffffff;
         }
         .total-row td:first-child {
             border-bottom-left-radius: 12px;
@@ -158,16 +160,18 @@
         .no-data {
             text-align: center;
             padding: 80px 20px;
-            color: #6b7280;
+            color: #ffffff;
             font-size: 18px;
             font-weight: 500;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
         }
         .footer {
             margin-top: 55px;
             padding-top: 25px;
-            border-top: 2px solid #e5e7eb;
+            border-top: 2px solid rgba(255, 255, 255, 0.3);
             text-align: center;
-            color: #6b7280;
+            color: #e0e7ff;
             font-size: 11px;
         }
         .footer p {

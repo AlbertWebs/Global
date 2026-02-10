@@ -22,7 +22,7 @@
     <!-- Current Data Counts -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Current Data Counts</h2>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
             <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
                 <p class="text-sm text-gray-600 font-medium">Students</p>
                 <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['students']) }}</p>
@@ -71,6 +71,26 @@
                 <p class="text-sm text-gray-600 font-medium">Teachers</p>
                 <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['teachers'] ?? 0) }}</p>
             </div>
+            <div class="bg-slate-50 p-4 rounded-lg border-l-4 border-slate-500">
+                <p class="text-sm text-gray-600 font-medium">Payment Logs</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['payment_logs'] ?? 0) }}</p>
+            </div>
+            <div class="bg-amber-50 p-4 rounded-lg border-l-4 border-amber-500">
+                <p class="text-sm text-gray-600 font-medium">Billings</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['billings'] ?? 0) }}</p>
+            </div>
+            <div class="bg-lime-50 p-4 rounded-lg border-l-4 border-lime-500">
+                <p class="text-sm text-gray-600 font-medium">Attendances</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['attendances'] ?? 0) }}</p>
+            </div>
+            <div class="bg-rose-50 p-4 rounded-lg border-l-4 border-rose-500">
+                <p class="text-sm text-gray-600 font-medium">Announcements</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['announcements'] ?? 0) }}</p>
+            </div>
+            <div class="bg-violet-50 p-4 rounded-lg border-l-4 border-violet-500">
+                <p class="text-sm text-gray-600 font-medium">Student Results</p>
+                <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($counts['student_results'] ?? 0) }}</p>
+            </div>
         </div>
     </div>
 
@@ -103,11 +123,16 @@
                             $refs.wallets.checked = false; 
                             $refs.courses.checked = false; 
                             $refs.teachers.checked = false; 
+                            $refs.payment_logs.checked = false; 
+                            $refs.billings.checked = false; 
+                            $refs.attendances.checked = false; 
+                            $refs.announcements.checked = false; 
+                            $refs.student_results.checked = false; 
                         }"
                     >
                     <div class="ml-3">
                         <p class="text-lg font-bold text-red-900">Purge All Data (Except Users)</p>
-                        <p class="text-sm text-red-700 mt-1">This will delete ALL data including students, payments, expenses, course registrations, bank deposits, receipts, ledger entries, activity logs, balances, wallet balances, courses, and teachers. Only users will remain.</p>
+                        <p class="text-sm text-red-700 mt-1">This will delete ALL data including students, payments, expenses, course registrations, bank deposits, receipts, ledger entries, activity logs, balances, wallet balances, courses, teachers, payment logs, billings, attendances, announcements, and student results. Only users will remain.</p>
                     </div>
                 </label>
             </div>
@@ -201,6 +226,46 @@
                         <input type="checkbox" name="purge_teachers" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="teachers" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
                         <div class="ml-3">
                             <p class="font-medium text-gray-900">Teachers ({{ number_format($counts['teachers'] ?? 0) }})</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" name="purge_payment_logs" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="payment_logs" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">Payment Logs ({{ number_format($counts['payment_logs'] ?? 0) }})</p>
+                            <p class="text-sm text-gray-600">This will delete all payment transaction logs</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" name="purge_billings" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="billings" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">Billings ({{ number_format($counts['billings'] ?? 0) }})</p>
+                            <p class="text-sm text-gray-600">This will delete all billing records</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" name="purge_attendances" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="attendances" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">Attendances ({{ number_format($counts['attendances'] ?? 0) }})</p>
+                            <p class="text-sm text-gray-600">This will delete all student attendance records</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" name="purge_announcements" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="announcements" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">Announcements ({{ number_format($counts['announcements'] ?? 0) }})</p>
+                            <p class="text-sm text-gray-600">This will delete all announcements</p>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer">
+                        <input type="checkbox" name="purge_student_results" value="1" class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500" x-ref="student_results" :disabled="purgeAll" @change="if ($event.target.checked) purgeAll = false">
+                        <div class="ml-3">
+                            <p class="font-medium text-gray-900">Student Results ({{ number_format($counts['student_results'] ?? 0) }})</p>
+                            <p class="text-sm text-gray-600">This will delete all student exam and test results</p>
                         </div>
                     </label>
                 </div>

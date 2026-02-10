@@ -3,14 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
+use App\Models\Announcement;
+use App\Models\Attendance;
 use App\Models\Balance;
 use App\Models\BankDeposit;
+use App\Models\Billing;
+use App\Models\Course;
 use App\Models\CourseRegistration;
 use App\Models\Expense;
 use App\Models\LedgerEntry;
 use App\Models\Payment;
+use App\Models\PaymentLog;
 use App\Models\Receipt;
 use App\Models\Student;
+use App\Models\StudentResult;
+use App\Models\Teacher;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +43,13 @@ class DataPurgeController extends Controller
             'activity_logs' => ActivityLog::count(),
             'balances' => Balance::count(),
             'wallets' => Wallet::count(),
+            'courses' => Course::count(),
+            'teachers' => Teacher::count(),
+            'payment_logs' => PaymentLog::count(),
+            'billings' => Billing::count(),
+            'attendances' => Attendance::count(),
+            'announcements' => Announcement::count(),
+            'student_results' => StudentResult::count(),
         ];
 
         return view('data-purge.index', compact('counts'));
@@ -60,6 +74,13 @@ class DataPurgeController extends Controller
             'purge_activity_logs' => ['nullable', 'boolean'],
             'purge_balances' => ['nullable', 'boolean'],
             'purge_wallets' => ['nullable', 'boolean'],
+            'purge_courses' => ['nullable', 'boolean'],
+            'purge_teachers' => ['nullable', 'boolean'],
+            'purge_payment_logs' => ['nullable', 'boolean'],
+            'purge_billings' => ['nullable', 'boolean'],
+            'purge_attendances' => ['nullable', 'boolean'],
+            'purge_announcements' => ['nullable', 'boolean'],
+            'purge_student_results' => ['nullable', 'boolean'],
             'confirm_text' => ['required', 'string'],
         ]);
 
@@ -78,13 +99,20 @@ class DataPurgeController extends Controller
                 LedgerEntry::truncate();
                 Receipt::truncate();
                 Payment::truncate();
+                PaymentLog::truncate();
                 BankDeposit::truncate();
                 Expense::truncate();
                 CourseRegistration::truncate();
                 ActivityLog::truncate();
                 Balance::truncate();
                 Wallet::truncate();
+                Billing::truncate();
+                Attendance::truncate();
+                Announcement::truncate();
+                StudentResult::truncate();
                 Student::truncate();
+                Course::truncate();
+                Teacher::truncate();
                 
                 $purged[] = 'All data (except users)';
             } else {
@@ -138,6 +166,41 @@ class DataPurgeController extends Controller
                 if ($validated['purge_wallets'] ?? false) {
                     Wallet::truncate();
                     $purged[] = 'Wallet Balances';
+                }
+
+                if ($validated['purge_courses'] ?? false) {
+                    Course::truncate();
+                    $purged[] = 'Courses';
+                }
+
+                if ($validated['purge_teachers'] ?? false) {
+                    Teacher::truncate();
+                    $purged[] = 'Teachers';
+                }
+
+                if ($validated['purge_payment_logs'] ?? false) {
+                    PaymentLog::truncate();
+                    $purged[] = 'Payment Logs';
+                }
+
+                if ($validated['purge_billings'] ?? false) {
+                    Billing::truncate();
+                    $purged[] = 'Billings';
+                }
+
+                if ($validated['purge_attendances'] ?? false) {
+                    Attendance::truncate();
+                    $purged[] = 'Attendances';
+                }
+
+                if ($validated['purge_announcements'] ?? false) {
+                    Announcement::truncate();
+                    $purged[] = 'Announcements';
+                }
+
+                if ($validated['purge_student_results'] ?? false) {
+                    StudentResult::truncate();
+                    $purged[] = 'Student Results';
                 }
             }
 
