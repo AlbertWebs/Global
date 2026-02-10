@@ -148,49 +148,50 @@ class BillingController extends Controller
         }
         
         // Calculate how much wallet to use
-        // First, use cash to clear outstanding balance (if any), then apply to agreed amount
-        // Wallet should only cover the shortfall for the agreed amount after cash is applied
-        $cashAfterClearingOutstanding = $cashPaymentAmount;
-        if ($outstandingBalance > 0) {
-            // Use cash to clear outstanding balance first
-            $cashAfterClearingOutstanding = max(0, $cashPaymentAmount - $outstandingBalance);
-        }
+        // PRIORITY: Use wallet only to clear outstanding balance (if cash is insufficient)
+        // Wallet is NOT used for new payments - those must be explicit cash payments
+        $amountFromWallet = 0;
         
-        // Calculate shortfall for agreed amount after cash (and after clearing outstanding)
-        $shortfallForAgreedAmount = max(0, $agreedAmount - $cashAfterClearingOutstanding);
-
-        // Use wallet funds to cover ONLY the shortfall for the agreed amount (if available)
-        if ($initialWalletBalance > 0 && $shortfallForAgreedAmount > 0) {
-            $amountFromWallet = min($initialWalletBalance, $shortfallForAgreedAmount);
-            
-            if ($amountFromWallet > 0) {
-                $wallet->balance = $initialWalletBalance - $amountFromWallet;
-                $wallet->save();
+        if ($outstandingBalance > 0 && $cashPaymentAmount < $outstandingBalance) {
+            // Cash doesn't fully cover outstanding balance, use wallet to cover the shortfall
+            $amountNeeded = $outstandingBalance - $cashPaymentAmount;
+            if ($initialWalletBalance > 0 && $amountNeeded > 0) {
+                $amountFromWallet = min($initialWalletBalance, $amountNeeded);
+                
+                if ($amountFromWallet > 0) {
+                    $wallet->balance = $initialWalletBalance - $amountFromWallet;
+                    $wallet->save();
+                }
             }
         }
 
         // Calculate total payment (cash + wallet)
         $totalPayment = $cashPaymentAmount + $amountFromWallet;
 
-        // Calculate how much to apply to this course
-        // Simply apply the payment to reduce the outstanding balance
-        // Outstanding balance = agreed_amount - total_paid
-        // So we just add the payment to total_paid
-        $amountToApplyToCourse = $totalPayment;
-        $overpaymentAmount = 0;
+        // PRIORITY 1: Clear outstanding balance first
+        // PRIORITY 2: If payment exceeds outstanding balance, treat excess as new payment for the course
+        $amountToClearOutstanding = 0;
+        $amountForNewPayment = 0;
         
-        // If payment exceeds what's needed, calculate overpayment
-        $amountNeeded = $outstandingBalance > 0 ? $outstandingBalance : $agreedAmount;
-        if ($totalPayment > $amountNeeded) {
-            $overpaymentAmount = $totalPayment - $amountNeeded;
-            $amountToApplyToCourse = $amountNeeded;
+        if ($outstandingBalance > 0) {
+            // First, clear the outstanding balance
+            $amountToClearOutstanding = min($totalPayment, $outstandingBalance);
+            $remainingAfterClearing = $totalPayment - $amountToClearOutstanding;
+            
+            // If there's remaining payment after clearing balance, treat it as new payment
+            // This increases the agreed_amount (student is paying for the course again)
+            // The entire remaining amount is treated as new payment (no limit)
+            if ($remainingAfterClearing > 0) {
+                $amountForNewPayment = $remainingAfterClearing;
+            }
+        } else {
+            // No outstanding balance, treat entire payment as new payment for the course
+            // Student is paying for the course again
+            $amountForNewPayment = $totalPayment;
         }
-
-        // Add overpayment to wallet if any
-        if ($overpaymentAmount > 0) {
-            $wallet->balance = (float) $wallet->balance + $overpaymentAmount;
-            $wallet->save();
-        }
+        
+        // Total amount to apply to this course
+        $amountToApplyToCourse = $amountToClearOutstanding + $amountForNewPayment;
 
         // Create payment record
         $payment = Payment::create([
@@ -202,7 +203,7 @@ class BillingController extends Controller
             'agreed_amount' => $agreedAmount,
             'amount_paid' => $cashPaymentAmount,
             'wallet_amount_used' => $amountFromWallet,
-            'overpayment_amount' => $overpaymentAmount,
+            'overpayment_amount' => 0, // No overpayment when paying for course again
             'base_price' => $course->base_price,
             'discount_amount' => $totalDiscount,
             'cashier_id' => auth()->id(),
@@ -228,23 +229,21 @@ class BillingController extends Controller
             $currentCourseBalance->total_paid = 0;
             $currentCourseBalance->outstanding_balance = $agreedAmount;
         } else {
-            // If agreed amount changed, we need to recalculate outstanding balance
-            // based on the new agreed amount and existing total_paid
-            $oldAgreedAmount = $currentCourseBalance->agreed_amount;
-            $currentCourseBalance->agreed_amount = $agreedAmount;
+            // If paying for the same course again, treat excess as new payment
+            // This means increasing the agreed_amount by the amount of new payment
+            if ($amountForNewPayment > 0) {
+                // Student is paying for the course again - increase agreed amount
+                $currentCourseBalance->agreed_amount = (float) $currentCourseBalance->agreed_amount + $amountForNewPayment;
+            } else {
+                // Just updating the agreed amount if changed (but no new payment)
+                $currentCourseBalance->agreed_amount = $agreedAmount;
+            }
             $currentCourseBalance->base_price = $course->base_price;
             $currentCourseBalance->discount_amount = $totalDiscount;
-            
-            // If agreed amount increased, add the difference to outstanding balance
-            // If agreed amount decreased, reduce outstanding balance accordingly
-            if ($agreedAmount != $oldAgreedAmount) {
-                $difference = $agreedAmount - $oldAgreedAmount;
-                $currentCourseBalance->outstanding_balance = max(0, $currentCourseBalance->outstanding_balance + $difference);
-            }
         }
 
         // Apply payment to this course
-        // Simply add the payment amount to total_paid
+        // First clear outstanding balance, then apply new payment
         $currentCourseBalance->total_paid = (float) $currentCourseBalance->total_paid + $amountToApplyToCourse;
         
         // Recalculate outstanding balance: agreed_amount - total_paid
@@ -254,15 +253,19 @@ class BillingController extends Controller
         $currentCourseBalance->save();
 
         // Log payment for this course
+        $balanceBefore = $outstandingBalance > 0 ? $outstandingBalance : ($currentCourseBalance->getOriginal('outstanding_balance') ?? $currentCourseBalance->agreed_amount);
+        
         PaymentLog::create([
             'student_id' => $studentId,
             'course_id' => $courseId,
             'payment_id' => $payment->id,
-            'description' => 'Payment for ' . $course->name,
+            'description' => $amountForNewPayment > 0 
+                ? 'Payment for ' . $course->name . ' (Cleared balance: ' . number_format($amountToClearOutstanding, 2) . ', New payment: ' . number_format($amountForNewPayment, 2) . ')'
+                : 'Payment for ' . $course->name,
             'base_price' => $currentCourseBalance->base_price,
             'agreed_amount' => $currentCourseBalance->agreed_amount,
             'amount_paid' => $amountToApplyToCourse,
-            'balance_before' => (float) ($currentCourseBalance->getOriginal('outstanding_balance') ?? $currentCourseBalance->agreed_amount),
+            'balance_before' => (float) $balanceBefore,
             'balance_after' => $currentCourseBalance->outstanding_balance,
             'wallet_balance_after' => (float) $wallet->balance,
             'payment_date' => now(),
@@ -283,35 +286,8 @@ class BillingController extends Controller
             ]);
         }
 
-        // Log wallet top-up if there was overpayment
-        if ($overpaymentAmount > 0) {
-            PaymentLog::create([
-                'student_id' => $studentId,
-                'course_id' => $courseId,
-                'payment_id' => $payment->id,
-                'description' => 'Wallet Credit from Overpayment',
-                'amount_paid' => $overpaymentAmount,
-                'balance_before' => (float) $wallet->balance - $overpaymentAmount,
-                'balance_after' => (float) $wallet->balance,
-                'wallet_balance_after' => (float) $wallet->balance,
-                'payment_date' => now(),
-            ]);
-
-            // Send SMS notification for wallet top-up
-            try {
-                $smsService = app(\App\Services\SmsService::class);
-                $smsService->sendWalletTopUpSMS(
-                    $payment->student,
-                    $overpaymentAmount,
-                    $wallet->balance
-                );
-            } catch (\Exception $e) {
-                \Log::error("Failed to send wallet top-up SMS", [
-                    'student_id' => $studentId,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
+        // Note: No overpayment logic - excess payments are treated as new payments for the course
+        // When a student pays for the same course again, the excess increases the agreed_amount
 
         // Automatically register student for the course if not already registered
         // Check if registration already exists for this student, course, academic year, month, and year
