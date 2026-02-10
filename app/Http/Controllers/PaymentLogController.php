@@ -6,6 +6,7 @@ use App\Exports\PaymentLogsExport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class PaymentLogController extends Controller
 {
@@ -36,9 +37,10 @@ class PaymentLogController extends Controller
         return view('payment-logs.show', compact('paymentLog'));
     }
 
-    public function exportExcel(Request $request)
+    public function export(Request $request)
     {
         $studentId = $request->query('student_id');
+        $format = $request->get('format', 'excel');
         
         if (!$studentId) {
             return back()->with('error', 'Student ID is required for export.');
@@ -50,8 +52,18 @@ class PaymentLogController extends Controller
             return back()->with('error', 'Student not found.');
         }
         
-        $fileName = 'payment_records_' . Str::slug($student->full_name) . '_' . now()->format('Ymd_His') . '.xlsx';
+        $paymentLogs = \App\Models\PaymentLog::with(['student', 'course', 'payment'])
+            ->where('student_id', $studentId)
+            ->latest()
+            ->get();
         
+        if ($format === 'pdf') {
+            $pdf = PDF::loadView('payment-logs.pdf', compact('paymentLogs', 'student'));
+            $fileName = 'payment_records_' . Str::slug($student->full_name) . '_' . now()->format('Ymd_His') . '.pdf';
+            return $pdf->download($fileName);
+        }
+        
+        $fileName = 'payment_records_' . Str::slug($student->full_name) . '_' . now()->format('Ymd_His') . '.xlsx';
         return Excel::download(new PaymentLogsExport($studentId), $fileName);
     }
 }

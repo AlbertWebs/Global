@@ -114,7 +114,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class);
 
     // Payment Logs (Super Admin only - checked in controller)
-    Route::get('/payment-logs/export-excel', [\App\Http\Controllers\PaymentLogController::class, 'exportExcel'])->name('payment-logs.export-excel');
+    Route::get('/payment-logs/export', [\App\Http\Controllers\PaymentLogController::class, 'export'])->name('payment-logs.export');
     Route::resource('payment-logs', \App\Http\Controllers\PaymentLogController::class)->only(['index', 'show']);
 
     // Teachers Management (Super Admin only - checked in controller)

@@ -37,12 +37,11 @@ class PaymentLogsExport implements FromCollection, WithHeadings, WithMapping, Wi
     public function headings(): array
     {
         return [
-            'Admission Number',
-            'Name',
             'Date',
-            'Amount Paid (KES)',
-            'Balance After (KES)',
+            'Student',
             'Course',
+            'Description',
+            'Amount Paid (KES)',
         ];
     }
 
@@ -53,12 +52,11 @@ class PaymentLogsExport implements FromCollection, WithHeadings, WithMapping, Wi
     public function map($paymentLog): array
     {
         return [
-            $paymentLog->student ? ($paymentLog->student->admission_number ?? 'N/A') : 'N/A',
-            $paymentLog->student ? $paymentLog->student->full_name : 'Student Deleted',
             $paymentLog->payment_date->format('Y-m-d'),
-            number_format($paymentLog->amount_paid, 2),
-            number_format($paymentLog->balance_after, 2),
+            $paymentLog->student ? $paymentLog->student->full_name : 'Student Deleted',
             $paymentLog->course ? $paymentLog->course->name : 'N/A',
+            $paymentLog->description,
+            number_format($paymentLog->amount_paid, 2),
         ];
     }
 
