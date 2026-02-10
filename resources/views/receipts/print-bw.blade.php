@@ -57,7 +57,7 @@
                 max-width: 130mm !important;
                 padding: 0 2mm !important;
                 margin-top: 0 !important;
-                max-height: 143mm !important; /* Adjusted for larger header (55mm) */
+                max-height: 138mm !important; /* Adjusted for larger header (60mm) */
             }
             .no-print { display: none !important; }
             .print-break { page-break-after: always; }
@@ -199,11 +199,11 @@
             /* Prevent page breaks and ensure single page */
             .max-w-3xl {
                 page-break-inside: avoid !important;
-                max-height: 143mm !important; /* Adjusted for larger header (55mm) */
+                max-height: 138mm !important; /* Adjusted for larger header (60mm) */
                 overflow: hidden !important;
             }
             .receipt-container {
-                max-height: 143mm !important; /* Adjusted for larger header (55mm) */
+                max-height: 138mm !important; /* Adjusted for larger header (60mm) */
                 page-break-inside: avoid !important;
             }
             table {
