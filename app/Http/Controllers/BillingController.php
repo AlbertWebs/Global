@@ -229,11 +229,13 @@ class BillingController extends Controller
             $currentCourseBalance->total_paid = 0;
             $currentCourseBalance->outstanding_balance = $agreedAmount;
         } else {
-            // If paying for the same course again, treat excess as new payment
-            // This means increasing the agreed_amount by the amount of new payment
+            // If paying for the same course again, treat the user's input as the NEW agreed amount
+            // This means: new agreed_amount = old agreed_amount + user's input
+            // The user's input represents how much they're agreeing to pay for this new payment cycle
             if ($amountForNewPayment > 0) {
-                // Student is paying for the course again - increase agreed amount
-                $currentCourseBalance->agreed_amount = (float) $currentCourseBalance->agreed_amount + $amountForNewPayment;
+                // Student is paying for the course again
+                // Increase agreed_amount by the user's input (which is the new payment amount)
+                $currentCourseBalance->agreed_amount = (float) $currentCourseBalance->agreed_amount + $agreedAmount;
             } else {
                 // Just updating the agreed amount if changed (but no new payment)
                 $currentCourseBalance->agreed_amount = $agreedAmount;
@@ -243,7 +245,8 @@ class BillingController extends Controller
         }
 
         // Apply payment to this course
-        // First clear outstanding balance, then apply new payment
+        // The full payment amount (clearing balance + new payment) increases total_paid
+        // This is correct because total_paid represents all payments made toward the course
         $currentCourseBalance->total_paid = (float) $currentCourseBalance->total_paid + $amountToApplyToCourse;
         
         // Recalculate outstanding balance: agreed_amount - total_paid
