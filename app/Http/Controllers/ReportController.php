@@ -34,22 +34,14 @@ class ReportController extends Controller
 
     public function module()
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can view reports');
-        }
+        $this->requirePermission('reports.view');
 
         return view('reports.module');
     }
 
     public function index(Request $request)
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can view reports');
-        }
+        $this->requirePermission('reports.view');
 
         $dateFrom = $request->get('date_from', now()->startOfDay()->toDateString());
         $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
@@ -172,11 +164,7 @@ class ReportController extends Controller
 
     public function export(Request $request)
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can export reports');
-        }
+        $this->requirePermission('reports.view');
 
         $dateFrom = $request->get('date_from', now()->startOfDay()->toDateString());
         $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
@@ -241,11 +229,7 @@ class ReportController extends Controller
 
     public function exportExpenses(Request $request)
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can export reports');
-        }
+        $this->requirePermission('reports.view');
 
         $dateFrom = $request->get('date_from', now()->startOfDay()->toDateString());
         $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
@@ -272,11 +256,7 @@ class ReportController extends Controller
 
     public function exportPayments(Request $request)
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can export reports');
-        }
+        $this->requirePermission('reports.view');
 
         $dateFrom = $request->get('date_from', now()->startOfDay()->toDateString());
         $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
@@ -325,11 +305,7 @@ class ReportController extends Controller
 
     public function exportMpesaPayments(Request $request)
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can export reports');
-        }
+        $this->requirePermission('reports.view');
 
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
@@ -375,11 +351,7 @@ class ReportController extends Controller
 
     public function exportCashPayments(Request $request)
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can export reports');
-        }
+        $this->requirePermission('reports.view');
 
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
@@ -425,11 +397,7 @@ class ReportController extends Controller
 
     public function exportStudentsRegistered(Request $request)
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can export reports');
-        }
+        $this->requirePermission('reports.view');
 
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
@@ -462,11 +430,7 @@ class ReportController extends Controller
 
     public function exportBalances(Request $request)
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can export reports');
-        }
+        $this->requirePermission('reports.view');
 
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
@@ -505,11 +469,7 @@ class ReportController extends Controller
 
     public function exportCourseRegistrations(Request $request)
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can export reports');
-        }
+        $this->requirePermission('reports.view');
 
         $dateFrom = $request->get('date_from', now()->startOfYear()->toDateString());
         $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
@@ -534,11 +494,7 @@ class ReportController extends Controller
 
     public function exportBankDeposits(Request $request)
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can export reports');
-        }
+        $this->requirePermission('reports.view');
 
         $dateFrom = $request->get('date_from', now()->startOfDay()->toDateString());
         $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
@@ -563,11 +519,7 @@ class ReportController extends Controller
 
     public function exportReceipts(Request $request)
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can export reports');
-        }
+        $this->requirePermission('reports.view');
 
         $dateFrom = $request->get('date_from', now()->startOfDay()->toDateString());
         $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());

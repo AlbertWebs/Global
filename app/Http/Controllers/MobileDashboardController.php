@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\Course;
 use App\Models\Payment;
 use App\Models\Student;
@@ -10,13 +11,11 @@ use Illuminate\Support\Facades\DB;
 
 class MobileDashboardController extends Controller
 {
+    use ChecksPermissions;
+
     public function index()
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can access mobile dashboard');
-        }
+        $this->requirePermission('mobile_dashboard.view');
 
         // Get current academic year and term (you can make this configurable)
         $currentAcademicYear = $this->getCurrentAcademicYear();

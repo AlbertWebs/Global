@@ -29,6 +29,7 @@
             width: 100%;
             max-width: 130mm;
             padding: 0 5mm;
+            padding-top: 20mm;
         }
         .max-w-3xl {
             max-width: 130mm !important; /* Adjusted max-width for A5 centering */
@@ -36,7 +37,7 @@
         @media print {
             @page {
                 size: A5;
-                margin-top: 60mm !important; /* Larger space for letterhead header */
+                margin-top: 65mm !important; /* Increased space for letterhead header */
                 margin-bottom: 10mm !important; /* Reduced footer space */
                 margin-left: 5mm !important;
                 margin-right: 5mm !important;
@@ -44,7 +45,7 @@
             body { 
                 margin: 0 !important; 
                 padding: 0 !important; 
-                height: 140mm !important; /* A5 height (210mm) minus top (60mm) and bottom (10mm) margins */
+                height: 135mm !important; /* A5 height (210mm) minus top (65mm) and bottom (10mm) margins */
                 overflow: hidden !important;
                 display: flex !important;
                 flex-direction: column !important;
@@ -56,8 +57,9 @@
                 width: 100% !important;
                 max-width: 130mm !important;
                 padding: 0 2mm !important;
+                padding-top: 20mm !important;
                 margin-top: 0 !important;
-                max-height: 138mm !important; /* Adjusted for larger header (60mm) */
+                max-height: 133mm !important; /* Adjusted for larger header (65mm) */
             }
             .no-print { display: none !important; }
             .print-break { page-break-after: always; }
@@ -199,11 +201,11 @@
             /* Prevent page breaks and ensure single page */
             .max-w-3xl {
                 page-break-inside: avoid !important;
-                max-height: 138mm !important; /* Adjusted for larger header (60mm) */
+                max-height: 133mm !important; /* Adjusted for larger header (65mm) */
                 overflow: hidden !important;
             }
             .receipt-container {
-                max-height: 138mm !important; /* Adjusted for larger header (60mm) */
+                max-height: 133mm !important; /* Adjusted for larger header (65mm) */
                 page-break-inside: avoid !important;
             }
             table {

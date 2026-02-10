@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\ActivityLog;
 use App\Models\Course;
 use App\Models\CourseRegistration;
@@ -16,8 +17,12 @@ use Illuminate\Support\Str;
 
 class BillingController extends Controller
 {
+    use ChecksPermissions;
+
     public function index(Request $request)
     {
+        $this->requirePermission('billing.view');
+        
         $students = Student::where('status', 'active')->orderBy('first_name')->get();
         $courses = Course::where('status', 'active')->orderBy('name')->get();
         

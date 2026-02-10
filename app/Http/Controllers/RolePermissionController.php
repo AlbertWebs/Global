@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\Permission;
 use App\Models\Role;
 use Illuminate\Http\Request;
 
 class RolePermissionController extends Controller
 {
+    use ChecksPermissions;
+
     public function index()
     {
-        // Only Super Admin can manage permissions
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can manage permissions');
-        }
+        $this->requirePermission('roles.manage');
 
         $roles = Role::with('permissions')->get();
         $permissions = Permission::orderBy('module')->orderBy('name')->get()->groupBy('module');
@@ -23,10 +23,7 @@ class RolePermissionController extends Controller
 
     public function update(Request $request, Role $role)
     {
-        // Only Super Admin can manage permissions
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can manage permissions');
-        }
+        $this->requirePermission('roles.manage');
 
         $request->validate([
             'permissions' => 'nullable|array',

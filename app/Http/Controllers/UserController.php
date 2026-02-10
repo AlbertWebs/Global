@@ -11,10 +11,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        // Only Super Admin can access user management
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can access this page');
-        }
+        $this->requirePermission('users.view');
 
         $users = User::with('role')->latest()->paginate(20);
         return view('users.index', compact('users'));
@@ -22,10 +19,7 @@ class UserController extends Controller
 
     public function create()
     {
-        // Only Super Admin can access user management
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can access this page');
-        }
+        $this->requirePermission('users.create');
 
         $roles = Role::all();
         return view('users.create', compact('roles'));
@@ -33,10 +27,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        // Only Super Admin can access user management
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can access this page');
-        }
+        $this->requirePermission('users.create');
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -55,10 +46,7 @@ class UserController extends Controller
 
     public function show(User $user)
     {
-        // Only Super Admin can access user management
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can access this page');
-        }
+        $this->requirePermission('users.view');
 
         $user->load('role');
         return view('users.show', compact('user'));
@@ -66,10 +54,7 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        // Only Super Admin can access user management
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can access this page');
-        }
+        $this->requirePermission('users.edit');
 
         $roles = Role::all();
         return view('users.edit', compact('user', 'roles'));
@@ -77,10 +62,7 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        // Only Super Admin can access user management
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can access this page');
-        }
+        $this->requirePermission('users.edit');
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -103,10 +85,7 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
-        // Only Super Admin can access user management
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can access this page');
-        }
+        $this->requirePermission('users.delete');
 
         if ($user->isSuperAdmin() && User::whereHas('role', function($q) {
             $q->where('slug', 'super-admin');

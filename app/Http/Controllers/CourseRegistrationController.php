@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\Course;
 use App\Models\CourseRegistration;
 use App\Models\Student;
@@ -10,7 +11,11 @@ use Illuminate\Http\Request;
 
 class CourseRegistrationController extends Controller
 {
+    use ChecksPermissions;
+
     public function index()
+    {
+        $this->requirePermission('course_registrations.view');
     {
         // Group registrations by course
         $registrations = CourseRegistration::with(['student', 'course'])
@@ -40,6 +45,7 @@ class CourseRegistrationController extends Controller
 
     public function create(Request $request)
     {
+        $this->requirePermission('course_registrations.create');
         $students = Student::where('status', 'active')->orderBy('first_name')->get();
         $courses = Course::where('status', 'active')->orderBy('name')->get();
         
@@ -124,6 +130,7 @@ class CourseRegistrationController extends Controller
 
     public function destroy(CourseRegistration $courseRegistration)
     {
+        $this->requirePermission('course_registrations.delete');
         $courseRegistration->delete();
         return redirect()->route('course-registrations.index')
             ->with('success', 'Course registration removed successfully!');

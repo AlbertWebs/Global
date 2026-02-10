@@ -18,12 +18,12 @@ class BulkSmsController extends Controller
     }
 
     /**
-     * Check if user is Super Admin
+     * Check if user has permission to send bulk SMS
      */
     private function checkSuperAdmin()
     {
-        if (!auth()->user() || !auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Administrators can send bulk SMS.');
+        if (!auth()->user() || !auth()->user()->hasPermission('bulk_sms.send')) {
+            abort(403, 'You do not have permission to send bulk SMS.');
         }
     }
 
@@ -449,22 +449,28 @@ class BulkSmsController extends Controller
     public function getStudents(Request $request)
     {
         $this->checkSuperAdmin();
-        $query = $request->get('q', '');
+        // Handle both 'q' (Select2 default) and 'term' (alternative)
+        $query = $request->get('q', $request->get('term', ''));
         
         $students = Student::where('status', 'active')
             ->whereNotNull('phone')
             ->where(function($q) use ($query) {
-                $q->where('first_name', 'like', "%{$query}%")
-                  ->orWhere('last_name', 'like', "%{$query}%")
-                  ->orWhere('student_number', 'like', "%{$query}%")
-                  ->orWhere('phone', 'like', "%{$query}%");
+                if (!empty($query)) {
+                    $q->where('first_name', 'like', "%{$query}%")
+                      ->orWhere('last_name', 'like', "%{$query}%")
+                      ->orWhere('student_number', 'like', "%{$query}%")
+                      ->orWhere('admission_number', 'like', "%{$query}%")
+                      ->orWhere('phone', 'like', "%{$query}%");
+                }
             })
+            ->orderBy('first_name')
+            ->orderBy('last_name')
             ->limit(20)
             ->get()
             ->map(function($student) {
                 return [
                     'id' => $student->id,
-                    'text' => $student->full_name . ' (' . $student->student_number . ') - ' . $student->phone,
+                    'text' => $student->full_name . ' (' . ($student->admission_number ?? $student->student_number) . ') - ' . ($student->phone ?? 'No phone'),
                 ];
             });
 
@@ -474,22 +480,27 @@ class BulkSmsController extends Controller
     public function getTeachers(Request $request)
     {
         $this->checkSuperAdmin();
-        $query = $request->get('q', '');
+        // Handle both 'q' (Select2 default) and 'term' (alternative)
+        $query = $request->get('q', $request->get('term', ''));
         
         $teachers = Teacher::where('status', 'active')
             ->whereNotNull('phone')
             ->where(function($q) use ($query) {
-                $q->where('first_name', 'like', "%{$query}%")
-                  ->orWhere('last_name', 'like', "%{$query}%")
-                  ->orWhere('employee_number', 'like', "%{$query}%")
-                  ->orWhere('phone', 'like', "%{$query}%");
+                if (!empty($query)) {
+                    $q->where('first_name', 'like', "%{$query}%")
+                      ->orWhere('last_name', 'like', "%{$query}%")
+                      ->orWhere('employee_number', 'like', "%{$query}%")
+                      ->orWhere('phone', 'like', "%{$query}%");
+                }
             })
+            ->orderBy('first_name')
+            ->orderBy('last_name')
             ->limit(20)
             ->get()
             ->map(function($teacher) {
                 return [
                     'id' => $teacher->id,
-                    'text' => $teacher->full_name . ' (' . $teacher->employee_number . ') - ' . $teacher->phone,
+                    'text' => $teacher->full_name . ' (' . ($teacher->employee_number ?? 'N/A') . ') - ' . ($teacher->phone ?? 'No phone'),
                 ];
             });
 

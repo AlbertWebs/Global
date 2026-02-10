@@ -54,6 +54,11 @@ class User extends Authenticatable
 
     public function hasPermission($permissionSlug)
     {
+        // Super Admin has all permissions
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
         if (!$this->role) {
             return false;
         }
@@ -74,5 +79,20 @@ class User extends Authenticatable
     public function isCashier()
     {
         return $this->hasRole('cashier');
+    }
+
+    /**
+     * Check if user can perform an action (permission check with fallback to role check)
+     * Compatible with Laravel's authorization system
+     */
+    public function can($abilities, $arguments = [])
+    {
+        // If it's a string (permission slug), check permission
+        if (is_string($abilities)) {
+            return $this->hasPermission($abilities);
+        }
+        
+        // Fallback to parent implementation for other authorization checks
+        return parent::can($abilities, $arguments);
     }
 }

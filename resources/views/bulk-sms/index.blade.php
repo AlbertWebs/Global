@@ -338,62 +338,88 @@ function bulkSms() {
             // Watch for recipient type changes to initialize Select2
             this.$watch('recipientType', (value) => {
                 this.$nextTick(() => {
-                    if (value === 'individual_student') {
-                        setTimeout(() => {
-                            $('#student_id').select2({
-                                placeholder: 'Search and select a student...',
-                                allowClear: true,
-                                ajax: {
-                                    url: '{{ route("bulk-sms.students") }}',
-                                    dataType: 'json',
-                                    delay: 250,
-                                    data: function (params) {
-                                        return {
-                                            q: params.term,
-                                            page: params.page
-                                        };
-                                    },
-                                    processResults: function (data) {
-                                        return {
-                                            results: data
-                                        };
-                                    },
-                                    cache: true
-                                },
-                                minimumInputLength: 1
-                            });
-                        }, 100);
-                    } else {
+                    // Destroy existing Select2 instances first
+                    if ($('#student_id').hasClass('select2-hidden-accessible')) {
                         $('#student_id').select2('destroy');
+                    }
+                    if ($('#teacher_id').hasClass('select2-hidden-accessible')) {
+                        $('#teacher_id').select2('destroy');
+                    }
+                    
+                    if (value === 'individual_student') {
+                        // Wait for element to be visible
+                        setTimeout(() => {
+                            const studentSelect = document.getElementById('student_id');
+                            if (studentSelect && typeof $ !== 'undefined' && $.fn.select2) {
+                                $('#student_id').select2({
+                                    placeholder: 'Search and select a student...',
+                                    allowClear: true,
+                                    width: '100%',
+                                    ajax: {
+                                        url: '{{ route("bulk-sms.students") }}',
+                                        dataType: 'json',
+                                        delay: 250,
+                                        data: function (params) {
+                                            return {
+                                                q: params.term || '',
+                                                page: params.page || 1
+                                            };
+                                        },
+                                        processResults: function (data) {
+                                            return {
+                                                results: data
+                                            };
+                                        },
+                                        cache: true
+                                    },
+                                    minimumInputLength: 1
+                                }).on('select2:open', function() {
+                                    // Ensure dropdown is visible
+                                    setTimeout(() => {
+                                        $('.select2-search__field').focus();
+                                    }, 100);
+                                });
+                            } else {
+                                console.error('Select2 not available or element not found');
+                            }
+                        }, 200);
                     }
                     
                     if (value === 'individual_teacher') {
                         setTimeout(() => {
-                            $('#teacher_id').select2({
-                                placeholder: 'Search and select a teacher...',
-                                allowClear: true,
-                                ajax: {
-                                    url: '{{ route("bulk-sms.teachers") }}',
-                                    dataType: 'json',
-                                    delay: 250,
-                                    data: function (params) {
-                                        return {
-                                            q: params.term,
-                                            page: params.page
-                                        };
+                            const teacherSelect = document.getElementById('teacher_id');
+                            if (teacherSelect && typeof $ !== 'undefined' && $.fn.select2) {
+                                $('#teacher_id').select2({
+                                    placeholder: 'Search and select a teacher...',
+                                    allowClear: true,
+                                    width: '100%',
+                                    ajax: {
+                                        url: '{{ route("bulk-sms.teachers") }}',
+                                        dataType: 'json',
+                                        delay: 250,
+                                        data: function (params) {
+                                            return {
+                                                q: params.term || '',
+                                                page: params.page || 1
+                                            };
+                                        },
+                                        processResults: function (data) {
+                                            return {
+                                                results: data
+                                            };
+                                        },
+                                        cache: true
                                     },
-                                    processResults: function (data) {
-                                        return {
-                                            results: data
-                                        };
-                                    },
-                                    cache: true
-                                },
-                                minimumInputLength: 1
-                            });
-                        }, 100);
-                    } else {
-                        $('#teacher_id').select2('destroy');
+                                    minimumInputLength: 1
+                                }).on('select2:open', function() {
+                                    setTimeout(() => {
+                                        $('.select2-search__field').focus();
+                                    }, 100);
+                                });
+                            } else {
+                                console.error('Select2 not available or element not found');
+                            }
+                        }, 200);
                     }
                 });
             });
@@ -567,6 +593,14 @@ window.bulkSmsFormSubmit = function(event) {
 
 // Auto-scroll to results when page loads with results
 document.addEventListener('DOMContentLoaded', function() {
+    // Ensure jQuery and Select2 are loaded
+    if (typeof $ === 'undefined') {
+        console.error('jQuery is not loaded. Please check if jQuery is included.');
+    }
+    if (typeof $ === 'undefined' || !$.fn.select2) {
+        console.error('Select2 is not loaded. Please check if Select2 is included.');
+    }
+    
     @if(session('results'))
         const resultsSection = document.getElementById('resultsSection');
         if (resultsSection) {

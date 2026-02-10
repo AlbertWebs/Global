@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\Payment;
 use App\Models\Student;
 use Illuminate\Http\Request;
@@ -9,12 +10,11 @@ use Illuminate\Support\Facades\Mail;
 
 class FeeBalanceController extends Controller
 {
+    use ChecksPermissions;
+
     public function index()
     {
-        // Only Super Admin can view fee balances
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can view fee balances');
-        }
+        $this->requirePermission('fee_balances.view');
 
         // Get all students with their payments
         $students = Student::with(['payments' => function($query) {
@@ -43,10 +43,7 @@ class FeeBalanceController extends Controller
 
     public function sendReminders(Request $request)
     {
-        // Only Super Admin can send reminders
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can send reminders');
-        }
+        $this->requirePermission('fee_balances.send_reminders');
 
         $studentIds = $request->input('student_ids', []);
         $method = $request->input('method', 'both'); // 'email', 'sms', 'both'

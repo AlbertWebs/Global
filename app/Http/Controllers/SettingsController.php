@@ -2,20 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
+    use ChecksPermissions;
+
     public function index()
     {
-        // Only Super Admin can access settings
-        if (!auth()->user()->isSuperAdmin()) {
-            return view('errors.unauthorized', [
-                'message' => 'Only Super Administrators can access system settings. Please contact your administrator if you need access to this page.'
-            ]);
-        }
+        $this->requirePermission('settings.manage');
 
         $settings = Setting::orderBy('group')->orderBy('key')->get()->groupBy('group');
         
@@ -24,12 +22,7 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
-        // Only Super Admin can update settings
-        if (!auth()->user()->isSuperAdmin()) {
-            return view('errors.unauthorized', [
-                'message' => 'Only Super Administrators can update system settings. Please contact your administrator if you need access to this feature.'
-            ]);
-        }
+        $this->requirePermission('settings.manage');
 
         $validated = $request->validate([
             'settings' => ['required', 'array'],

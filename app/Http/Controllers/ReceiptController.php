@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\Receipt;
 use App\Models\Balance;
 use Illuminate\Http\Request;
 
 class ReceiptController extends Controller
 {
+    use ChecksPermissions;
+
     public function show($id)
     {
+        $this->requirePermission('receipts.view');
         $receipt = Receipt::with(['payment.student', 'payment.course', 'payment.cashier'])->findOrFail($id);
         
         // Check if user has permission to view this receipt
@@ -27,6 +31,7 @@ class ReceiptController extends Controller
 
     public function print($id)
     {
+        $this->requirePermission('receipts.print');
         $receipt = Receipt::with(['payment.student', 'payment.course', 'payment.cashier'])->findOrFail($id);
         
         $user = auth()->user();
@@ -39,6 +44,7 @@ class ReceiptController extends Controller
 
     public function thermal($id)
     {
+        $this->requirePermission('receipts.print');
         $receipt = Receipt::with(['payment.student', 'payment.course', 'payment.cashier'])->findOrFail($id);
         
         $user = auth()->user();
@@ -51,6 +57,7 @@ class ReceiptController extends Controller
 
     public function printBw($id)
     {
+        $this->requirePermission('receipts.print');
         $receipt = Receipt::with(['payment.student', 'payment.course', 'payment.cashier'])->findOrFail($id);
         
         $user = auth()->user();
@@ -63,6 +70,7 @@ class ReceiptController extends Controller
 
     public function index()
     {
+        $this->requirePermission('receipts.view');
         $user = auth()->user();
         
         $receiptsQuery = Receipt::with(['payment.student', 'payment.course']);

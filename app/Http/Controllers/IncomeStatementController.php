@@ -20,22 +20,14 @@ class IncomeStatementController extends Controller
 
     public function index()
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can view income statements');
-        }
+        $this->requirePermission('income_statement.view');
 
         return view('income-statement.index');
     }
 
     public function generate(Request $request)
     {
-        $user = auth()->user();
-        
-        if (!$user->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can generate income statements');
-        }
+        $this->requirePermission('income_statement.view');
 
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');

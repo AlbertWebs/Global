@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\ActivityLog;
 use App\Models\Expense;
 use App\Models\LedgerEntry;
@@ -9,9 +10,11 @@ use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
 {
+    use ChecksPermissions;
 
     public function index(Request $request)
     {
+        $this->requirePermission('expenses.view');
         $query = Expense::with('recorder');
 
         // Cashier can only see their own expenses
@@ -54,10 +57,13 @@ class ExpenseController extends Controller
 
     public function create()
     {
+        $this->requirePermission('expenses.create');
         return view('expenses.create');
     }
 
     public function store(Request $request)
+    {
+        $this->requirePermission('expenses.create');
     {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
@@ -100,6 +106,7 @@ class ExpenseController extends Controller
 
     public function edit(Expense $expense)
     {
+        $this->requirePermission('expenses.edit');
         // Cashier can only edit their own expenses
         if (auth()->user()->isCashier() && $expense->recorded_by !== auth()->id()) {
             abort(403, 'Unauthorized access');
@@ -110,6 +117,7 @@ class ExpenseController extends Controller
 
     public function update(Request $request, Expense $expense)
     {
+        $this->requirePermission('expenses.edit');
         // Cashier can only update their own expenses
         if (auth()->user()->isCashier() && $expense->recorded_by !== auth()->id()) {
             abort(403, 'Unauthorized access');
@@ -140,10 +148,7 @@ class ExpenseController extends Controller
 
     public function destroy(Expense $expense)
     {
-        // Only Super Admin can delete expenses
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Unauthorized access');
-        }
+        $this->requirePermission('expenses.delete');
 
         $expenseTitle = $expense->title;
         $expenseAmount = $expense->amount;

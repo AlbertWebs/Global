@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\BankDeposit;
 use App\Models\LedgerEntry;
 use Illuminate\Http\Request;
 
 class MoneyTraceController extends Controller
 {
+    use ChecksPermissions;
+
     public function index(Request $request)
     {
-        // Only Super Admin can access money trace
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can access Money Trace');
-        }
+        $this->requirePermission('money_trace.view');
         $dateFrom = $request->get('date_from', now()->startOfMonth()->toDateString());
         $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
         $period = $request->get('period', 'month');

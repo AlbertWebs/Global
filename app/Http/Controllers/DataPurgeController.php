@@ -26,10 +26,7 @@ class DataPurgeController extends Controller
 {
     public function index()
     {
-        // Only Super Admin can access data purge
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Only Super Admin can access Data Purge');
-        }
+        $this->requirePermission('data_purge.manage');
 
         // Get counts for each table
         $counts = [

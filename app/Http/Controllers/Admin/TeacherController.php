@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\Teacher;
 use App\Models\Course;
 use App\Services\SmsService;
@@ -12,13 +13,11 @@ use Illuminate\Support\Str;
 
 class TeacherController extends Controller
 {
+    use ChecksPermissions;
+
     public function index(Request $request)
     {
-        if (!auth()->user()->isSuperAdmin()) {
-            return view('errors.unauthorized', [
-                'message' => 'Only Super Administrators can manage teachers.'
-            ]);
-        }
+        $this->requirePermission('teachers.view');
 
         $query = Teacher::query();
         
@@ -58,11 +57,7 @@ class TeacherController extends Controller
 
     public function store(Request $request)
     {
-        if (!auth()->user()->isSuperAdmin()) {
-            return view('errors.unauthorized', [
-                'message' => 'Only Super Administrators can create teachers.'
-            ]);
-        }
+        $this->requirePermission('teachers.create');
 
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
@@ -139,11 +134,7 @@ class TeacherController extends Controller
 
     public function update(Request $request, Teacher $teacher)
     {
-        if (!auth()->user()->isSuperAdmin()) {
-            return view('errors.unauthorized', [
-                'message' => 'Only Super Administrators can update teachers.'
-            ]);
-        }
+        $this->requirePermission('teachers.edit');
 
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',

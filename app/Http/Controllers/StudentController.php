@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\ActivityLog;
 use App\Models\Student;
 use App\Models\Wallet;
@@ -10,7 +11,11 @@ use Illuminate\Http\Request;
 
 class StudentController extends Controller
 {
+    use ChecksPermissions;
+
     public function index(Request $request)
+    {
+        $this->requirePermission('students.view');
     {
         $query = Student::query();
         
@@ -42,11 +47,13 @@ class StudentController extends Controller
 
     public function create()
     {
+        $this->requirePermission('students.create');
         return view('students.create');
     }
 
     public function store(Request $request)
     {
+        $this->requirePermission('students.create');
         try {
             $validated = $request->validate([
                 'first_name' => ['required', 'string', 'max:255'],
@@ -143,6 +150,8 @@ class StudentController extends Controller
     }
 
     public function show(Student $student)
+    {
+        $this->requirePermission('students.view');
     {
         $student->load('payments.course', 'payments.receipt', 'payments.cashier', 'courseRegistrations.course');
 
@@ -346,10 +355,14 @@ class StudentController extends Controller
 
     public function edit(Student $student)
     {
+        $this->requirePermission('students.edit');
+    {
         return view('students.edit', compact('student'));
     }
 
     public function update(Request $request, Student $student)
+    {
+        $this->requirePermission('students.edit');
     {
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
@@ -401,6 +414,8 @@ class StudentController extends Controller
     }
 
     public function destroy(Student $student)
+    {
+        $this->requirePermission('students.delete');
     {
         $student->delete();
         return redirect()->route('students.index')

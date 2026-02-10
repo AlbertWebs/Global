@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\ActivityLog;
 use App\Models\OtherIncome;
 use App\Models\OtherIncomeReceipt;
@@ -9,8 +10,11 @@ use Illuminate\Http\Request;
 
 class OtherIncomeController extends Controller
 {
+    use ChecksPermissions;
+
     public function index(Request $request)
     {
+        $this->requirePermission('other_income.view');
         $query = OtherIncome::with('recorder');
 
         // Cashier can only see their own income records
@@ -53,10 +57,13 @@ class OtherIncomeController extends Controller
 
     public function create()
     {
+        $this->requirePermission('other_income.create');
         return view('other-incomes.create');
     }
 
     public function store(Request $request)
+    {
+        $this->requirePermission('other_income.create');
     {
         $validated = $request->validate([
             'description' => ['required', 'string', 'max:255'],
@@ -114,6 +121,7 @@ class OtherIncomeController extends Controller
 
     public function edit(OtherIncome $otherIncome)
     {
+        $this->requirePermission('other_income.edit');
         // Cashier can only edit their own income records
         if (auth()->user()->isCashier() && $otherIncome->recorded_by !== auth()->id()) {
             abort(403, 'Unauthorized access');
@@ -124,6 +132,7 @@ class OtherIncomeController extends Controller
 
     public function update(Request $request, OtherIncome $otherIncome)
     {
+        $this->requirePermission('other_income.edit');
         // Cashier can only update their own income records
         if (auth()->user()->isCashier() && $otherIncome->recorded_by !== auth()->id()) {
             abort(403, 'Unauthorized access');
@@ -153,10 +162,7 @@ class OtherIncomeController extends Controller
 
     public function destroy(OtherIncome $otherIncome)
     {
-        // Only Super Admin can delete income records
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Unauthorized access');
-        }
+        $this->requirePermission('other_income.delete');
 
         $description = $otherIncome->description;
         $amount = $otherIncome->amount;

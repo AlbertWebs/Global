@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\ActivityLog;
 use App\Models\BankDeposit;
 use App\Models\LedgerEntry;
@@ -9,9 +10,11 @@ use Illuminate\Http\Request;
 
 class BankDepositController extends Controller
 {
+    use ChecksPermissions;
+
     public function index(Request $request)
     {
-        // Only Super Admin can view all deposits, Cashier can view their own
+        $this->requirePermission('bank_deposits.view');
         $query = BankDeposit::with('recorder');
 
         if (auth()->user()->isCashier()) {
@@ -206,10 +209,7 @@ class BankDepositController extends Controller
 
     public function destroy(BankDeposit $bankDeposit)
     {
-        // Only Super Admin can delete deposits
-        if (!auth()->user()->isSuperAdmin()) {
-            abort(403, 'Unauthorized access');
-        }
+        $this->requirePermission('bank_deposits.delete');
 
         $amount = $bankDeposit->amount;
         $sourceAccount = $bankDeposit->source_account_label;

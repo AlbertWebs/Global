@@ -67,6 +67,58 @@ class RolePermissionSeeder extends Seeder
             ['name' => 'Edit Users', 'slug' => 'users.edit', 'module' => 'users', 'action' => 'edit'],
             ['name' => 'Delete Users', 'slug' => 'users.delete', 'module' => 'users', 'action' => 'delete'],
             ['name' => 'Manage Roles', 'slug' => 'roles.manage', 'module' => 'roles', 'action' => 'manage'],
+
+            // Course Registrations
+            ['name' => 'View Course Registrations', 'slug' => 'course_registrations.view', 'module' => 'course_registrations', 'action' => 'view'],
+            ['name' => 'Create Course Registrations', 'slug' => 'course_registrations.create', 'module' => 'course_registrations', 'action' => 'create'],
+            ['name' => 'Delete Course Registrations', 'slug' => 'course_registrations.delete', 'module' => 'course_registrations', 'action' => 'delete'],
+
+            // Bank Deposits
+            ['name' => 'View Bank Deposits', 'slug' => 'bank_deposits.view', 'module' => 'bank_deposits', 'action' => 'view'],
+            ['name' => 'Create Bank Deposits', 'slug' => 'bank_deposits.create', 'module' => 'bank_deposits', 'action' => 'create'],
+            ['name' => 'Edit Bank Deposits', 'slug' => 'bank_deposits.edit', 'module' => 'bank_deposits', 'action' => 'edit'],
+            ['name' => 'Delete Bank Deposits', 'slug' => 'bank_deposits.delete', 'module' => 'bank_deposits', 'action' => 'delete'],
+
+            // Other Income
+            ['name' => 'View Other Income', 'slug' => 'other_income.view', 'module' => 'other_income', 'action' => 'view'],
+            ['name' => 'Create Other Income', 'slug' => 'other_income.create', 'module' => 'other_income', 'action' => 'create'],
+            ['name' => 'Edit Other Income', 'slug' => 'other_income.edit', 'module' => 'other_income', 'action' => 'edit'],
+            ['name' => 'Delete Other Income', 'slug' => 'other_income.delete', 'module' => 'other_income', 'action' => 'delete'],
+
+            // Income Statement
+            ['name' => 'View Income Statement', 'slug' => 'income_statement.view', 'module' => 'income_statement', 'action' => 'view'],
+
+            // Balances
+            ['name' => 'View Balances', 'slug' => 'balances.view', 'module' => 'balances', 'action' => 'view'],
+            ['name' => 'Edit Balances', 'slug' => 'balances.edit', 'module' => 'balances', 'action' => 'edit'],
+
+            // Payment Logs
+            ['name' => 'View Payment Logs', 'slug' => 'payment_logs.view', 'module' => 'payment_logs', 'action' => 'view'],
+
+            // Teachers
+            ['name' => 'View Teachers', 'slug' => 'teachers.view', 'module' => 'teachers', 'action' => 'view'],
+            ['name' => 'Create Teachers', 'slug' => 'teachers.create', 'module' => 'teachers', 'action' => 'create'],
+            ['name' => 'Edit Teachers', 'slug' => 'teachers.edit', 'module' => 'teachers', 'action' => 'edit'],
+            ['name' => 'Delete Teachers', 'slug' => 'teachers.delete', 'module' => 'teachers', 'action' => 'delete'],
+
+            // Settings
+            ['name' => 'Manage Settings', 'slug' => 'settings.manage', 'module' => 'settings', 'action' => 'manage'],
+
+            // Bulk SMS
+            ['name' => 'Send Bulk SMS', 'slug' => 'bulk_sms.send', 'module' => 'bulk_sms', 'action' => 'send'],
+
+            // Data Purge
+            ['name' => 'Data Purge', 'slug' => 'data_purge.manage', 'module' => 'data_purge', 'action' => 'manage'],
+
+            // Money Trace
+            ['name' => 'View Money Trace', 'slug' => 'money_trace.view', 'module' => 'money_trace', 'action' => 'view'],
+
+            // Fee Balances
+            ['name' => 'View Fee Balances', 'slug' => 'fee_balances.view', 'module' => 'fee_balances', 'action' => 'view'],
+            ['name' => 'Send Fee Reminders', 'slug' => 'fee_balances.send_reminders', 'module' => 'fee_balances', 'action' => 'send_reminders'],
+
+            // Mobile Dashboard
+            ['name' => 'View Mobile Dashboard', 'slug' => 'mobile_dashboard.view', 'module' => 'mobile_dashboard', 'action' => 'view'],
         ];
 
         foreach ($permissions as $perm) {
@@ -76,8 +128,8 @@ class RolePermissionSeeder extends Seeder
             );
         }
 
-        // Assign all permissions to Super Admin
-        $superAdmin->permissions()->attach(Permission::all()->pluck('id'));
+        // Assign all permissions to Super Admin (use sync to avoid duplicates)
+        $superAdmin->permissions()->sync(Permission::all()->pluck('id'));
 
         // Assign limited permissions to Cashier
         $cashierPermissions = Permission::whereIn('slug', [
@@ -91,8 +143,16 @@ class RolePermissionSeeder extends Seeder
             'expenses.view',
             'expenses.create',
             'expenses.edit',
+            'bank_deposits.view',
+            'bank_deposits.create',
+            'bank_deposits.edit',
+            'other_income.view',
+            'other_income.create',
+            'other_income.edit',
+            'course_registrations.view',
+            'course_registrations.create',
         ])->pluck('id');
 
-        $cashier->permissions()->attach($cashierPermissions);
+        $cashier->permissions()->sync($cashierPermissions);
     }
 }
