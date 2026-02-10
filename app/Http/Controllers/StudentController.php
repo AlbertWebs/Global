@@ -177,7 +177,13 @@ class StudentController extends Controller
         $totalPayments = $student->payments->count();
         $totalPaid = $student->payments->sum('amount_paid');
         $totalAgreed = $student->payments->sum('agreed_amount');
-        $totalBalance = max(0, $totalAgreed - $totalPaid);
+        
+        // Calculate outstanding balance from Balance records (not Payment records)
+        // This ensures consistency with the balances page
+        $totalBalance = \App\Models\Balance::where('student_id', $student->id)
+            ->where('outstanding_balance', '>', 0)
+            ->sum('outstanding_balance');
+        
         $registeredCourses = $student->courseRegistrations->count();
         
         // Payment method breakdown

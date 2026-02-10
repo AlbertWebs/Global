@@ -214,7 +214,7 @@
                 <h3 class="text-sm font-semibold text-gray-700 mb-3">Summary for this Payment</h3>
                 <div x-show="studentOverallBalance > 0" class="flex justify-between items-center mb-2">
                     <span class="text-gray-600">Overall Outstanding Balance:</span>
-                    <span class="font-bold text-orange-700" x-text="'KES ' + studentOverallBalance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                    <span class="font-bold text-orange-700" x-text="'KES ' + parseFloat(studentOverallBalance || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                 </div>
                 <div x-show="walletBalance > 0" class="flex justify-between items-center mb-2">
                     <span class="text-gray-600">Wallet Balance:</span>
@@ -233,31 +233,35 @@
 
             <!-- Payment Summary -->
             <div x-show="agreedAmount && amountPaid" class="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <h3 class="text-sm font-semibold text-gray-700 mb-3">Payment Summary</h3>
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">Payment Summary for Selected Course</h3>
                 <div class="space-y-2">
                     <div class="flex justify-between">
-                        <span class="text-gray-600">Total Due for Transaction:</span>
-                        <span class="font-semibold" x-text="'KES ' + totalAmountDueForPayment.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                        <span class="text-gray-600">Agreed Amount:</span>
+                        <span class="font-semibold" x-text="'KES ' + parseFloat(agreedAmount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Cash/Bank Payment:</span>
+                        <span class="font-semibold" x-text="'KES ' + (amountPaid ? parseFloat(amountPaid).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00')"></span>
                     </div>
                     <div x-show="usedWalletAmount > 0" class="flex justify-between">
                         <span class="text-gray-600">Amount from Wallet:</span>
                         <span class="font-semibold text-green-600" x-text="'KES ' + usedWalletAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Amount Paid (Cash/Bank):</span>
-                        <span class="font-semibold" x-text="'KES ' + (amountPaid ? parseFloat(amountPaid).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '0.00')"></span>
-                    </div>
                     <div class="flex justify-between pt-2 border-t border-gray-300">
-                        <span class="text-gray-600">Total Paid:</span>
-                        <span class="font-bold text-green-600" x-text="'KES ' + (parseFloat(amountPaid || 0) + parseFloat(usedWalletAmount || 0)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                        <span class="text-gray-600 font-semibold">Total Payment:</span>
+                        <span class="font-bold text-blue-600" x-text="'KES ' + (parseFloat(amountPaid || 0) + parseFloat(usedWalletAmount || 0)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                     </div>
-                    <div x-show="balance > 0" class="flex justify-between pt-2 border-t border-gray-300">
-                        <span class="text-gray-600">Outstanding Balance:</span>
+                    <div x-show="balance > 0" class="flex justify-between pt-2 border-t-2 border-orange-300">
+                        <span class="text-gray-700 font-semibold">Balance Due:</span>
                         <span class="font-bold text-orange-600" x-text="'KES ' + balance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                     </div>
-                    <div x-show="balance === 0 && agreedAmount && amountPaid" class="flex justify-between pt-2 border-t border-gray-300">
-                        <span class="text-gray-600">Status:</span>
-                        <span class="font-bold text-green-600">Fully Paid</span>
+                    <div x-show="balance === 0 && (parseFloat(amountPaid || 0) + parseFloat(usedWalletAmount || 0)) === parseFloat(agreedAmount || 0)" class="flex justify-between pt-2 border-t-2 border-green-300">
+                        <span class="text-gray-700 font-semibold">Balance:</span>
+                        <span class="font-bold text-green-600">KES 0.00 (Fully Paid)</span>
+                    </div>
+                    <div x-show="balance < 0" class="flex justify-between pt-2 border-t-2 border-green-300">
+                        <span class="text-gray-700 font-semibold">Credit (will be added to wallet):</span>
+                        <span class="font-bold text-green-600" x-text="'KES ' + Math.abs(balance).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                     </div>
                 </div>
             </div>
@@ -312,9 +316,12 @@ function billingForm() {
             }
 
             // If student is pre-selected, trigger any necessary actions
-            if (this.studentId) {
-                this.loadStudentInfo();
-            }
+            // Use $nextTick to ensure Alpine is fully initialized
+            this.$nextTick(() => {
+                if (this.studentId) {
+                    this.loadStudentInfo();
+                }
+            });
         },
 
         async loadStudentInfo() {
@@ -344,6 +351,9 @@ function billingForm() {
 
                 this.studentOverallBalance = parseFloat(overallBalanceData.total_outstanding_balance || 0);
                 this.studentCourseBalances = overallBalanceData.course_balances || [];
+                
+                // Update total amount due with the outstanding balance
+                this.totalAmountDueForPayment = this.studentOverallBalance + parseFloat(this.agreedAmount || 0);
 
                 // Fetch wallet balance for the student
                 const walletUrl = `/api/students/${this.studentId}/wallet-balance`;
@@ -435,25 +445,33 @@ function billingForm() {
                 this.discountAmount = 0;
             }
 
-            // Update total amount due based on current agreedAmount input
-            this.totalAmountDueForPayment = this.studentOverallBalance + parseFloat(this.agreedAmount || 0);
+            // For this payment, we focus on the agreed amount for the selected course
+            // Check if there's an existing balance for this specific course
+            const specificCourseBalance = this.studentCourseBalances.find(cb => cb.course_id == this.courseId);
+            const amountNeededForCourse = specificCourseBalance && specificCourseBalance.outstanding_balance > 0 
+                ? specificCourseBalance.outstanding_balance 
+                : agreed;
 
-            // Calculate how much wallet balance to use
+            // Calculate shortfall after cash payment
+            const shortfallAfterCash = Math.max(0, amountNeededForCourse - paid);
+
+            // Calculate how much wallet balance to use to cover the shortfall
             let amountFromWallet = 0;
-            if (this.walletBalance > 0 && paid < this.totalAmountDueForPayment) {
-                // Use wallet balance up to the remaining amount due or available wallet balance
-                amountFromWallet = Math.min(this.walletBalance, this.totalAmountDueForPayment - paid);
+            if (this.walletBalance > 0 && shortfallAfterCash > 0) {
+                // Use wallet balance to cover the shortfall
+                amountFromWallet = Math.min(this.walletBalance, shortfallAfterCash);
                 this.usedWalletAmount = amountFromWallet;
             } else {
                 this.usedWalletAmount = 0;
             }
 
-            // Add wallet amount to paid amount for summary calculation
-            const totalPaidIncludingWallet = paid + amountFromWallet;
+            // Calculate total payment (cash + wallet)
+            const totalPayment = paid + amountFromWallet;
 
-            // Calculate balance after applying discount and considering the total amount due
-            const totalPayable = this.totalAmountDueForPayment;
-            this.balance = Math.max(0, totalPayable - totalPaidIncludingWallet);
+            // Calculate balance for this specific course
+            // Balance = agreed amount - total payment (cash + wallet)
+            // Negative balance means overpayment (credit)
+            this.balance = agreed - totalPayment;
         },
 
         getYearFromMonth(monthString) {

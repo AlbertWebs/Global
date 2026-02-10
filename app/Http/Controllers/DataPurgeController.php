@@ -11,6 +11,7 @@ use App\Models\LedgerEntry;
 use App\Models\Payment;
 use App\Models\Receipt;
 use App\Models\Student;
+use App\Models\Wallet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -34,6 +35,7 @@ class DataPurgeController extends Controller
             'ledger_entries' => LedgerEntry::count(),
             'activity_logs' => ActivityLog::count(),
             'balances' => Balance::count(),
+            'wallets' => Wallet::count(),
         ];
 
         return view('data-purge.index', compact('counts'));
@@ -57,6 +59,7 @@ class DataPurgeController extends Controller
             'purge_ledger_entries' => ['nullable', 'boolean'],
             'purge_activity_logs' => ['nullable', 'boolean'],
             'purge_balances' => ['nullable', 'boolean'],
+            'purge_wallets' => ['nullable', 'boolean'],
             'confirm_text' => ['required', 'string'],
         ]);
 
@@ -80,6 +83,7 @@ class DataPurgeController extends Controller
                 CourseRegistration::truncate();
                 ActivityLog::truncate();
                 Balance::truncate();
+                Wallet::truncate();
                 Student::truncate();
                 
                 $purged[] = 'All data (except users)';
@@ -129,6 +133,11 @@ class DataPurgeController extends Controller
                 if ($validated['purge_balances'] ?? false) {
                     Balance::truncate();
                     $purged[] = 'Balances';
+                }
+
+                if ($validated['purge_wallets'] ?? false) {
+                    Wallet::truncate();
+                    $purged[] = 'Wallet Balances';
                 }
             }
 

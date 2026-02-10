@@ -60,7 +60,8 @@
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Agreed Amount</th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Paid</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Paid (Applied)</th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Real Total Paid</th>
                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Discount</th>
                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Outstanding Balance</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -80,7 +81,13 @@
                             <div class="text-sm text-gray-500">{{ $balance->course->code }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">KES {{ number_format($balance->agreed_amount, 2) }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">KES {{ number_format($balance->total_paid, 2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900" title="Amount applied to course balance">KES {{ number_format($balance->total_paid, 2) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold {{ ($balance->real_total_paid ?? 0) > $balance->total_paid ? 'text-blue-600' : 'text-gray-900' }}" title="Total cash + wallet payments (may include overpayments)">
+                            KES {{ number_format($balance->real_total_paid ?? $balance->total_paid, 2) }}
+                            @if(($balance->real_total_paid ?? 0) > $balance->total_paid)
+                                <span class="text-xs text-blue-500" title="Includes overpayment">*</span>
+                            @endif
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-red-600">- KES {{ number_format($balance->discount_amount, 2) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-lg font-bold {{ $balance->outstanding_balance > 0 ? 'text-orange-600' : 'text-green-600' }}">KES {{ number_format($balance->outstanding_balance, 2) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
