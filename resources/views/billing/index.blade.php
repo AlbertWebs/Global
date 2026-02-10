@@ -273,9 +273,8 @@
                 </a>
                 <button 
                     type="submit"
-                    x-init="$watch('studentId', () => {}); $watch('courseId', () => {}); $watch('agreedAmount', () => {}); $watch('amountPaid', () => {});"
-                    x-bind:disabled="!studentId || !courseId || isNaN(parseFloat(agreedAmount)) || parseFloat(agreedAmount) <= 0 || isNaN(parseFloat(amountPaid)) || parseFloat(amountPaid) <= 0"
-                    class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl"
+                    x-bind:disabled="!studentId || !courseId || !agreedAmount || parseFloat(agreedAmount || 0) <= 0 || !amountPaid || parseFloat(amountPaid || 0) < 0"
+                    class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg hover:shadow-xl disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                     Process Payment & Generate Receipt
                 </button>
@@ -302,6 +301,7 @@ function billingForm() {
         usedWalletAmount: 0,
 
         registeredCourses: [], // Will hold courses registered by the selected student
+        courseInfo: null,
 
         selectedMonth: '{{ $currentMonthName }} {{ $currentYear }}',
 
