@@ -7,7 +7,6 @@ use App\Models\Student;
 use App\Models\Wallet;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class StudentController extends Controller
 {
@@ -83,7 +82,7 @@ class StudentController extends Controller
 
             // Auto-generate admission number
             $validated['admission_number'] = $this->generateAdmissionNumber();
-            $validated['student_number'] = 'STU-' . strtoupper(Str::random(8));
+            $validated['student_number'] = $this->generateStudentNumber();
             // Set default password as student_number (will be hashed automatically by model cast)
             $validated['password'] = $validated['student_number'];
 
@@ -299,6 +298,44 @@ class StudentController extends Controller
         }
         
         return $admissionNumber;
+    }
+
+    private function generateStudentNumber(): string
+    {
+        // Get all student numbers and find the highest numeric one
+        $allStudentNumbers = Student::whereNotNull('student_number')
+            ->pluck('student_number')
+            ->filter(function ($number) {
+                // Only keep numeric student numbers (simple format like "1001", "1002", etc.)
+                return is_numeric($number) && ctype_digit($number);
+            })
+            ->map(function ($number) {
+                return (int)$number;
+            });
+        
+        // If no numeric student numbers exist, start from 1001
+        if ($allStudentNumbers->isEmpty()) {
+            $nextNumber = 1001;
+        } else {
+            // Get the maximum numeric student number and increment
+            $maxNumber = $allStudentNumbers->max();
+            $nextNumber = $maxNumber + 1;
+            
+            // If somehow we get a number less than 1001, start from 1001
+            if ($nextNumber < 1001) {
+                $nextNumber = 1001;
+            }
+        }
+        
+        $studentNumber = (string)$nextNumber;
+        
+        // Ensure uniqueness (in case of race conditions)
+        while (Student::where('student_number', $studentNumber)->exists()) {
+            $nextNumber++;
+            $studentNumber = (string)$nextNumber;
+        }
+        
+        return $studentNumber;
     }
 
     public function edit(Student $student)

@@ -22,11 +22,8 @@ class BalancesExport implements FromCollection, WithHeadings, WithMapping, WithS
 
     public function collection()
     {
-        return $this->students->filter(function ($student) {
-            $totalAgreed = $student->payments->sum('agreed_amount');
-            $totalPaid = $student->payments->sum('amount_paid');
-            return ($totalAgreed - $totalPaid) > 0;
-        });
+        // Students are already filtered in the controller, just return them
+        return $this->students;
     }
 
     public function headings(): array
@@ -41,15 +38,16 @@ class BalancesExport implements FromCollection, WithHeadings, WithMapping, WithS
 
     public function map($student): array
     {
-        $totalAgreed = $student->payments->sum('agreed_amount');
+        // Use the same calculation as PDF - from Balance model
+        $balances = \App\Models\Balance::where('student_id', $student->id)->get();
+        $totalOutstanding = $balances->sum('outstanding_balance');
         $totalPaid = $student->payments->sum('amount_paid');
-        $balance = $totalAgreed - $totalPaid;
 
         return [
             $student->admission_number ?? 'N/A',
             $student->full_name,
             number_format($totalPaid, 2),
-            number_format($balance, 2),
+            number_format($totalOutstanding, 2),
         ];
     }
 

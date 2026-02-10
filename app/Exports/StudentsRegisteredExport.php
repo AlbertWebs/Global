@@ -28,8 +28,9 @@ class StudentsRegisteredExport implements FromCollection, WithHeadings, WithMapp
     public function headings(): array
     {
         return [
-            'Full Name',
             'Admission Number',
+            'Full Name',
+            'Phone Number',
             'Registration Date',
         ];
     }
@@ -37,9 +38,10 @@ class StudentsRegisteredExport implements FromCollection, WithHeadings, WithMapp
     public function map($student): array
     {
         return [
-            $student->full_name,
             $student->admission_number ?? 'N/A',
-            $student->created_at ? $student->created_at->format('Y-m-d') : 'N/A',
+            $student->full_name,
+            $student->phone ?? 'N/A',
+            $student->created_at ? $student->created_at->format('F d, Y') : 'N/A',
         ];
     }
 

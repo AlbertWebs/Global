@@ -27,9 +27,10 @@ class StudentLoginController extends Controller
             ->first();
 
         if (!$student) {
-            throw ValidationException::withMessages([
-                'student_number' => 'Invalid student number or account is inactive.',
-            ]);
+            return back()->withInput($request->only('student_number'))
+                ->withErrors([
+                    'student_number' => 'Invalid student number or account is inactive. Please check your student number and try again.',
+                ]);
         }
 
         // Check password
@@ -43,9 +44,10 @@ class StudentLoginController extends Controller
         }
 
         if (!$passwordValid) {
-            throw ValidationException::withMessages([
-                'password' => 'Invalid credentials.',
-            ]);
+            return back()->withInput($request->only('student_number'))
+                ->withErrors([
+                    'password' => 'Incorrect password. Please try again. (Default password is your student number)',
+                ]);
         }
 
         // Store student in session

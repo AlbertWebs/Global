@@ -8,16 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('payments', function (Blueprint $table) {
-            $table->string('academic_year')->nullable()->after('course_id'); // e.g., "2024/2025"
-            $table->string('term')->nullable()->after('academic_year'); // e.g., "Term 1", "Term 2", "Term 3"
-        });
+        // No changes to payments table for academic_year or term as these fields are being removed
     }
 
     public function down(): void
     {
-        Schema::table('payments', function (Blueprint $table) {
-            $table->dropColumn(['academic_year', 'term']);
-        });
+        // No changes needed as these fields are being removed
     }
 };

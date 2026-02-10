@@ -29,15 +29,12 @@ class CourseRegistrationsExport implements FromCollection, WithHeadings, WithMap
     {
         return [
             'Registration Date',
-            'Student Number',
             'Student Name',
-            'Course Name',
             'Course Code',
+            'Course Name',
             'Academic Year',
-            'Month',
-            'Year',
+            'Term',
             'Status',
-            'Notes',
         ];
     }
 
@@ -45,15 +42,12 @@ class CourseRegistrationsExport implements FromCollection, WithHeadings, WithMap
     {
         return [
             $registration->registration_date ? $registration->registration_date->format('Y-m-d') : 'N/A',
-            $registration->student->student_number ?? 'N/A',
             $registration->student->full_name ?? 'N/A',
-            $registration->course->name ?? 'N/A',
             $registration->course->code ?? 'N/A',
+            $registration->course->name ?? 'N/A',
             $registration->academic_year ?? 'N/A',
-            $registration->month ?? 'N/A',
-            $registration->year ?? 'N/A',
-            ucfirst($registration->status ?? 'N/A'),
-            $registration->notes ?? 'N/A',
+            $registration->term ?? 'N/A',
+            ucfirst($registration->status ?? 'active'),
         ];
     }
 

@@ -165,7 +165,7 @@
                     <div class="pt-4 border-t border-blue-700 border-opacity-50">
                         <p class="px-3 py-2 text-xs font-semibold text-blue-300 uppercase tracking-wider">Admin Tools</p>
                     </div>
-                    <a href="{{ route('mobile.dashboard') }}" class="flex items-center px-3 py-2 rounded-xl hover:bg-white hover:bg-opacity-20 hover:shadow-lg transition-all duration-200 group {{ request()->routeIs('mobile.*') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
+                    <a href="{{ route('mobile.dashboard') }}" class="hidden lg:flex items-center px-3 py-2 rounded-xl hover:bg-white hover:bg-opacity-20 hover:shadow-lg transition-all duration-200 group {{ request()->routeIs('mobile.*') ? 'bg-white bg-opacity-20 shadow-lg' : '' }}">
                         <div class="w-8 h-8 bg-white bg-opacity-20 rounded-lg flex items-center justify-center mr-3 {{ request()->routeIs('mobile.*') ? 'bg-opacity-30' : '' }} group-hover:bg-opacity-30">
                             <svg class="w-4 h-4 {{ request()->routeIs('mobile.*') ? 'text-blue-900' : 'text-blue-200 group-hover:text-blue-900' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>

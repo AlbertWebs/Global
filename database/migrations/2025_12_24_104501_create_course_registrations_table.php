@@ -15,15 +15,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('student_id')->constrained()->onDelete('cascade');
             $table->foreignId('course_id')->constrained()->onDelete('cascade');
-            $table->string('academic_year', 50); // Limit length for composite index compatibility
-            $table->string('term', 50); // Limit length for composite index compatibility
             $table->date('registration_date')->default(now());
+            $table->decimal('agreed_amount', 10, 2)->default(0); // New field for agreed price
             $table->enum('status', ['registered', 'completed', 'dropped'])->default('registered');
             $table->text('notes')->nullable();
             $table->timestamps();
             
-            // Ensure a student can't register for the same course in the same term/year twice
-            $table->unique(['student_id', 'course_id', 'academic_year', 'term'], 'unique_student_course_registration');
+            // Ensure a student can't register for the same course twice
+            $table->unique(['student_id', 'course_id'], 'unique_student_course_registration');
         });
     }
 

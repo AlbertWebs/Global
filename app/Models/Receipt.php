@@ -26,29 +26,44 @@ class Receipt extends Model
     }
 
     /**
-     * Generate a serialized receipt number in format GTC-001, GTC-002, etc.
+     * Generate a serialized receipt number as numeric only (001, 002, etc.)
      * Ensures auto-increment and no duplicates
      */
     public static function generateReceiptNumber(): string
     {
-        // Get the last receipt number
-        $lastReceipt = self::where('receipt_number', 'like', 'GTC-%')
-            ->orderByRaw('CAST(SUBSTRING(receipt_number, 5) AS UNSIGNED) DESC')
-            ->first();
+        // Get all receipt numbers and find the highest numeric one
+        $allReceiptNumbers = self::whereNotNull('receipt_number')
+            ->pluck('receipt_number')
+            ->map(function ($number) {
+                // Extract numeric part from GTC-XXX format or use the number itself if numeric
+                if (preg_match('/GTC-(\d+)/', $number, $matches)) {
+                    return (int)$matches[1];
+                } elseif (is_numeric($number) && ctype_digit($number)) {
+                    return (int)$number;
+                }
+                return null;
+            })
+            ->filter()
+            ->map(function ($number) {
+                return (int)$number;
+            });
 
-        if ($lastReceipt && preg_match('/GTC-(\d+)/', $lastReceipt->receipt_number, $matches)) {
-            $nextNumber = (int)$matches[1] + 1;
-        } else {
+        // If no numeric receipt numbers exist, start from 1
+        if ($allReceiptNumbers->isEmpty()) {
             $nextNumber = 1;
+        } else {
+            // Get the maximum numeric receipt number and increment
+            $maxNumber = $allReceiptNumbers->max();
+            $nextNumber = $maxNumber + 1;
         }
 
-        // Format: GTC-001, GTC-002, etc. (3 digits minimum)
-        $receiptNumber = sprintf('GTC-%03d', $nextNumber);
+        // Format: 001, 002, etc. (3 digits minimum)
+        $receiptNumber = sprintf('%03d', $nextNumber);
 
         // Ensure uniqueness (handle race conditions)
         while (self::where('receipt_number', $receiptNumber)->exists()) {
             $nextNumber++;
-            $receiptNumber = sprintf('GTC-%03d', $nextNumber);
+            $receiptNumber = sprintf('%03d', $nextNumber);
         }
 
         return $receiptNumber;

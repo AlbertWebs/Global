@@ -8,7 +8,7 @@
     <div class="bg-white rounded-xl shadow-lg p-8">
         <div class="text-center mb-8">
             <h2 class="text-3xl font-bold text-gray-900 mb-2">Reports Module</h2>
-            <p class="text-gray-600">Generate and download reports in Excel format</p>
+            <p class="text-gray-600">Generate and download reports in Excel or PDF format</p>
         </div>
 
         <!-- Date Range Selection -->
@@ -57,9 +57,9 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Students Registered Report -->
-            <a 
-                :href="buildReportUrl('{{ route('reports.export-students-registered') }}')"
-                class="group bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl"
+            <button 
+                @click="openFormatModal('{{ route('reports.export-students-registered') }}', 'Students Registered')"
+                class="group bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl cursor-pointer"
             >
                 <div class="mb-4">
                     <svg class="w-14 h-14 mx-auto text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -68,12 +68,12 @@
                 </div>
                 <h3 class="text-lg font-bold text-white mb-2">Students Registered</h3>
                 <p class="text-blue-100 text-xs">Complete list of all registered students</p>
-            </a>
+            </button>
 
             <!-- Balances Report -->
-            <a 
-                :href="buildReportUrl('{{ route('reports.export-balances') }}')"
-                class="group bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl"
+            <button 
+                @click="openFormatModal('{{ route('reports.export-balances') }}', 'Balances Report')"
+                class="group bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl cursor-pointer"
             >
                 <div class="mb-4">
                     <svg class="w-14 h-14 mx-auto text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,12 +82,12 @@
                 </div>
                 <h3 class="text-lg font-bold text-white mb-2">Balances Report</h3>
                 <p class="text-green-100 text-xs">Student balances and payment information</p>
-            </a>
+            </button>
 
             <!-- Fee Payment Report -->
-            <a 
-                :href="buildReportUrl('{{ route('reports.export-payments') }}')"
-                class="group bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl"
+            <button 
+                @click="openFormatModal('{{ route('reports.export-payments') }}', 'Fee Payment Report')"
+                class="group bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl cursor-pointer"
             >
                 <div class="mb-4">
                     <svg class="w-14 h-14 mx-auto text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,12 +96,12 @@
                 </div>
                 <h3 class="text-lg font-bold text-white mb-2">Fee Payment Report</h3>
                 <p class="text-purple-100 text-xs">All fee payments with details</p>
-            </a>
+            </button>
 
             <!-- Expenses Report -->
-            <a 
-                :href="buildReportUrl('{{ route('reports.export-expenses') }}')"
-                class="group bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl"
+            <button 
+                @click="openFormatModal('{{ route('reports.export-expenses') }}', 'Expenses Report')"
+                class="group bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl cursor-pointer"
             >
                 <div class="mb-4">
                     <svg class="w-14 h-14 mx-auto text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,12 +110,12 @@
                 </div>
                 <h3 class="text-lg font-bold text-white mb-2">Expenses Report</h3>
                 <p class="text-red-100 text-xs">All expenses and costs</p>
-            </a>
+            </button>
 
             <!-- Full Financial Report -->
-            <a 
-                :href="buildReportUrl('{{ route('reports.export') }}')"
-                class="group bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl"
+            <button 
+                @click="openFormatModal('{{ route('reports.export') }}', 'Full Financial Report')"
+                class="group bg-gradient-to-br from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl cursor-pointer"
             >
                 <div class="mb-4">
                     <svg class="w-14 h-14 mx-auto text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,12 +124,12 @@
                 </div>
                 <h3 class="text-lg font-bold text-white mb-2">Full Financial Report</h3>
                 <p class="text-indigo-100 text-xs">Complete financial summary with all data</p>
-            </a>
+            </button>
 
             <!-- Course Registrations Report -->
-            <a 
-                :href="buildReportUrl('{{ route('reports.export-course-registrations') }}')"
-                class="group bg-gradient-to-br from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl"
+            <button 
+                @click="openFormatModal('{{ route('reports.export-course-registrations') }}', 'Course Registrations Report')"
+                class="group bg-gradient-to-br from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl cursor-pointer"
             >
                 <div class="mb-4">
                     <svg class="w-14 h-14 mx-auto text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,12 +138,12 @@
                 </div>
                 <h3 class="text-lg font-bold text-white mb-2">Course Registrations</h3>
                 <p class="text-teal-100 text-xs">Student course registration records</p>
-            </a>
+            </button>
 
             <!-- Bank Deposits Report -->
-            <a 
-                :href="buildReportUrl('{{ route('reports.export-bank-deposits') }}')"
-                class="group bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl"
+            <button 
+                @click="openFormatModal('{{ route('reports.export-bank-deposits') }}', 'Bank Deposits Report')"
+                class="group bg-gradient-to-br from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl cursor-pointer"
             >
                 <div class="mb-4">
                     <svg class="w-14 h-14 mx-auto text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,21 +152,7 @@
                 </div>
                 <h3 class="text-lg font-bold text-white mb-2">Bank Deposits</h3>
                 <p class="text-yellow-100 text-xs">All bank deposit transactions</p>
-            </a>
-
-            <!-- Receipts Report -->
-            <a 
-                :href="buildReportUrl('{{ route('reports.export-receipts') }}')"
-                class="group bg-gradient-to-br from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl"
-            >
-                <div class="mb-4">
-                    <svg class="w-14 h-14 mx-auto text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                </div>
-                <h3 class="text-lg font-bold text-white mb-2">Receipts Report</h3>
-                <p class="text-pink-100 text-xs">All issued receipts with details</p>
-            </a>
+            </button>
         </div>
 
         <div class="mt-8 text-center">
@@ -174,8 +160,67 @@
                 <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                Reports will be automatically downloaded in Excel (.xlsx) format
+                Click any report to choose between Excel (.xlsx) or PDF (.pdf) format
             </p>
+        </div>
+    </div>
+
+    <!-- Format Selection Modal -->
+    <div 
+        x-show="showFormatModal" 
+        x-cloak
+        @click.away="closeFormatModal()"
+        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        x-transition:enter="ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+    >
+        <div 
+            class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4"
+            @click.stop
+            x-transition:enter="ease-out duration-300"
+            x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100"
+            x-transition:leave="ease-in duration-200"
+            x-transition:leave-start="opacity-100 scale-100"
+            x-transition:leave-end="opacity-0 scale-95"
+        >
+            <div class="text-center mb-6">
+                <h3 class="text-2xl font-bold text-gray-900 mb-2">Select Export Format</h3>
+                <p class="text-gray-600" x-text="selectedReportName"></p>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-4 mb-6">
+                <button
+                    @click="exportReport('excel')"
+                    class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Export as Excel (.xlsx)
+                </button>
+                
+                <button
+                    @click="exportReport('pdf')"
+                    class="flex items-center justify-center px-6 py-4 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg font-semibold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                    <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    Export as PDF (.pdf)
+                </button>
+            </div>
+            
+            <button
+                @click="closeFormatModal()"
+                class="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+            >
+                Cancel
+            </button>
         </div>
     </div>
 </div>
@@ -185,13 +230,16 @@ function reportsModule() {
     return {
         dateFrom: '',
         dateTo: '',
+        showFormatModal: false,
+        selectedReportUrl: '',
+        selectedReportName: '',
         
         init() {
             // Set default dates to current month if needed
             // For now, leave empty to show all records by default
         },
         
-        buildReportUrl(baseUrl) {
+        buildReportUrl(baseUrl, format = 'excel') {
             const params = new URLSearchParams();
             
             if (this.dateFrom) {
@@ -202,8 +250,28 @@ function reportsModule() {
                 params.append('date_to', this.dateTo);
             }
             
+            params.append('format', format);
+            
             const queryString = params.toString();
-            return queryString ? `${baseUrl}?${queryString}` : baseUrl;
+            return queryString ? `${baseUrl}?${queryString}` : `${baseUrl}?format=${format}`;
+        },
+        
+        openFormatModal(reportUrl, reportName) {
+            this.selectedReportUrl = reportUrl;
+            this.selectedReportName = reportName;
+            this.showFormatModal = true;
+        },
+        
+        closeFormatModal() {
+            this.showFormatModal = false;
+            this.selectedReportUrl = '';
+            this.selectedReportName = '';
+        },
+        
+        exportReport(format) {
+            const url = this.buildReportUrl(this.selectedReportUrl, format);
+            window.location.href = url;
+            this.closeFormatModal();
         },
         
         clearDates() {

@@ -19,6 +19,7 @@ use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class ReportController extends Controller
 {
@@ -213,8 +214,15 @@ class ReportController extends Controller
             'bank_transfer' => $payments->where('payment_method', 'bank_transfer')->sum('amount_paid'),
         ];
 
+        $format = $request->get('format', 'excel');
+        
+        if ($format === 'pdf') {
+            $pdf = PDF::loadView('reports.pdf.financial', compact('payments', 'expenses', 'summary', 'paymentMethodBreakdown', 'dateFrom', 'dateTo'));
+            $fileName = 'financial_report_' . $dateFrom . '_to_' . $dateTo . '.pdf';
+            return $pdf->download($fileName);
+        }
+        
         $fileName = 'financial_report_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
-
         return Excel::download(
             new FinancialReportExport($payments, $expenses, $summary, $paymentMethodBreakdown, $dateFrom, $dateTo),
             $fileName
@@ -239,8 +247,15 @@ class ReportController extends Controller
             ->latest('expense_date')
             ->get();
 
+        $format = $request->get('format', 'excel');
+        
+        if ($format === 'pdf') {
+            $pdf = PDF::loadView('reports.pdf.expenses', compact('expenses', 'dateFrom', 'dateTo'));
+            $fileName = 'expenses_report_' . $dateFrom . '_to_' . $dateTo . '.pdf';
+            return $pdf->download($fileName);
+        }
+        
         $fileName = 'expenses_report_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
-
         return Excel::download(new ExpensesExport($expenses), $fileName);
     }
 
@@ -273,8 +288,26 @@ class ReportController extends Controller
             ->latest()
             ->get();
 
+        $format = $request->get('format', 'excel');
+        
+        if ($format === 'pdf') {
+            // Pre-load balances for PDF
+            $studentIds = $payments->pluck('student_id')->unique();
+            $courseIds = $payments->pluck('course_id')->unique();
+            
+            $balances = \App\Models\Balance::whereIn('student_id', $studentIds)
+                ->whereIn('course_id', $courseIds)
+                ->get()
+                ->keyBy(function ($balance) {
+                    return $balance->student_id . '-' . $balance->course_id;
+                });
+            
+            $pdf = PDF::loadView('reports.pdf.payments', compact('payments', 'balances', 'dateFrom', 'dateTo'));
+            $fileName = 'payments_report_' . $dateFrom . '_to_' . $dateTo . '.pdf';
+            return $pdf->download($fileName);
+        }
+        
         $fileName = 'payments_report_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
-
         return Excel::download(new PaymentsExport($payments), $fileName);
     }
 
@@ -288,6 +321,7 @@ class ReportController extends Controller
 
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
+        $format = $request->get('format', 'excel');
 
         $query = Student::with('payments');
 
@@ -302,8 +336,14 @@ class ReportController extends Controller
         $students = $query->latest()->get();
         
         $dateRange = $dateFrom && $dateTo ? '_' . $dateFrom . '_to_' . $dateTo : '';
+        
+        if ($format === 'pdf') {
+            $pdf = PDF::loadView('reports.pdf.students-registered', compact('students', 'dateFrom', 'dateTo'));
+            $fileName = 'students_registered' . $dateRange . '_' . now()->format('Y-m-d') . '.pdf';
+            return $pdf->download($fileName);
+        }
+        
         $fileName = 'students_registered' . $dateRange . '_' . now()->format('Y-m-d') . '.xlsx';
-
         return Excel::download(new StudentsRegisteredExport($students), $fileName);
     }
 
@@ -317,6 +357,7 @@ class ReportController extends Controller
 
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
+        $format = $request->get('format', 'excel');
 
         $query = Student::with(['payments' => function($q) use ($dateFrom, $dateTo) {
             if ($dateFrom) {
@@ -327,11 +368,24 @@ class ReportController extends Controller
             }
         }]);
 
-        $students = $query->latest()->get();
+        $allStudents = $query->latest()->get();
+        
+        // Filter to only show students with outstanding balances
+        $students = $allStudents->filter(function ($student) {
+            $balances = \App\Models\Balance::where('student_id', $student->id)->get();
+            $totalOutstanding = $balances->sum('outstanding_balance');
+            return $totalOutstanding > 0;
+        });
         
         $dateRange = $dateFrom && $dateTo ? '_' . $dateFrom . '_to_' . $dateTo : '';
+        
+        if ($format === 'pdf') {
+            $pdf = PDF::loadView('reports.pdf.balances', compact('students', 'dateFrom', 'dateTo'));
+            $fileName = 'balances_report' . $dateRange . '_' . now()->format('Y-m-d') . '.pdf';
+            return $pdf->download($fileName);
+        }
+        
         $fileName = 'balances_report' . $dateRange . '_' . now()->format('Y-m-d') . '.xlsx';
-
         return Excel::download(new BalancesExport($students), $fileName);
     }
 
@@ -345,6 +399,7 @@ class ReportController extends Controller
 
         $dateFrom = $request->get('date_from', now()->startOfYear()->toDateString());
         $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
+        $format = $request->get('format', 'excel');
 
         $registrations = CourseRegistration::with(['student', 'course'])
             ->whereDate('registration_date', '>=', $dateFrom)
@@ -352,8 +407,13 @@ class ReportController extends Controller
             ->latest('registration_date')
             ->get();
 
+        if ($format === 'pdf') {
+            $pdf = PDF::loadView('reports.pdf.course-registrations', compact('registrations', 'dateFrom', 'dateTo'));
+            $fileName = 'course_registrations_' . $dateFrom . '_to_' . $dateTo . '.pdf';
+            return $pdf->download($fileName);
+        }
+        
         $fileName = 'course_registrations_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
-
         return Excel::download(new CourseRegistrationsExport($registrations), $fileName);
     }
 
@@ -367,6 +427,7 @@ class ReportController extends Controller
 
         $dateFrom = $request->get('date_from', now()->startOfDay()->toDateString());
         $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
+        $format = $request->get('format', 'excel');
 
         $deposits = BankDeposit::with('recorder')
             ->whereDate('deposit_date', '>=', $dateFrom)
@@ -374,8 +435,13 @@ class ReportController extends Controller
             ->latest('deposit_date')
             ->get();
 
+        if ($format === 'pdf') {
+            $pdf = PDF::loadView('reports.pdf.bank-deposits', compact('deposits', 'dateFrom', 'dateTo'));
+            $fileName = 'bank_deposits_' . $dateFrom . '_to_' . $dateTo . '.pdf';
+            return $pdf->download($fileName);
+        }
+        
         $fileName = 'bank_deposits_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
-
         return Excel::download(new BankDepositsExport($deposits), $fileName);
     }
 
@@ -389,6 +455,7 @@ class ReportController extends Controller
 
         $dateFrom = $request->get('date_from', now()->startOfDay()->toDateString());
         $dateTo = $request->get('date_to', now()->endOfDay()->toDateString());
+        $format = $request->get('format', 'excel');
 
         $receipts = Receipt::with(['payment.student', 'payment.course', 'payment.cashier'])
             ->whereDate('receipt_date', '>=', $dateFrom)
@@ -396,8 +463,13 @@ class ReportController extends Controller
             ->latest('receipt_date')
             ->get();
 
+        if ($format === 'pdf') {
+            $pdf = PDF::loadView('reports.pdf.receipts', compact('receipts', 'dateFrom', 'dateTo'));
+            $fileName = 'receipts_' . $dateFrom . '_to_' . $dateTo . '.pdf';
+            return $pdf->download($fileName);
+        }
+        
         $fileName = 'receipts_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
-
         return Excel::download(new ReceiptsExport($receipts), $fileName);
     }
 }

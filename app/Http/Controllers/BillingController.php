@@ -29,10 +29,18 @@ class BillingController extends Controller
         // Pre-select student if provided in query string
         $selectedStudentId = $request->get('student_id');
         $selectedStudent = null;
+        $courses = collect(); // Initialize as an empty collection
         if ($selectedStudentId) {
             $selectedStudent = Student::find($selectedStudentId);
             $studentWallet = Wallet::where('student_id', $selectedStudentId)->first();
             $walletBalance = $studentWallet ? $studentWallet->balance : 0;
+            
+            // Fetch only courses registered by the selected student
+            $courses = CourseRegistration::where('student_id', $selectedStudentId)
+                                         ->with('course')
+                                         ->get()
+                                         ->map(fn($reg) => $reg->course)
+                                         ->filter(); // Remove nulls if any course was deleted
         } else {
             $walletBalance = 0;
         }
@@ -102,9 +110,6 @@ class BillingController extends Controller
         $validated = $request->validate([
             'student_id' => ['required', 'exists:students,id'],
             'course_id' => ['required', 'exists:courses,id'],
-            'academic_year' => ['required', 'string'],
-            'month' => ['required', 'string'],
-            'year' => ['required', 'integer'],
             'agreed_amount' => ['required', 'numeric', 'min:0'],
             'amount_paid' => ['required', 'numeric', 'min:0'],
             'discount_amount' => ['nullable', 'numeric', 'min:0'],
@@ -135,6 +140,7 @@ class BillingController extends Controller
                 PaymentLog::create([
                     'student_id' => $studentId,
                     'description' => 'Wallet Funds Applied',
+                    'payment_id' => null,
                     'amount_paid' => $amountFromWallet,
                     'balance_before' => $initialWalletBalance,
                     'balance_after' => $wallet->balance,
@@ -153,9 +159,6 @@ class BillingController extends Controller
         $payment = Payment::create([
             'student_id' => $validated['student_id'],
             'course_id' => $validated['course_id'],
-            'academic_year' => $validated['academic_year'],
-            'month' => $validated['month'],
-            'year' => $validated['year'],
             'agreed_amount' => $validated['agreed_amount'],
             'amount_paid' => $cashPaymentAmount, // This is the cash/bank amount only
             'base_price' => $course->base_price,
@@ -287,18 +290,14 @@ class BillingController extends Controller
         // Check if registration already exists for this student, course, academic year, month, and year
         $existingRegistration = CourseRegistration::where('student_id', $validated['student_id'])
             ->where('course_id', $validated['course_id'])
-            ->where('academic_year', $validated['academic_year'])
-            ->where('month', $validated['month'])
-            ->where('year', $validated['year'])
+          
             ->first();
 
         if (!$existingRegistration) {
             CourseRegistration::create([
                 'student_id' => $validated['student_id'],
                 'course_id' => $validated['course_id'],
-                'academic_year' => $validated['academic_year'],
-                'month' => $validated['month'],
-                'year' => $validated['year'],
+              
                 'registration_date' => now(),
                 'status' => 'registered',
                 'notes' => 'Auto-registered upon payment',
@@ -404,9 +403,7 @@ class BillingController extends Controller
                 
                 $isRegistered = \App\Models\CourseRegistration::where('student_id', $studentId)
                     ->where('course_id', $course->id)
-                    ->where('academic_year', $currentAcademicYear)
-                    ->where('month', $selectedMonth)
-                    ->where('year', $year)
+                  
                     ->where('status', 'registered')
                     ->exists();
             }

@@ -8,6 +8,8 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class PaymentLogsExport implements FromCollection, WithHeadings, WithMapping, WithStyles
 {
@@ -35,18 +37,12 @@ class PaymentLogsExport implements FromCollection, WithHeadings, WithMapping, Wi
     public function headings(): array
     {
         return [
-            'ID',
-            'Payment Date',
-            'Student Name',
-            'Student Admission No',
+            'Admission Number',
+            'Name',
+            'Date',
+            'Amount Paid (KES)',
+            'Balance After (KES)',
             'Course',
-            'Description',
-            'Base Price',
-            'Agreed Amount',
-            'Amount Paid',
-            'Balance Before',
-            'Balance After',
-            'Wallet Balance After',
         ];
     }
 
@@ -57,18 +53,12 @@ class PaymentLogsExport implements FromCollection, WithHeadings, WithMapping, Wi
     public function map($paymentLog): array
     {
         return [
-            $paymentLog->id,
-            $paymentLog->payment_date->format('Y-m-d H:i:s'),
-            $paymentLog->student->full_name,
-            $paymentLog->student->admission_number,
-            $paymentLog->course ? $paymentLog->course->name : 'N/A',
-            $paymentLog->description,
-            number_format($paymentLog->base_price, 2),
-            number_format($paymentLog->agreed_amount, 2),
+            $paymentLog->student ? ($paymentLog->student->admission_number ?? 'N/A') : 'N/A',
+            $paymentLog->student ? $paymentLog->student->full_name : 'Student Deleted',
+            $paymentLog->payment_date->format('Y-m-d'),
             number_format($paymentLog->amount_paid, 2),
-            number_format($paymentLog->balance_before, 2),
             number_format($paymentLog->balance_after, 2),
-            number_format($paymentLog->wallet_balance_after, 2),
+            $paymentLog->course ? $paymentLog->course->name : 'N/A',
         ];
     }
 
@@ -78,8 +68,14 @@ class PaymentLogsExport implements FromCollection, WithHeadings, WithMapping, Wi
     public function styles(Worksheet $sheet)
     {
         return [
-            // Style the first row as bold text.
-            1    => ['font' => ['bold' => true]],
+            1 => [
+                'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => [
+                    'fillType' => Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '4472C4']
+                ],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+            ],
         ];
     }
 }

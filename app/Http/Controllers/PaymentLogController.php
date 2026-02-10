@@ -14,11 +14,16 @@ class PaymentLogController extends Controller
         $this->middleware('super_admin');
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $paymentLogs = \App\Models\PaymentLog::with(['student', 'course', 'payment'])
-            ->latest()
-            ->paginate(20);
+        $query = \App\Models\PaymentLog::with(['student', 'course', 'payment']);
+        
+        // Filter by student_id if provided
+        if ($request->has('student_id') && $request->student_id) {
+            $query->where('student_id', $request->student_id);
+        }
+        
+        $paymentLogs = $query->latest()->paginate(20);
 
         return view('payment-logs.index', compact('paymentLogs'));
     }
@@ -34,8 +39,18 @@ class PaymentLogController extends Controller
     public function exportExcel(Request $request)
     {
         $studentId = $request->query('student_id');
+        
+        if (!$studentId) {
+            return back()->with('error', 'Student ID is required for export.');
+        }
+        
         $student = \App\Models\Student::find($studentId);
-        $fileName = 'payment_logs_' . ($student ? Str::slug($student->full_name) : 'all') . '_' . now()->format('Ymd_His') . '.xlsx';
+        
+        if (!$student) {
+            return back()->with('error', 'Student not found.');
+        }
+        
+        $fileName = 'payment_records_' . Str::slug($student->full_name) . '_' . now()->format('Ymd_His') . '.xlsx';
         
         return Excel::download(new PaymentLogsExport($studentId), $fileName);
     }

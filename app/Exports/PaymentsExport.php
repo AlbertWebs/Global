@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Payment;
+use App\Models\Balance;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -15,10 +16,22 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 class PaymentsExport implements FromCollection, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     protected $payments;
+    protected $balances;
 
     public function __construct($payments)
     {
         $this->payments = $payments;
+        
+        // Pre-load all balances to avoid N+1 queries
+        $studentIds = $payments->pluck('student_id')->unique();
+        $courseIds = $payments->pluck('course_id')->unique();
+        
+        $this->balances = Balance::whereIn('student_id', $studentIds)
+            ->whereIn('course_id', $courseIds)
+            ->get()
+            ->keyBy(function ($balance) {
+                return $balance->student_id . '-' . $balance->course_id;
+            });
     }
 
     public function collection()
@@ -30,35 +43,23 @@ class PaymentsExport implements FromCollection, WithHeadings, WithMapping, WithS
     {
         return [
             'Date',
-            'Time',
             'Student Name',
-            'Student Number',
+            'Admission Number',
             'Course',
-            'Course Code',
             'Payment Method',
             'Amount Paid (KES)',
-            'Agreed Amount (KES)',
-            'Balance (KES)',
-            'Receipt Number',
-            'Processed By'
         ];
     }
 
     public function map($payment): array
     {
         return [
-            $payment->created_at->format('Y-m-d'),
-            $payment->created_at->format('H:i:s'),
+            $payment->created_at->format('M d, Y'),
             $payment->student->full_name,
-            $payment->student->student_number,
+            $payment->student->admission_number ?? 'N/A',
             $payment->course->name,
-            $payment->course->code,
             ucfirst(str_replace('_', ' ', $payment->payment_method)),
             number_format($payment->amount_paid, 2),
-            number_format($payment->agreed_amount ?? 0, 2),
-            number_format($payment->balance ?? 0, 2),
-            $payment->receipt?->receipt_number ?? 'N/A',
-            $payment->cashier->name ?? 'N/A',
         ];
     }
 

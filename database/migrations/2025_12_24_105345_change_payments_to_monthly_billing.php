@@ -11,14 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('payments', function (Blueprint $table) {
-            // Remove term column
-            $table->dropColumn('term');
-            
-            // Add month and year for monthly billing
-            $table->string('month')->nullable()->after('academic_year'); // e.g., "2024-12" or "December 2024"
-            $table->integer('year')->nullable()->after('month');
-        });
+        // No changes to payments table for month or year as these fields are being removed
     }
 
     /**
@@ -26,9 +19,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('payments', function (Blueprint $table) {
-            $table->dropColumn(['month', 'year']);
-            $table->string('term')->nullable()->after('academic_year');
-        });
+        // No changes needed as these fields are being removed
     }
 };

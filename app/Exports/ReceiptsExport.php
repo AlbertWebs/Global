@@ -30,14 +30,12 @@ class ReceiptsExport implements FromCollection, WithHeadings, WithMapping, WithS
         return [
             'Receipt Number',
             'Receipt Date',
-            'Student Number',
+            'Admission Number',
             'Student Name',
-            'Course Name',
-            'Amount Paid (KES)',
-            'Agreed Amount (KES)',
+            'Course',
             'Payment Method',
-            'Processed By',
-            'Payment Date',
+            'Amount Paid (KES)',
+            'Cashier',
         ];
     }
 
@@ -46,14 +44,12 @@ class ReceiptsExport implements FromCollection, WithHeadings, WithMapping, WithS
         return [
             $receipt->receipt_number ?? 'N/A',
             $receipt->receipt_date ? $receipt->receipt_date->format('Y-m-d') : 'N/A',
-            $receipt->payment->student->student_number ?? 'N/A',
+            $receipt->payment->student->admission_number ?? 'N/A',
             $receipt->payment->student->full_name ?? 'N/A',
             $receipt->payment->course->name ?? 'N/A',
-            number_format($receipt->payment->amount_paid, 2),
-            $receipt->payment->agreed_amount ? number_format($receipt->payment->agreed_amount, 2) : 'N/A',
             ucfirst(str_replace('_', ' ', $receipt->payment->payment_method ?? 'N/A')),
+            number_format($receipt->payment->amount_paid, 2),
             $receipt->payment->cashier->name ?? 'N/A',
-            $receipt->payment->created_at ? $receipt->payment->created_at->format('Y-m-d H:i:s') : 'N/A',
         ];
     }
 

@@ -43,13 +43,6 @@
                 </select>
             </div>
 
-            <!-- Academic Year (Hidden - Auto-set to current) -->
-            <input 
-                type="hidden" 
-                id="academic_year" 
-                name="academic_year" 
-                value="{{ $currentAcademicYear }}"
-            >
 
             <!-- Registration Info -->
             <div class="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
@@ -73,16 +66,28 @@
                                 name="course_ids[]" 
                                 value="{{ $course->id }}"
                                 x-bind:disabled="!studentId || isCourseRegistered({{ $course->id }})"
-                                x-on:change="updateSelectedCourseCount()"
+                                x-on:change="toggleCourseSelection({{ $course->id }}, $event.target.checked)"
                                 class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                             >
                             <div class="ml-3 flex-1">
                                 <p class="text-sm font-medium text-gray-900">{{ $course->name }}</p>
                                 <p class="text-xs text-gray-500">{{ $course->code }}</p>
                             </div>
-                            @if(auth()->user()->isSuperAdmin())
-                            <span class="text-sm font-semibold text-gray-700">KES {{ number_format($course->base_price, 2) }}</span>
-                            @endif
+                            <div class="flex items-center space-x-2">
+                                <input
+                                    type="number"
+                                    name="agreed_amounts[{{ $course->id }}]"
+                                    x-model="agreedAmounts[{{ $course->id }}]"
+                                    x-bind:disabled="!studentId || isCourseRegistered({{ $course->id }}) || !selectedCourses.includes({{ $course->id }})"
+                                    class="w-32 px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm text-right"
+                                    placeholder="Agreed Price"
+                                    step="0.01"
+                                    min="0"
+                                >
+                                @if(auth()->user()->isSuperAdmin())
+                                <span class="text-sm font-semibold text-gray-700">KES {{ number_format($course->base_price, 2) }}</span>
+                                @endif
+                            </div>
                         </label>
                         @endforeach
                     @else
@@ -131,9 +136,9 @@
                 loadingCourses: false,
                 registeredCourses: [],
                 formErrors: {},
-
-                // New reactive property for selected course count
-                selectedCourseCount: 0,
+                selectedCourses: [], // New reactive property for selected course IDs
+                agreedAmounts: {},
+                allCourses: {{ Js::from($courses) }},
 
                 init() {
                     console.log('Alpine.js component initialized.');
@@ -144,6 +149,8 @@
                     console.log('loadStudentInfo called. Student ID:', this.studentId);
                     this.registeredCourses = []; // Reset previously registered courses
                     this.formErrors = {}; // Reset form errors
+                    this.selectedCourses = []; // Reset selected courses
+                    this.agreedAmounts = {}; // Reset agreed amounts
 
                     // Reset all course checkboxes and enable them by default
                     document.querySelectorAll('input[name="course_ids[]"]').forEach(checkbox => {
@@ -152,7 +159,6 @@
                         checkbox.closest('label').classList.remove('opacity-50', 'cursor-not-allowed', 'line-through');
                         checkbox.closest('label').querySelector('.registration-status')?.remove();
                     });
-                    this.updateSelectedCourseCount(); // Update count after resetting checkboxes
 
                     if (!this.studentId) {
                         console.log('No student ID selected. Courses remain disabled.');
@@ -179,15 +185,31 @@
                     }
                 },
 
+                toggleCourseSelection(courseId, isChecked) {
+                    if (isChecked) {
+                        this.selectedCourses.push(courseId);
+                        // Set a default agreed amount when selected, e.g., the base price
+                        const course = this.allCourses.find(c => c.id === courseId);
+                        if (course) {
+                            this.agreedAmounts[courseId] = course.base_price;
+                        }
+                    } else {
+                        this.selectedCourses = this.selectedCourses.filter(id => id !== courseId);
+                        delete this.agreedAmounts[courseId];
+                    }
+                },
+
                 updateCourseCheckboxes() {
                     console.log('Updating course checkboxes. Registered courses:', this.registeredCourses);
                     document.querySelectorAll('input[name="course_ids[]"]').forEach(checkbox => {
                         const courseId = parseInt(checkbox.value);
                         const label = checkbox.closest('label');
+                        const agreedAmountInput = label.querySelector(`input[name="agreed_amounts[${courseId}]"]`);
 
                         if (this.registeredCourses.includes(courseId)) {
                             checkbox.checked = false; // Ensure it's unchecked if already registered
                             checkbox.disabled = true; // Disable if already registered
+                            if (agreedAmountInput) agreedAmountInput.disabled = true;
                             label.classList.add('opacity-50', 'cursor-not-allowed', 'line-through');
                             // Add a status indicator if not already present
                             if (!label.querySelector('.registration-status')) {
@@ -198,29 +220,17 @@
                             }
                         } else {
                             checkbox.disabled = false; // Enable if not registered
+                            if (agreedAmountInput) agreedAmountInput.disabled = !checkbox.checked;
                             label.classList.remove('opacity-50', 'cursor-not-allowed', 'line-through');
                             label.querySelector('.registration-status')?.remove();
                         }
                     });
-                    this.updateSelectedCourseCount(); // Update count after changing checkboxes
-                },
-
-                updateSelectedCourseCount() {
-                    this.selectedCourseCount = Array.from(
-                        document.querySelectorAll('input[name="course_ids[]"]:checked:not([disabled])')
-                    ).length;
-                    console.log('Selected course count updated:', this.selectedCourseCount);
                 },
 
                 isCourseRegistered(courseId) {
                     return this.registeredCourses.includes(courseId);
-                },
-
-                get hasSelectedCourses() {
-                    return this.selectedCourseCount > 0;
                 }
             }
         }
 </script>
 @endsection
-

@@ -25,8 +25,6 @@
                             @input="showStudentDropdown = true"
                             placeholder="Search student by name or number..."
                             class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            :value="selectedStudentName"
-                            readonly
                         >
                         <input type="hidden" name="student_id" x-model="studentId" required>
                         <div x-show="showStudentDropdown" x-cloak class="absolute z-10 w-full mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -69,24 +67,10 @@
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                         <option value="">Choose a course...</option>
-                        @foreach($courses as $course)
-                            <option value="{{ $course->id }}">
-                                {{ $course->name }} ({{ $course->code }})
-                            </option>
-                        @endforeach
+                        <template x-for="course in registeredCourses" :key="course.id">
+                            <option :value="course.id" x-text="`${course.name} (${course.code})`"></option>
+                        </template>
                     </select>
-                    <p x-show="studentCourses.length === 0 && studentId" class="mt-2 text-sm text-yellow-600">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                        </svg>
-                        This student has no registered courses for the current academic year. Showing all available courses.
-                    </p>
-                    <p x-show="studentCourses.length > 0 && studentId" class="mt-2 text-sm text-green-600">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Showing registered courses for this student.
-                    </p>
                 </div>
             </div>
 
@@ -105,8 +89,7 @@
                     id="month" 
                     name="month" 
                     x-model="selectedMonth"
-                    @change="loadMonthCourses"
-                    x-init="if (studentId) loadMonthCourses()" {{-- Ensure month is loaded for pre-selected student --}}
+                    @change="loadStudentInfo"
                     required
                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
@@ -313,11 +296,11 @@ function billingForm() {
         totalAmountDueForPayment: 0, // Total amount due: overall balance + agreedAmount for selected course
         walletBalance: {{ $walletBalance ?? 0 }}, // Initialize wallet balance from backend
         usedWalletAmount: 0,
-        
-        courseInfo: null,
-        studentCourses: [],
+
+        registeredCourses: [], // Will hold courses registered by the selected student
+
         selectedMonth: '{{ $currentMonthName }} {{ $currentYear }}',
-        
+
         init() {
             // Ensure current month is selected by default
             const monthSelect = document.getElementById('month');
@@ -327,16 +310,16 @@ function billingForm() {
                     this.selectedMonth = currentMonthOption.value;
                 }
             }
-            
+
             // If student is pre-selected, trigger any necessary actions
             if (this.studentId) {
                 this.loadStudentInfo();
             }
         },
-        
+
         async loadStudentInfo() {
             if (!this.studentId) {
-                this.studentCourses = [];
+                this.registeredCourses = []; // Clear registered courses
                 this.courseId = '';
                 this.courseInfo = null;
                 this.selectedStudentName = '';
@@ -344,31 +327,16 @@ function billingForm() {
                 this.studentCourseBalances = []; // Reset detailed balances
                 this.totalAmountDueForPayment = 0; // Reset total amount due
                 this.walletBalance = 0; // Reset wallet balance
-                // Show all courses when no student is selected
-                this.$nextTick(() => {
-                    const select = this.$refs.courseSelect;
-                    if (select) {
-                        Array.from(select.options).forEach(option => {
-                            if (option.value !== '') {
-                                option.style.display = '';
-                            }
-                        });
-                    }
-                });
                 return;
             }
-            
-            // Get selected month for filtering
-            const monthSelect = document.getElementById('month');
-            const selectedMonth = monthSelect ? monthSelect.value : null;
-            
+
             try {
-                // Fetch all courses (registered and non-registered) for the student
-                const coursesUrl = `/billing/student/${this.studentId}/courses${selectedMonth ? '?month=' + encodeURIComponent(selectedMonth) : ''}`;
-                const coursesResponse = await fetch(coursesUrl);
-                const coursesData = await coursesResponse.json();
-                this.studentCourses = coursesData;
-                
+                // Fetch only registered courses for the student
+                const registeredCoursesUrl = `/api/students/${this.studentId}/registered-courses`;
+                const registeredCoursesResponse = await fetch(registeredCoursesUrl);
+                const registeredCoursesData = await registeredCoursesResponse.json();
+                this.registeredCourses = registeredCoursesData;
+
                 // Fetch overall balance for the student
                 const overallBalanceUrl = `/billing/student/${this.studentId}/overall-balance`;
                 const overallBalanceResponse = await fetch(overallBalanceUrl);
@@ -382,7 +350,7 @@ function billingForm() {
                 const walletResponse = await fetch(walletUrl);
                 const walletData = await walletResponse.json();
                 this.walletBalance = parseFloat(walletData.balance || 0);
-                
+
                 // Reset agreedAmount when student changes to prevent carry-over from previous selections.
                 // It will be populated when a course is selected.
                 this.agreedAmount = '';
@@ -394,35 +362,18 @@ function billingForm() {
                 this.amountPaid = '';
                 this.balance = 0;
                 this.discountAmount = 0;
-                
+
                 this.calculateBalance(); // Recalculate balance after loading student info
-                
-                // Show all courses (students can pay for any course in any month)
-                // But we'll keep the studentCourses array for reference
-                this.$nextTick(() => {
-                    const select = this.$refs.courseSelect;
-                    if (select) {
-                        // Show all courses - students can pay for any course in any month
-                        Array.from(select.options).forEach(option => {
-                            if (option.value !== '') {
-                                option.style.display = '';
-                            }
-                        });
-                    }
-                });
+
             } catch (error) {
-                console.error('Error loading student courses:', error);
-                this.studentCourses = [];
+                console.error('Error loading student courses or balance:', error);
+                this.registeredCourses = [];
+                this.studentOverallBalance = 0;
+                this.studentCourseBalances = [];
+                this.walletBalance = 0;
             }
         },
-        
-        async loadMonthCourses() {
-            // Reload courses when month changes
-            if (this.studentId) {
-                await this.loadStudentInfo();
-            }
-        },
-        
+
         async loadCourseInfo() {
             // Reset relevant fields when course changes
             this.agreedAmount = '';
@@ -436,13 +387,13 @@ function billingForm() {
                 this.calculateBalance(); // Recalculate if no course is selected
                 return;
             }
-            
+
             try {
                 const response = await fetch(`/billing/course/${this.courseId}`);
                 const data = await response.json();
                 this.courseInfo = data;
                 this.basePrice = parseFloat(data.base_price || 0); // Set basePrice here
-                
+
                 let defaultAgreedAmount = 0;
                 @if(auth()->user()->isSuperAdmin())
                 if (data.base_price) {
@@ -452,7 +403,7 @@ function billingForm() {
 
                 // Find if there's an outstanding balance for this specific course
                 const specificCourseBalance = this.studentCourseBalances.find(cb => cb.course_id == this.courseId);
-                
+
                 if (specificCourseBalance && specificCourseBalance.outstanding_balance > 0) {
                     // If there's an existing balance for this specific course, pre-fill agreed amount with it
                     this.agreedAmount = specificCourseBalance.outstanding_balance;
@@ -460,7 +411,7 @@ function billingForm() {
                     // If no specific course balance, but the selected course has a default price, pre-fill agreed amount with it
                     this.agreedAmount = defaultAgreedAmount;
                 }
-                
+
                 // Update total amount due based on current agreedAmount input
                 this.totalAmountDueForPayment = this.studentOverallBalance + parseFloat(this.agreedAmount || 0);
                 this.calculateBalance(); // Always recalculate balance after loading course info
@@ -471,7 +422,7 @@ function billingForm() {
                 this.calculateBalance();
             }
         },
-        
+
         calculateBalance() {
             const base = parseFloat(this.basePrice) || 0;
             const agreed = parseFloat(this.agreedAmount) || 0;
@@ -504,13 +455,13 @@ function billingForm() {
             const totalPayable = this.totalAmountDueForPayment;
             this.balance = Math.max(0, totalPayable - totalPaidIncludingWallet);
         },
-        
+
         getYearFromMonth(monthString) {
             if (!monthString) return '';
             const parts = monthString.split(' ');
             return parts[1] || '';
         },
-        
+
         submitForm() {
             // Ensure year is set correctly from month selection
             const yearInput = this.$el.querySelector('input[name="year"]');
