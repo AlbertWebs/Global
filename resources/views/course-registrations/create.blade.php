@@ -20,7 +20,7 @@
     
     <div class="bg-white rounded-lg shadow-md p-6">
 
-        <form method="POST" action="{{ route('course-registrations.store') }}" id="courseRegistrationForm">
+        <form method="POST" action="{{ route('course-registrations.store') }}" id="courseRegistrationForm" @submit="validateForm">
             @csrf
 
             <!-- Student Selection -->
@@ -229,6 +229,55 @@
 
                 isCourseRegistered(courseId) {
                     return this.registeredCourses.includes(courseId);
+                },
+
+                validateForm(event) {
+                    // Reset form errors
+                    this.formErrors = {};
+
+                    // Check if student is selected
+                    if (!this.studentId) {
+                        event.preventDefault();
+                        this.formErrors.student = 'Please select a student.';
+                        alert('Please select a student before registering courses.');
+                        return false;
+                    }
+
+                    // Check if at least one course is selected
+                    const selectedCheckboxes = document.querySelectorAll('input[name="course_ids[]"]:checked');
+                    if (selectedCheckboxes.length === 0) {
+                        event.preventDefault();
+                        this.formErrors.course_selection = 'Please select at least one course.';
+                        alert('Please select at least one course to register.');
+                        return false;
+                    }
+
+                    // Check if all selected courses have agreed amounts
+                    let hasErrors = false;
+                    selectedCheckboxes.forEach(checkbox => {
+                        const courseId = checkbox.value;
+                        const agreedAmountInput = document.querySelector(`input[name="agreed_amounts[${courseId}]"]`);
+                        if (agreedAmountInput) {
+                            const agreedAmount = parseFloat(agreedAmountInput.value) || 0;
+                            if (agreedAmount <= 0) {
+                                hasErrors = true;
+                                agreedAmountInput.focus();
+                                agreedAmountInput.classList.add('border-red-500');
+                            } else {
+                                agreedAmountInput.classList.remove('border-red-500');
+                            }
+                        }
+                    });
+
+                    if (hasErrors) {
+                        event.preventDefault();
+                        this.formErrors.course_selection = 'Please enter a valid agreed amount for all selected courses.';
+                        alert('Please enter a valid agreed amount (greater than 0) for all selected courses.');
+                        return false;
+                    }
+
+                    // Form is valid, allow submission
+                    return true;
                 }
             }
         }

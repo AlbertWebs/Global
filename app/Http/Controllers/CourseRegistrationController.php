@@ -59,8 +59,6 @@ class CourseRegistrationController extends Controller
         $validated = $request->validate([
             'student_id' => ['required', 'exists:students,id'],
             'course_ids' => ['required', 'array', 'min:1'],
-            'agreed_amounts' => ['required', 'array', 'min:1'],
-            'agreed_amounts.*' => ['required', 'numeric', 'min:0'],
             'course_ids.*' => ['exists:courses,id',
                 function ($attribute, $value, $fail) use ($request) {
                     $studentId = $request->input('student_id');
@@ -79,13 +77,23 @@ class CourseRegistrationController extends Controller
                     }
                 },
             ],
+            'agreed_amounts' => ['required', 'array', 'min:1'],
+            'agreed_amounts.*' => ['required', 'numeric', 'min:0'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $registrations = [];
-        $courseAgreedAmounts = array_combine($validated['course_ids'], $validated['agreed_amounts']);
+        // agreed_amounts comes as an associative array keyed by course_id
+        $agreedAmounts = $validated['agreed_amounts'];
 
         foreach ($validated['course_ids'] as $courseId) {
-            $agreedAmount = $courseAgreedAmounts[$courseId];
+            // Get the agreed amount for this course from the associative array
+            $agreedAmount = $agreedAmounts[$courseId] ?? 0;
+            
+            if ($agreedAmount <= 0) {
+                continue; // Skip if no agreed amount provided
+            }
+            
             $course = Course::findOrFail($courseId); // Retrieve the course to get its base_price
             
             $registrations[] = CourseRegistration::create([
@@ -94,7 +102,7 @@ class CourseRegistrationController extends Controller
                 'registration_date' => now(), // Always use current date
                 'agreed_amount' => $agreedAmount,
                 'status' => 'registered',
-                'notes' => $validated['notes'],
+                'notes' => $validated['notes'] ?? null,
             ]);
 
             // Create or update balance for the registered course
@@ -107,6 +115,10 @@ class CourseRegistrationController extends Controller
                     'total_paid' => 0,
                 ]
             );
+        }
+
+        if (empty($registrations)) {
+            return back()->withErrors(['course_ids' => 'Please select at least one course with a valid agreed amount.'])->withInput();
         }
 
         $message = count($registrations) . ' course(s) registered successfully.';
@@ -154,6 +166,10 @@ class CourseRegistrationController extends Controller
                 ];
             });
 
-        return response()->json($registeredCourses);
+        // Return both the full course list and just the IDs for compatibility
+        return response()->json([
+            'courses' => $registeredCourses,
+            'registered_course_ids' => $registeredCourses->pluck('id')->toArray(),
+        ]);
     }
 }
