@@ -10,10 +10,8 @@ class CourseRegistration extends Model
     protected $fillable = [
         'student_id',
         'course_id',
-        'academic_year',
-        'month',
-        'year',
         'registration_date',
+        'agreed_amount',
         'status',
         'notes',
     ];

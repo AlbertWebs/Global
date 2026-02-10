@@ -77,8 +77,6 @@
                 <th>Student Name</th>
                 <th>Course Code</th>
                 <th>Course Name</th>
-                <th>Academic Year</th>
-                <th>Term</th>
                 <th>Status</th>
             </tr>
         </thead>
@@ -89,13 +87,11 @@
                 <td>{{ $registration->student->full_name }}</td>
                 <td>{{ $registration->course->code }}</td>
                 <td>{{ $registration->course->name }}</td>
-                <td>{{ $registration->academic_year ?? 'N/A' }}</td>
-                <td>{{ $registration->term ?? 'N/A' }}</td>
                 <td>{{ ucfirst($registration->status ?? 'active') }}</td>
             </tr>
             @endforeach
             <tr style="font-weight: bold; background-color: #f5f5f5;">
-                <td colspan="6" class="text-right">TOTAL REGISTRATIONS:</td>
+                <td colspan="4" class="text-right">TOTAL REGISTRATIONS:</td>
                 <td>{{ $registrations->count() }}</td>
             </tr>
         </tbody>

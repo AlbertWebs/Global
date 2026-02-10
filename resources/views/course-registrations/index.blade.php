@@ -92,7 +92,6 @@
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Admission #</th>
-                                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Academic Year</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registration Date</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                                     <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
@@ -117,7 +116,6 @@
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                                         {{ $registration->student->admission_number ?? $registration->student->student_number }}
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{{ $registration->academic_year }}</td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                                         {{ $registration->registration_date->format('M d, Y') }}
                                     </td>

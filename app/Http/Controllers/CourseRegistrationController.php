@@ -43,15 +43,10 @@ class CourseRegistrationController extends Controller
         $students = Student::where('status', 'active')->orderBy('first_name')->get();
         $courses = Course::where('status', 'active')->orderBy('name')->get();
         
-        // Get current academic year
-        $currentAcademicYear = $this->getCurrentAcademicYear();
-        $currentMonth = now()->format('F Y'); // e.g., "December 2024"
-        $currentYear = now()->year;
-        
         // Pre-select student if provided in query string
         $selectedStudentId = $request->get('student_id');
         
-        return view('course-registrations.create', compact('students', 'courses', 'currentAcademicYear', 'currentMonth', 'currentYear', 'selectedStudentId'));
+        return view('course-registrations.create', compact('students', 'courses', 'selectedStudentId'));
     }
 
     public function store(Request $request)
@@ -141,17 +136,6 @@ class CourseRegistrationController extends Controller
      * @param  int  $studentId
      * @return \Illuminate\Http\JsonResponse
      */
-    private function getCurrentAcademicYear(): string
-    {
-        $year = now()->year;
-        $month = now()->month;
-
-        if ($month >= 9) {
-            return $year . '/' . ($year + 1);
-        } else {
-            return ($year - 1) . '/' . $year;
-        }
-    }
 
     public function getRegisteredCoursesForStudent($studentId)
     {

@@ -487,10 +487,6 @@
                         </div>
                         <div class="space-y-2 text-sm">
                             <div class="flex justify-between">
-                                <span class="text-gray-600">Academic Year:</span>
-                                <span class="font-semibold text-gray-900">{{ $registration->academic_year }}</span>
-                            </div>
-                            <div class="flex justify-between">
                                 <span class="text-gray-600">Registered:</span>
                                 <span class="font-semibold text-gray-900">{{ $registration->registration_date->format('M d, Y') }}</span>
                             </div>

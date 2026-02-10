@@ -107,7 +107,7 @@
 
         @php
             $groupedCourses = $student->courseRegistrations->groupBy(function($registration) {
-                return ($registration->academic_year ?? 'N/A') . ' - ' . ($registration->month ?? 'N/A');
+                return $registration->registration_date->format('Y');
             });
         @endphp
 
