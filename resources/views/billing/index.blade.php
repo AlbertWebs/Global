@@ -151,7 +151,7 @@
                         id="agreed_amount" 
                         name="agreed_amount" 
                         x-model="agreedAmount"
-                        @input="calculateBalance"
+                        @input="calculateBalance(); updateTotalAmountDue()"
                         step="0.01"
                         min="0"
                         required
@@ -360,8 +360,14 @@ function billingForm() {
                 this.studentOverallBalance = parseFloat(overallBalanceData.total_outstanding_balance || 0);
                 this.studentCourseBalances = overallBalanceData.course_balances || [];
                 
-                // Update total amount due with the outstanding balance
-                this.totalAmountDueForPayment = this.studentOverallBalance + parseFloat(this.agreedAmount || 0);
+                // Update total amount due - will be recalculated when course is selected or agreed amount changes
+                // For now, if no course selected, total due is just the overall balance
+                if (this.courseId) {
+                    // If course is already selected, recalculate
+                    this.loadCourseInfo();
+                } else {
+                    this.totalAmountDueForPayment = this.studentOverallBalance;
+                }
 
                 // Fetch wallet balance for the student
                 const walletUrl = `/api/students/${this.studentId}/wallet-balance`;
@@ -402,6 +408,7 @@ function billingForm() {
 
             if (!this.courseId) {
                 this.courseInfo = null;
+                this.updateTotalAmountDue(); // Update total amount due
                 this.calculateBalance(); // Recalculate if no course is selected
                 return;
             }
@@ -421,17 +428,20 @@ function billingForm() {
 
                 // Find if there's an outstanding balance for this specific course
                 const specificCourseBalance = this.studentCourseBalances.find(cb => cb.course_id == this.courseId);
+                const courseOutstandingBalance = specificCourseBalance ? parseFloat(specificCourseBalance.outstanding_balance || 0) : 0;
 
-                if (specificCourseBalance && specificCourseBalance.outstanding_balance > 0) {
-                    // If there's an existing balance for this specific course, pre-fill agreed amount with it
-                    this.agreedAmount = specificCourseBalance.outstanding_balance;
-                } else if (defaultAgreedAmount > 0) {
-                    // If no specific course balance, but the selected course has a default price, pre-fill agreed amount with it
+                // Always use the course base price (or user input) for agreed amount, not the outstanding balance
+                // The outstanding balance will be cleared first, then any excess is treated as new payment
+                if (defaultAgreedAmount > 0) {
                     this.agreedAmount = defaultAgreedAmount;
+                } else {
+                    // If no default price, leave it empty for user to enter
+                    this.agreedAmount = '';
                 }
 
-                // Update total amount due based on current agreedAmount input
-                this.totalAmountDueForPayment = this.studentOverallBalance + parseFloat(this.agreedAmount || 0);
+                // Update total amount due using the helper function
+                this.updateTotalAmountDue();
+                
                 this.calculateBalance(); // Always recalculate balance after loading course info
 
             } catch (error) {
@@ -480,6 +490,22 @@ function billingForm() {
             // Balance = agreed amount - total payment (cash + wallet)
             // Negative balance means overpayment (credit)
             this.balance = agreed - totalPayment;
+        },
+
+        updateTotalAmountDue() {
+            // Calculate total amount due when agreed amount changes
+            if (!this.courseId) {
+                this.totalAmountDueForPayment = this.studentOverallBalance;
+                return;
+            }
+
+            const specificCourseBalance = this.studentCourseBalances.find(cb => cb.course_id == this.courseId);
+            const courseOutstandingBalance = specificCourseBalance ? parseFloat(specificCourseBalance.outstanding_balance || 0) : 0;
+            
+            // Total due = other courses' balance + agreed amount for selected course
+            // (We subtract the selected course's outstanding balance to avoid double-counting)
+            const otherCoursesBalance = this.studentOverallBalance - courseOutstandingBalance;
+            this.totalAmountDueForPayment = otherCoursesBalance + parseFloat(this.agreedAmount || 0);
         },
 
         getYearFromMonth(monthString) {
