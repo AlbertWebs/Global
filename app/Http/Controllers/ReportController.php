@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Exports\BalancesExport;
 use App\Exports\BankDepositsExport;
+use App\Exports\CashPaymentsExport;
 use App\Exports\CourseRegistrationsExport;
 use App\Exports\ExpensesExport;
 use App\Exports\FinancialReportExport;
+use App\Exports\MpesaPaymentsExport;
 use App\Exports\PaymentsExport;
 use App\Exports\ReceiptsExport;
 use App\Exports\StudentsRegisteredExport;
@@ -319,6 +321,106 @@ class ReportController extends Controller
         
         $fileName = 'payments_report_' . $dateFrom . '_to_' . $dateTo . '.xlsx';
         return Excel::download(new PaymentsExport($payments), $fileName);
+    }
+
+    public function exportMpesaPayments(Request $request)
+    {
+        $user = auth()->user();
+        
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Only Super Admin can export reports');
+        }
+
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        $query = Payment::with(['student', 'course', 'cashier', 'receipt'])
+            ->where('payment_method', 'mpesa');
+
+        if ($dateFrom) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->whereDate('created_at', '<=', $dateTo);
+        }
+
+        $payments = $query->latest()->get();
+
+        $format = $request->get('format', 'excel');
+        
+        if ($format === 'pdf') {
+            // Pre-load balances for PDF
+            $studentIds = $payments->pluck('student_id')->unique();
+            $courseIds = $payments->pluck('course_id')->unique();
+            
+            $balances = \App\Models\Balance::whereIn('student_id', $studentIds)
+                ->whereIn('course_id', $courseIds)
+                ->get()
+                ->keyBy(function ($balance) {
+                    return $balance->student_id . '-' . $balance->course_id;
+                });
+            
+            $pdf = $this->getPdfInstance();
+            $pdf->loadView('reports.pdf.mpesa-payments', compact('payments', 'balances', 'dateFrom', 'dateTo'));
+            $dateRange = $dateFrom && $dateTo ? '_' . $dateFrom . '_to_' . $dateTo : '';
+            $fileName = 'mpesa_payments_report' . $dateRange . '_' . now()->format('Y-m-d') . '.pdf';
+            return $pdf->download($fileName);
+        }
+        
+        $dateRange = $dateFrom && $dateTo ? '_' . $dateFrom . '_to_' . $dateTo : '';
+        $fileName = 'mpesa_payments_report' . $dateRange . '_' . now()->format('Y-m-d') . '.xlsx';
+        return Excel::download(new MpesaPaymentsExport($payments), $fileName);
+    }
+
+    public function exportCashPayments(Request $request)
+    {
+        $user = auth()->user();
+        
+        if (!$user->isSuperAdmin()) {
+            abort(403, 'Only Super Admin can export reports');
+        }
+
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        $query = Payment::with(['student', 'course', 'cashier', 'receipt'])
+            ->where('payment_method', 'cash');
+
+        if ($dateFrom) {
+            $query->whereDate('created_at', '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->whereDate('created_at', '<=', $dateTo);
+        }
+
+        $payments = $query->latest()->get();
+
+        $format = $request->get('format', 'excel');
+        
+        if ($format === 'pdf') {
+            // Pre-load balances for PDF
+            $studentIds = $payments->pluck('student_id')->unique();
+            $courseIds = $payments->pluck('course_id')->unique();
+            
+            $balances = \App\Models\Balance::whereIn('student_id', $studentIds)
+                ->whereIn('course_id', $courseIds)
+                ->get()
+                ->keyBy(function ($balance) {
+                    return $balance->student_id . '-' . $balance->course_id;
+                });
+            
+            $pdf = $this->getPdfInstance();
+            $pdf->loadView('reports.pdf.cash-payments', compact('payments', 'balances', 'dateFrom', 'dateTo'));
+            $dateRange = $dateFrom && $dateTo ? '_' . $dateFrom . '_to_' . $dateTo : '';
+            $fileName = 'cash_payments_report' . $dateRange . '_' . now()->format('Y-m-d') . '.pdf';
+            return $pdf->download($fileName);
+        }
+        
+        $dateRange = $dateFrom && $dateTo ? '_' . $dateFrom . '_to_' . $dateTo : '';
+        $fileName = 'cash_payments_report' . $dateRange . '_' . now()->format('Y-m-d') . '.xlsx';
+        return Excel::download(new CashPaymentsExport($payments), $fileName);
     }
 
     public function exportStudentsRegistered(Request $request)

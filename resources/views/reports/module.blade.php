@@ -153,6 +153,34 @@
                 <h3 class="text-lg font-bold text-white mb-2">Bank Deposits</h3>
                 <p class="text-yellow-100 text-xs">All bank deposit transactions</p>
             </button>
+
+            <!-- M-Pesa Payments Report -->
+            <button 
+                @click="openFormatModal('{{ route('reports.export-mpesa-payments') }}', 'M-Pesa Payments Report')"
+                class="group bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl cursor-pointer"
+            >
+                <div class="mb-4">
+                    <svg class="w-14 h-14 mx-auto text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-white mb-2">M-Pesa Payments</h3>
+                <p class="text-emerald-100 text-xs">All M-Pesa payment transactions</p>
+            </button>
+
+            <!-- Cash Payments Report -->
+            <button 
+                @click="openFormatModal('{{ route('reports.export-cash-payments') }}', 'Cash Payments Report')"
+                class="group bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 rounded-xl shadow-lg p-6 text-center transition-all transform hover:scale-105 hover:shadow-2xl cursor-pointer"
+            >
+                <div class="mb-4">
+                    <svg class="w-14 h-14 mx-auto text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-white mb-2">Cash Payments</h3>
+                <p class="text-amber-100 text-xs">All cash payment transactions</p>
+            </button>
         </div>
 
         <div class="mt-8 text-center">
