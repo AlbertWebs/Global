@@ -13,8 +13,8 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             font-size: 12px;
             line-height: 1.7;
-            color: #ffffff !important;
-            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #2563eb 100%);
+            color: #000000 !important;
+            background: #ffffff;
             padding: 35px 45px;
             min-height: 100vh;
         }
@@ -22,10 +22,9 @@
             text-align: center;
             margin-bottom: 45px;
             padding: 35px 25px;
-            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
-            border: none;
+            background: #1e40af !important;
+            border: 2px solid #1e3a8a;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
         }
         .header h1 {
             font-size: 32px;
@@ -68,14 +67,14 @@
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            background: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             border-radius: 12px;
             overflow: hidden;
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid #e5e7eb;
         }
         thead {
-            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
+            background: #1e40af !important;
         }
         th {
             padding: 16px 14px;
@@ -110,8 +109,8 @@
         }
         td {
             padding: 14px 14px;
-            border-bottom: 1px solid rgba(30, 64, 175, 0.2);
-            color: #1f2937;
+            border-bottom: 1px solid #e5e7eb;
+            color: #000000 !important;
             font-size: 12px;
             vertical-align: top;
         }
@@ -120,28 +119,28 @@
             font-weight: 600;
         }
         .date-cell {
-            color: #1e40af;
+            color: #1e40af !important;
             font-weight: 600;
         }
         .student-cell {
-            color: #1e3a8a;
+            color: #1e3a8a !important;
             font-weight: 700;
         }
         .course-cell {
-            color: #2563eb;
+            color: #2563eb !important;
             font-weight: 600;
         }
         .description-cell {
-            color: #374151;
+            color: #000000 !important;
             max-width: 300px;
         }
         .amount-cell {
-            color: #059669;
+            color: #059669 !important;
             font-weight: 700;
             font-size: 13px;
         }
         .total-row {
-            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%) !important;
+            background: #1e40af !important;
             font-weight: 800;
         }
         .total-row td {
@@ -160,18 +159,19 @@
         .no-data {
             text-align: center;
             padding: 80px 20px;
-            color: #ffffff;
+            color: #000000 !important;
             font-size: 18px;
             font-weight: 500;
-            background: rgba(255, 255, 255, 0.1);
+            background: #f3f4f6;
             border-radius: 12px;
+            border: 1px solid #e5e7eb;
         }
         .footer {
             margin-top: 55px;
             padding-top: 25px;
-            border-top: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid #e5e7eb;
             text-align: center;
-            color: #e0e7ff;
+            color: #6b7280 !important;
             font-size: 11px;
         }
         .footer p {
