@@ -76,45 +76,10 @@ class Payment extends Model
                 $payment->discount_amount = 0;
             }
 
-            // Fetch the course details to get base_price and agreed_amount
-            $course = Course::find($payment->course_id);
-
-            // Update Balance record
-            $balance = Balance::firstOrNew(
-                ['student_id' => $payment->student_id, 'course_id' => $payment->course_id]
-            );
-
-            // Set defaults if new balance record is created or existing record is missing values
-            if (!$balance->exists) {
-
-        
-                $balance->base_price = $course->base_price ?? 0;
-                $balance->agreed_amount = $payment->agreed_amount ?? $course->base_price ?? 0;
-                $balance->discount_amount = $payment->discount_amount;
-                $balance->total_paid = 0;
-                $balance->outstanding_balance = ($payment->agreed_amount ?? $course->base_price ?? 0) - ($payment->discount_amount ?? 0);
-                $balance->status = 'pending';
-                $balance->last_payment_date = null;
-            } else {
-                // Ensure discount_amount is set for existing records if null
-                if (is_null($balance->discount_amount)) {
-                    $balance->discount_amount = 0;
-                }
-                // Ensure base_price is set for existing records if null
-                if (is_null($balance->base_price)) {
-                    $balance->base_price = $course->base_price ?? 0;
-                }
-                // Ensure agreed_amount is set for existing records if null
-                if (is_null($balance->agreed_amount)) {
-                    $balance->agreed_amount = $payment->agreed_amount ?? $course->base_price ?? 0;
-                }
-            }
-            
-            $balance->total_paid += $payment->amount_paid;
-            $balance->outstanding_balance = $balance->agreed_amount - $balance->total_paid;
-            $balance->status = ($balance->outstanding_balance <= 0) ? 'cleared' : 'partially_paid';
-            $balance->last_payment_date = now();
-            $balance->save();
+            // NOTE: Balance updates are now handled by BillingController
+            // to avoid double-counting and to properly handle wallet amounts,
+            // overpayments, and outstanding balance clearing logic.
+            // This boot method no longer updates the Balance model.
         });
 
         static::updating(function ($payment) {
@@ -123,48 +88,16 @@ class Payment extends Model
                 $payment->discount_amount = 0;
             }
 
-            // Only update balance if amount_paid has changed
-            if ($payment->isDirty('amount_paid')) {
-                $originalAmountPaid = $payment->getOriginal('amount_paid');
-                $newAmountPaid = $payment->amount_paid;
-                $difference = $newAmountPaid - $originalAmountPaid;
-
-                $balance = Balance::firstOrNew(
-                    ['student_id' => $payment->student_id, 'course_id' => $payment->course_id]
-                );
-
-                // Ensure discount_amount is set for existing records if null
-                if (is_null($balance->discount_amount)) {
-                    $balance->discount_amount = 0;
-                }
-                // Ensure base_price is set for existing records if null
-                if (is_null($balance->base_price)) {
-                    $course = Course::find($payment->course_id);
-                    $balance->base_price = $course->base_price ?? 0;
-                }
-                // Ensure agreed_amount is set for existing records if null
-                if (is_null($balance->agreed_amount)) {
-                    $balance->agreed_amount = $payment->agreed_amount ?? $balance->base_price ?? 0;
-                }
-
-                $balance->total_paid += $difference;
-                $balance->outstanding_balance = $balance->agreed_amount - $balance->total_paid;
-                $balance->status = ($balance->outstanding_balance <= 0) ? 'cleared' : 'partially_paid';
-                $balance->last_payment_date = now();
-                $balance->save();
-            }
+            // NOTE: Balance updates on payment updates should be handled manually
+            // by the controller that updates the payment, to ensure proper calculation.
+            // This boot method no longer automatically updates the Balance model.
         });
 
         static::deleting(function ($payment) {
-            // When a payment is deleted, revert the balance update
-            $balance = Balance::where('student_id', $payment->student_id)
-                              ->where('course_id', $payment->course_id)
-                              ->first();
-            if ($balance) {
-                $balance->total_paid -= $payment->amount_paid;
-                $balance->outstanding_balance = $balance->agreed_amount - $balance->total_paid;
-                $balance->save();
-            }
+            // NOTE: Balance updates on payment deletion should be handled manually
+            // by the controller that deletes the payment, to ensure proper calculation
+            // of wallet amounts, overpayments, etc.
+            // This boot method no longer automatically reverts balance updates.
         });
     }
 }

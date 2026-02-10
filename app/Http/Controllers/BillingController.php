@@ -173,25 +173,17 @@ class BillingController extends Controller
         $totalPayment = $cashPaymentAmount + $amountFromWallet;
 
         // Calculate how much to apply to this course
-        // First, clear any outstanding balance, then apply to agreed amount
-        $amountToApplyToCourse = 0;
+        // Simply apply the payment to reduce the outstanding balance
+        // Outstanding balance = agreed_amount - total_paid
+        // So we just add the payment to total_paid
+        $amountToApplyToCourse = $totalPayment;
         $overpaymentAmount = 0;
         
-        if ($outstandingBalance > 0) {
-            // First, clear the outstanding balance
-            $amountToClearOutstanding = min($totalPayment, $outstandingBalance);
-            $remainingAfterClearing = $totalPayment - $amountToClearOutstanding;
-            
-            // Then apply remaining to the agreed amount (if any)
-            $amountToApplyToAgreed = min($remainingAfterClearing, $agreedAmount);
-            $amountToApplyToCourse = $amountToClearOutstanding + $amountToApplyToAgreed;
-            
-            // Any remaining is overpayment
-            $overpaymentAmount = max(0, $remainingAfterClearing - $agreedAmount);
-        } else {
-            // No outstanding balance, just apply to agreed amount
-            $amountToApplyToCourse = min($totalPayment, $agreedAmount);
-            $overpaymentAmount = max(0, $totalPayment - $agreedAmount);
+        // If payment exceeds what's needed, calculate overpayment
+        $amountNeeded = $outstandingBalance > 0 ? $outstandingBalance : $agreedAmount;
+        if ($totalPayment > $amountNeeded) {
+            $overpaymentAmount = $totalPayment - $amountNeeded;
+            $amountToApplyToCourse = $amountNeeded;
         }
 
         // Add overpayment to wallet if any
@@ -236,15 +228,26 @@ class BillingController extends Controller
             $currentCourseBalance->total_paid = 0;
             $currentCourseBalance->outstanding_balance = $agreedAmount;
         } else {
-            // Update agreed amount if it's different (user may have changed it)
+            // If agreed amount changed, we need to recalculate outstanding balance
+            // based on the new agreed amount and existing total_paid
+            $oldAgreedAmount = $currentCourseBalance->agreed_amount;
             $currentCourseBalance->agreed_amount = $agreedAmount;
             $currentCourseBalance->base_price = $course->base_price;
             $currentCourseBalance->discount_amount = $totalDiscount;
+            
+            // If agreed amount increased, add the difference to outstanding balance
+            // If agreed amount decreased, reduce outstanding balance accordingly
+            if ($agreedAmount != $oldAgreedAmount) {
+                $difference = $agreedAmount - $oldAgreedAmount;
+                $currentCourseBalance->outstanding_balance = max(0, $currentCourseBalance->outstanding_balance + $difference);
+            }
         }
 
         // Apply payment to this course
-        // The amountToApplyToCourse already accounts for clearing outstanding balance first
+        // Simply add the payment amount to total_paid
         $currentCourseBalance->total_paid = (float) $currentCourseBalance->total_paid + $amountToApplyToCourse;
+        
+        // Recalculate outstanding balance: agreed_amount - total_paid
         $currentCourseBalance->outstanding_balance = max(0, $currentCourseBalance->agreed_amount - $currentCourseBalance->total_paid);
         $currentCourseBalance->status = ($currentCourseBalance->outstanding_balance <= 0) ? 'cleared' : 'partially_paid';
         $currentCourseBalance->last_payment_date = now();
