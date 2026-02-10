@@ -463,33 +463,40 @@ function billingForm() {
                 this.discountAmount = 0;
             }
 
-            // For this payment, we focus on the agreed amount for the selected course
-            // Check if there's an existing balance for this specific course
+            // PRIORITY 1: Clear outstanding balance first
+            // PRIORITY 2: Then apply remaining payment to agreed amount
             const specificCourseBalance = this.studentCourseBalances.find(cb => cb.course_id == this.courseId);
-            const amountNeededForCourse = specificCourseBalance && specificCourseBalance.outstanding_balance > 0 
-                ? specificCourseBalance.outstanding_balance 
-                : agreed;
-
-            // Calculate shortfall after cash payment
-            const shortfallAfterCash = Math.max(0, amountNeededForCourse - paid);
-
-            // Calculate how much wallet balance to use to cover the shortfall
+            const courseOutstandingBalance = specificCourseBalance ? parseFloat(specificCourseBalance.outstanding_balance || 0) : 0;
+            
+            // Calculate how much payment goes to clearing outstanding balance
+            const amountToClearOutstanding = Math.min(paid, courseOutstandingBalance);
+            const remainingAfterClearing = paid - amountToClearOutstanding;
+            
+            // Calculate how much wallet to use (only for clearing outstanding balance if cash is insufficient)
             let amountFromWallet = 0;
-            if (this.walletBalance > 0 && shortfallAfterCash > 0) {
-                // Use wallet balance to cover the shortfall
-                amountFromWallet = Math.min(this.walletBalance, shortfallAfterCash);
-                this.usedWalletAmount = amountFromWallet;
+            if (courseOutstandingBalance > 0 && amountToClearOutstanding < courseOutstandingBalance) {
+                const outstandingShortfall = courseOutstandingBalance - amountToClearOutstanding;
+                if (this.walletBalance > 0 && outstandingShortfall > 0) {
+                    amountFromWallet = Math.min(this.walletBalance, outstandingShortfall);
+                    this.usedWalletAmount = amountFromWallet;
+                } else {
+                    this.usedWalletAmount = 0;
+                }
             } else {
                 this.usedWalletAmount = 0;
             }
 
             // Calculate total payment (cash + wallet)
             const totalPayment = paid + amountFromWallet;
-
-            // Calculate balance for this specific course
-            // Balance = agreed amount - total payment (cash + wallet)
-            // Negative balance means overpayment (credit)
-            this.balance = agreed - totalPayment;
+            
+            // Calculate how much goes to clearing outstanding vs new payment
+            const totalToClearOutstanding = Math.min(totalPayment, courseOutstandingBalance);
+            const totalForNewPayment = totalPayment - totalToClearOutstanding;
+            
+            // Calculate balance for the course
+            // Balance = agreed amount - amount applied to new payment
+            // This represents what's still owed for the agreed amount after clearing outstanding balance
+            this.balance = agreed - totalForNewPayment;
         },
 
         updateTotalAmountDue() {
