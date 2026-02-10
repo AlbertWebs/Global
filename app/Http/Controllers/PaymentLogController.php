@@ -6,13 +6,20 @@ use App\Exports\PaymentLogsExport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Str;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class PaymentLogController extends Controller
 {
     public function __construct()
     {
         $this->middleware('super_admin');
+    }
+
+    /**
+     * Get PDF instance from service container
+     */
+    protected function getPdfInstance()
+    {
+        return app('dompdf.wrapper');
     }
 
     public function index(Request $request)
@@ -58,7 +65,8 @@ class PaymentLogController extends Controller
             ->get();
         
         if ($format === 'pdf') {
-            $pdf = PDF::loadView('payment-logs.pdf', compact('paymentLogs', 'student'));
+            $pdf = $this->getPdfInstance();
+            $pdf->loadView('payment-logs.pdf', compact('paymentLogs', 'student'));
             $fileName = 'payment_records_' . Str::slug($student->full_name) . '_' . now()->format('Ymd_His') . '.pdf';
             return $pdf->download($fileName);
         }

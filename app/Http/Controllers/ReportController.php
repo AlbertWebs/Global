@@ -19,10 +19,17 @@ use App\Models\Student;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
-use Barryvdh\DomPDF\Facade\Pdf as PDF;
 
 class ReportController extends Controller
 {
+    /**
+     * Get PDF instance from service container
+     */
+    protected function getPdfInstance()
+    {
+        return app('dompdf.wrapper');
+    }
+
     public function module()
     {
         $user = auth()->user();
@@ -217,7 +224,8 @@ class ReportController extends Controller
         $format = $request->get('format', 'excel');
         
         if ($format === 'pdf') {
-            $pdf = PDF::loadView('reports.pdf.financial', compact('payments', 'expenses', 'summary', 'paymentMethodBreakdown', 'dateFrom', 'dateTo'));
+            $pdf = $this->getPdfInstance();
+            $pdf->loadView('reports.pdf.financial', compact('payments', 'expenses', 'summary', 'paymentMethodBreakdown', 'dateFrom', 'dateTo'));
             $fileName = 'financial_report_' . $dateFrom . '_to_' . $dateTo . '.pdf';
             return $pdf->download($fileName);
         }
@@ -250,7 +258,8 @@ class ReportController extends Controller
         $format = $request->get('format', 'excel');
         
         if ($format === 'pdf') {
-            $pdf = PDF::loadView('reports.pdf.expenses', compact('expenses', 'dateFrom', 'dateTo'));
+            $pdf = $this->getPdfInstance();
+            $pdf->loadView('reports.pdf.expenses', compact('expenses', 'dateFrom', 'dateTo'));
             $fileName = 'expenses_report_' . $dateFrom . '_to_' . $dateTo . '.pdf';
             return $pdf->download($fileName);
         }
@@ -302,7 +311,8 @@ class ReportController extends Controller
                     return $balance->student_id . '-' . $balance->course_id;
                 });
             
-            $pdf = PDF::loadView('reports.pdf.payments', compact('payments', 'balances', 'dateFrom', 'dateTo'));
+            $pdf = $this->getPdfInstance();
+            $pdf->loadView('reports.pdf.payments', compact('payments', 'balances', 'dateFrom', 'dateTo'));
             $fileName = 'payments_report_' . $dateFrom . '_to_' . $dateTo . '.pdf';
             return $pdf->download($fileName);
         }
@@ -338,7 +348,8 @@ class ReportController extends Controller
         $dateRange = $dateFrom && $dateTo ? '_' . $dateFrom . '_to_' . $dateTo : '';
         
         if ($format === 'pdf') {
-            $pdf = PDF::loadView('reports.pdf.students-registered', compact('students', 'dateFrom', 'dateTo'));
+            $pdf = $this->getPdfInstance();
+            $pdf->loadView('reports.pdf.students-registered', compact('students', 'dateFrom', 'dateTo'));
             $fileName = 'students_registered' . $dateRange . '_' . now()->format('Y-m-d') . '.pdf';
             return $pdf->download($fileName);
         }
@@ -380,7 +391,8 @@ class ReportController extends Controller
         $dateRange = $dateFrom && $dateTo ? '_' . $dateFrom . '_to_' . $dateTo : '';
         
         if ($format === 'pdf') {
-            $pdf = PDF::loadView('reports.pdf.balances', compact('students', 'dateFrom', 'dateTo'));
+            $pdf = $this->getPdfInstance();
+            $pdf->loadView('reports.pdf.balances', compact('students', 'dateFrom', 'dateTo'));
             $fileName = 'balances_report' . $dateRange . '_' . now()->format('Y-m-d') . '.pdf';
             return $pdf->download($fileName);
         }
@@ -408,7 +420,8 @@ class ReportController extends Controller
             ->get();
 
         if ($format === 'pdf') {
-            $pdf = PDF::loadView('reports.pdf.course-registrations', compact('registrations', 'dateFrom', 'dateTo'));
+            $pdf = $this->getPdfInstance();
+            $pdf->loadView('reports.pdf.course-registrations', compact('registrations', 'dateFrom', 'dateTo'));
             $fileName = 'course_registrations_' . $dateFrom . '_to_' . $dateTo . '.pdf';
             return $pdf->download($fileName);
         }
@@ -436,7 +449,8 @@ class ReportController extends Controller
             ->get();
 
         if ($format === 'pdf') {
-            $pdf = PDF::loadView('reports.pdf.bank-deposits', compact('deposits', 'dateFrom', 'dateTo'));
+            $pdf = $this->getPdfInstance();
+            $pdf->loadView('reports.pdf.bank-deposits', compact('deposits', 'dateFrom', 'dateTo'));
             $fileName = 'bank_deposits_' . $dateFrom . '_to_' . $dateTo . '.pdf';
             return $pdf->download($fileName);
         }
@@ -464,7 +478,8 @@ class ReportController extends Controller
             ->get();
 
         if ($format === 'pdf') {
-            $pdf = PDF::loadView('reports.pdf.receipts', compact('receipts', 'dateFrom', 'dateTo'));
+            $pdf = $this->getPdfInstance();
+            $pdf->loadView('reports.pdf.receipts', compact('receipts', 'dateFrom', 'dateTo'));
             $fileName = 'receipts_' . $dateFrom . '_to_' . $dateTo . '.pdf';
             return $pdf->download($fileName);
         }
