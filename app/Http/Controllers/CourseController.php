@@ -28,7 +28,6 @@ class CourseController extends Controller
     public function store(Request $request)
     {
         $this->requirePermission('courses.create');
-    {
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:50', 'unique:courses,code'],
             'name' => ['required', 'string', 'max:255'],
@@ -60,7 +59,6 @@ class CourseController extends Controller
     public function update(Request $request, Course $course)
     {
         $this->requirePermission('courses.edit');
-    {
         $validated = $request->validate([
             'code' => ['required', 'string', 'max:50', 'unique:courses,code,' . $course->id],
             'name' => ['required', 'string', 'max:255'],

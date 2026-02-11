@@ -64,7 +64,6 @@ class ExpenseController extends Controller
     public function store(Request $request)
     {
         $this->requirePermission('expenses.create');
-    {
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],

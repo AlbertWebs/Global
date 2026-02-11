@@ -16,7 +16,6 @@ class CourseRegistrationController extends Controller
     public function index()
     {
         $this->requirePermission('course_registrations.view');
-    {
         // Group registrations by course
         $registrations = CourseRegistration::with(['student', 'course'])
             ->latest('registration_date')
@@ -57,6 +56,8 @@ class CourseRegistrationController extends Controller
 
     public function store(Request $request)
     {
+        $this->requirePermission('course_registrations.create');
+        
         $validated = $request->validate([
             'student_id' => ['required', 'exists:students,id'],
             'course_ids' => ['required', 'array', 'min:1'],

@@ -8,6 +8,7 @@ use App\Models\Student;
 use App\Models\Wallet;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class StudentController extends Controller
 {
@@ -16,7 +17,6 @@ class StudentController extends Controller
     public function index(Request $request)
     {
         $this->requirePermission('students.view');
-    {
         $query = Student::query();
         
         // Search functionality
@@ -152,7 +152,6 @@ class StudentController extends Controller
     public function show(Student $student)
     {
         $this->requirePermission('students.view');
-    {
         $student->load('payments.course', 'payments.receipt', 'payments.cashier', 'courseRegistrations.course');
 
         // Manually attach balance information to payments
@@ -356,14 +355,12 @@ class StudentController extends Controller
     public function edit(Student $student)
     {
         $this->requirePermission('students.edit');
-    {
         return view('students.edit', compact('student'));
     }
 
     public function update(Request $request, Student $student)
     {
         $this->requirePermission('students.edit');
-    {
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'middle_name' => ['nullable', 'string', 'max:255'],
@@ -416,7 +413,6 @@ class StudentController extends Controller
     public function destroy(Student $student)
     {
         $this->requirePermission('students.delete');
-    {
         $student->delete();
         return redirect()->route('students.index')
             ->with('success', 'Student deleted successfully!');
@@ -478,4 +474,5 @@ class StudentController extends Controller
     {
         $wallet = Wallet::where('student_id', $student->id)->first();
         return response()->json(['balance' => $wallet ? $wallet->balance : 0]);
-    }}
+    }
+}

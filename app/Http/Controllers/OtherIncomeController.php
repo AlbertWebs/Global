@@ -64,7 +64,7 @@ class OtherIncomeController extends Controller
     public function store(Request $request)
     {
         $this->requirePermission('other_income.create');
-    {
+        
         $validated = $request->validate([
             'description' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0'],
