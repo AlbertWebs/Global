@@ -21,6 +21,11 @@ class CourseRegistrationController extends Controller
             ->latest('registration_date')
             ->get();
         
+        // Filter out registrations with null student or course
+        $registrations = $registrations->filter(function ($registration) {
+            return $registration->student !== null && $registration->course !== null;
+        });
+        
         // Group by course
         $coursesGrouped = $registrations->groupBy('course_id')->map(function ($courseRegistrations) {
             $course = $courseRegistrations->first()->course;

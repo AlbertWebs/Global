@@ -99,22 +99,23 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach($group['registrations'] as $registration)
+                                @if($registration->student)
                                 <tr class="hover:bg-gray-50 transition-colors">
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                                                 <span class="text-xs font-semibold text-gray-600">
-                                                    {{ strtoupper(substr($registration->student->first_name, 0, 1) . substr($registration->student->last_name, 0, 1)) }}
+                                                    {{ strtoupper(substr($registration->student->first_name ?? '', 0, 1) . substr($registration->student->last_name ?? '', 0, 1)) }}
                                                 </span>
                                             </div>
                                             <div>
-                                                <p class="text-sm font-medium text-gray-900">{{ $registration->student->full_name }}</p>
+                                                <p class="text-sm font-medium text-gray-900">{{ $registration->student->full_name ?? 'N/A' }}</p>
                                                 <p class="text-xs text-gray-500">{{ $registration->student->email ?? 'No email' }}</p>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                                        {{ $registration->student->admission_number ?? $registration->student->student_number }}
+                                        {{ $registration->student->admission_number ?? $registration->student->student_number ?? 'N/A' }}
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                                         {{ $registration->registration_date->format('M d, Y') }}
@@ -161,6 +162,7 @@
                                         </div>
                                     </td>
                                 </tr>
+                                @endif
                                 @endforeach
                             </tbody>
                         </table>
