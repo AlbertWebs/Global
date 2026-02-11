@@ -213,13 +213,15 @@
                     $incomeTotal = 0;
                 @endphp
                 @foreach($payments as $payment)
+                @if($payment->student && $payment->course)
                 <tr>
                     <td>Fee Payment</td>
-                    <td>{{ $payment->student->full_name }} - {{ $payment->course->name }}</td>
+                    <td>{{ $payment->student->full_name ?? 'N/A' }} - {{ $payment->course->name ?? 'N/A' }}</td>
                     <td>{{ $payment->created_at->format('M d, Y') }}</td>
                     <td class="text-right">{{ number_format($payment->amount_paid, 2) }}</td>
                 </tr>
                 @php $incomeTotal += $payment->amount_paid; @endphp
+                @endif
                 @endforeach
                 @foreach($otherIncomes as $income)
                 <tr>

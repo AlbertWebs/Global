@@ -67,7 +67,10 @@ class IncomeStatementController extends Controller
         $netProfit = $totalIncome - $totalExpenses;
 
         // Get detailed data for PDF
-        $payments = $paymentQuery->with(['student', 'course'])->get();
+        $payments = $paymentQuery->with(['student', 'course'])->get()
+            ->filter(function ($payment) {
+                return $payment->student !== null && $payment->course !== null;
+            });
         $otherIncomes = $otherIncomeQuery->with('recorder')->get();
         $expenses = $expenseQuery->with('recorder')->get();
 
