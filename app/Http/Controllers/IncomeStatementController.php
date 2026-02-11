@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\Expense;
 use App\Models\OtherIncome;
 use App\Models\Payment;
@@ -10,6 +11,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class IncomeStatementController extends Controller
 {
+    use ChecksPermissions;
     /**
      * Get PDF instance from service container
      */

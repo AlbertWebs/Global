@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Exports\BalancesExport;
 use App\Exports\BankDepositsExport;
 use App\Exports\CashPaymentsExport;
@@ -24,6 +25,7 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
+    use ChecksPermissions;
     /**
      * Get PDF instance from service container
      */

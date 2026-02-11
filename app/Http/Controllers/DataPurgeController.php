@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ChecksPermissions;
 use App\Models\ActivityLog;
 use App\Models\Announcement;
 use App\Models\Attendance;
@@ -24,6 +25,7 @@ use Illuminate\Support\Facades\DB;
 
 class DataPurgeController extends Controller
 {
+    use ChecksPermissions;
     public function index()
     {
         $this->requirePermission('data_purge.manage');
